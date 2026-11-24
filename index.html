@@ -156,7 +156,6 @@ const Ds = { name: "经世济国", version: "1.1", stage: "正式版", note: "�
     pityRed: 90,
     prospectCost: 80,
     dailyGems: 120,
-    demoGems: 3200,
   };
 function X9(A) {
   if (A <= 110) return O.unlockBase * Math.pow(O.unlockGrowth, A) + O.unlockScale * Math.pow(A, O.unlockExp);
@@ -6231,11 +6230,7 @@ function isSkinUnlocked(A, skinId) {
   if (!A) return !1;
   const sk = WARDROBE_SKIN_MAP[skinId];
   if (!sk) return !1;
-  return (
-    A.originMode === "ultimate" ||
-    Boolean(A.legacySkins && A.legacySkins.includes(skinId)) ||
-    lordTotalLevel(A) >= sk.unlockLv
-  );
+  return lordTotalLevel(A) >= sk.unlockLv;
 }
 function unlockedWardrobeSkins(A) {
   return WARDROBE_SKINS.filter((sk) => isSkinUnlocked(A, sk.id));
@@ -9949,21 +9944,6 @@ function totalClaimableTasks(A, m) {
     dailyTotal: signIn + dqReady + chestReady,
     total: signIn + dqReady + chestReady + achReady,
   };
-}
-function Ba(A, e = Date.now()) {
-  A.usedFreeGems = !0;
-  if (((A.gems += O.demoGems), A.demoDay === f0(e)))
-    return qe(`已领取 ◇${O.demoGems} 沙盒星钻补给（国库和体力今天已补过 · 归入沙盒展示榜）`);
-  A.demoDay = f0(e);
-  const t = dt(A);
-  A.treasury += Math.max(1500, t.gdp * 8);
-  A.lord.stamina = Math.max(A.lord.stamina, $n(A));
-  A.lord.staminaAt = e;
-  A.lord.charges ?? (A.lord.charges = {});
-  for (const k of ["mentor", "supervise", "trade"]) {
-    A.lord.charges[k] = { n: getActMaxCharges(A, k), at: e };
-  }
-  return qe("已发放沙盒补给（星钻、国库、体力与行动充能 · 本档归入沙盒展示榜）");
 }
 const Zr = {
     capital: "首都",
@@ -28342,7 +28322,20 @@ function lQ(A) {
 function JI() {
   try {
     const A = localStorage.getItem(DQ);
-    return A ? lQ(A) : null;
+    if (!A) return null;
+    const st = lQ(A);
+    if (
+      st &&
+      (st.originMode === "ultimate" ||
+        st.originMode === "starter" ||
+        st.originMode === "showcase" ||
+        st.nationName === "经世完全体帝国" ||
+        st.nationName === "示范共和国")
+    ) {
+      localStorage.removeItem(DQ);
+      return null;
+    }
+    return st;
   } catch {
     return null;
   }
@@ -28356,493 +28349,6 @@ function f9(A) {
 }
 if (typeof window < "u") {
   window.isRankedEligible = isRankedEligible;
-}
-const KI = 20261110;
-function buildUltimateDemo(A = Date.now()) {
-  const e = d7(KI, A),
-    t = Un(e),
-    n = e.tiles;
-  ((e.originMode = "ultimate"),
-    (e.usedFreeGems = !1),
-    (e.milestones = { act1: !0, act2: !0, act3: !0 }));
-  const sortedByDist = [...n].sort((a, b) => ks(a.q, a.r) - ks(b.q, b.r));
-  let uc = 0;
-  for (const tl of sortedByDist) {
-    ((tl.unlocked = !0), (tl.unlockedAt = ++uc));
-  }
-  e.stats.unlocks = uc;
-  const cap = n.find((x) => x.capital) || n[0];
-  cap.level = 6;
-  const isFree = (x) =>
-    x.unlocked && !x.capital && !x.industry && !x.public && !x.build && x.wonderHost == null;
-  // 1. Place all 8 3-hex Lv.5 National Wonders FIRST on clean flattened 3-hex triangles
-  for (const pub of ac.filter((p) => p.wonder)) {
-    const cands = n
-      .filter((x) => isFree(x) && pub.terrains.includes(x.terrain) && ks(x.q, x.r) >= 2)
-      .sort(
-        (a, b) =>
-          (pub.suits && pub.suits.includes(b.terrain) ? 20 : 0) -
-            (pub.suits && pub.suits.includes(a.terrain) ? 20 : 0) || ks(a.q, a.r) - ks(b.q, b.r),
-      );
-    for (const tl of cands) {
-      const tri = findWonderTri(e, tl, pub.id);
-      if (tri) {
-        ((tl.public = pub.id), (tl.level = 5), (tl.wonderTri = tri), (tl.resource = null));
-        for (const sid of [tri[1], tri[2]]) {
-          const sat = n[sid];
-          if (sat) {
-            ((sat.wonderHost = tl.id),
-              (sat.terrain = tl.terrain),
-              (sat.industry = null),
-              (sat.public = null),
-              (sat.build = null),
-              (sat.card = null),
-              (sat.resource = null),
-              (sat.level = 1));
-          }
-        }
-        break;
-      }
-    }
-  }
-  // 2. Place all 24 Lv.3 civic facilities across valid terrains
-  for (const pub of ac.filter((p) => !p.wonder)) {
-    const tl = n
-      .filter((x) => isFree(x) && pub.terrains.includes(x.terrain))
-      .sort(
-        (a, b) =>
-          (pub.suits && pub.suits.includes(b.terrain) ? 10 : 0) -
-            (pub.suits && pub.suits.includes(a.terrain) ? 10 : 0) || ks(b.q, b.r) - ks(a.q, a.r),
-      )[0];
-    if (tl) {
-      ((tl.public = pub.id), (tl.level = 3), (tl.resource = null));
-    }
-  }
-  // Guarantee every raw resource in fs exists on at least one free unlocked tile of valid terrain
-  const haveRes = new Set(n.filter((x) => isFree(x) && x.resource).map((x) => x.resource));
-  for (const r of fs) {
-    if (haveRes.has(r.id)) continue;
-    const cand = n.find((x) => isFree(x) && !x.resource && r.terrains.includes(x.terrain));
-    if (cand) {
-      cand.resource = r.id;
-      haveRes.add(r.id);
-    }
-  }
-  const resByName = new Map(fs.map((r) => [r.name, r]));
-  const pickTile = (indId, preferRes = null, anchorId = null) => {
-    const ind = HA[indId];
-    let cands = n.filter((x) => isFree(x) && fa(x, ind));
-    if (!cands.length) return null;
-    const score = (x) => {
-      let sc = 0;
-      if (ind.suits && ind.suits.includes(x.terrain)) sc += 18;
-      if (indId === "201011" && (x.terrain === "valley" || x.terrain === "water")) sc += 30;
-      if (preferRes && x.resource === preferRes) sc += 25;
-      else if (preferRes && !x.resource && ke[preferRes] && ke[preferRes].terrains.includes(x.terrain))
-        sc += 10;
-      if (anchorId != null && t[anchorId] && t[anchorId].includes(x.id)) sc += 28;
-      for (const nb of t[x.id] || []) {
-        const nt = n[nb],
-           host = nt && nt.wonderHost != null ? n[nt.wonderHost] : nt,
-          pd = host && host.public && it[host.public];
-        if (pd && pd.boosts && pd.boosts.includes(indId)) sc += 14;
-      }
-      const pv = previewLinks(e, x.id, indId);
-      sc += pv.list.length * 16;
-      sc -= ks(x.q, x.r) * 0.8;
-      return sc;
-    };
-    cands.sort((a, b) => score(b) - score(a));
-    return cands[0];
-  };
-  const placeInd = (indId, lv = 4, preferRes = null, anchorId = null) => {
-    const tl = pickTile(indId, preferRes, anchorId);
-    if (!tl) return null;
-    ((tl.industry = indId), (tl.level = lv), (tl.age = 120));
-    if (preferRes && ke[preferRes] && ke[preferRes].terrains.includes(tl.terrain)) tl.resource = preferRes;
-    return tl;
-  };
-  // 3. Core energy, water/gas, food, & mining backbones first so grid & resources are abundant
-  const food1 = placeInd("121010", 5, "wheat", cap.id);
-  placeInd("121010", 5, "wheat", food1 ? food1.id : cap.id);
-  placeInd("121010", 5, "rice", food1 ? food1.id : cap.id);
-  placeInd("121010", 4, "wheat", food1 ? food1.id : cap.id);
-  for (let k = 0; k < 5; k++) placeInd("201010", 5, null, cap.id);
-  for (let k = 0; k < 5; k++) placeInd("201011", 5, null, food1 ? food1.id : cap.id);
-  placeInd("131110", 5, null, cap.id);
-  placeInd("131110", 5, null, cap.id);
-  placeInd("181015", 5, "iron", cap.id);
-  placeInd("181015", 5, "copper", cap.id);
-  placeInd("181015", 5, "quartz", cap.id);
-  placeInd("181015", 4, "lithium", cap.id);
-  placeInd("131010", 5, "oil", cap.id);
-  placeInd("131010", 5, "gas", cap.id);
-  placeInd("181011", 4, "limestone", cap.id);
-  placeInd("181013", 4, "timber", cap.id);
-  // 4. Place ALL 75 industries (sorted Lv.0 -> Lv.4) maximizing upstream/downstream synergy!
-  const placedSet = new Set(n.filter((x) => x.industry).map((x) => x.industry));
-  const allByLv = [...Ee].sort((a, b) => a.level - b.level);
-  for (const ind of allByLv) {
-    if (placedSet.has(ind.id)) continue;
-    let wantRes = null;
-    for (const grp of ind.needs || []) {
-      for (const tag of grp) {
-        const r = resByName.get(tag);
-        if (r) {
-          wantRes = r.id;
-          break;
-        }
-      }
-      if (wantRes) break;
-    }
-    const baseLv = ind.level >= 4 ? 5 : ind.level >= 2 ? 4 : 3;
-    if (placeInd(ind.id, baseLv, wantRes, null)) placedSet.add(ind.id);
-  }
-  // Extra pillar copies for finance, chips, cars, AI/future to create real clusters
-  for (const extra of [
-    "141010",
-    "141111",
-    "191011",
-    "111011",
-    "181014",
-    "161010",
-    "191110",
-    "201010",
-    "201011",
-  ]) {
-    if (HA[extra]) placeInd(extra, 4, null, null);
-  }
-  // 5. Add 1 active construction project so player can test Supervise immediately
-  const bTile = n.find((x) => isFree(x) && fa(x, HA["191111"]));
-  if (bTile) bTile.build = { kind: "industry", id: "191111", left: 2, total: 3, financed: !1, paid: 200 };
-  // 6. Grant full all-star roster (all Red + Orange + Purple cards, maxed stars & levels) and deploy optimally
-  const roster = [...eo]
-    .filter((c) => c.tier >= 2)
-    .sort((a, b) => b.tier - a.tier || (b.exclusive ? 1 : 0) - (a.exclusive ? 1 : 0));
-  for (const c of roster) {
-    e.cards[c.id] = {
-      id: c.id,
-      level: Zn(c.tier),
-      exp: 0,
-      stars: Is[c.tier],
-      copies: c.tier === 2 ? 1 : 0,
-      tile: null,
-      obtained: Object.keys(e.cards).length,
-    };
-  }
-  const sampleBlue = eo.find((c) => c.tier === 1);
-  if (sampleBlue)
-    e.cards[sampleBlue.id] = {
-      id: sampleBlue.id,
-      level: 10,
-      exp: 0,
-      stars: 0,
-      copies: 1,
-      tile: null,
-      obtained: Object.keys(e.cards).length,
-    };
-  const assignCard = (cid, tl) => {
-    if (!e.cards[cid] || !tl || tl.card || tl.wonderHost != null) return !1;
-    ((e.cards[cid].tile = tl.id), (tl.card = cid));
-    if (tl.industry) tl.level = Math.min(6, Math.max(tl.level, Og(e, tl)));
-    return !0;
-  };
-  const capCard =
-    [...roster]
-      .filter((c) => !c.exclusive)
-      .sort((a, b) => b.attrs.pol + b.attrs.mgmt - (a.attrs.pol + a.attrs.mgmt))[0] || roster[0];
-  capCard && assignCard(capCard.id, cap);
-  for (const c of roster) {
-    if (e.cards[c.id].tile !== null || !c.exclusive) continue;
-    const tl = n.find((x) => x.unlocked && !x.card && x.industry === c.exclusive.industry);
-    if (tl) assignCard(c.id, tl);
-  }
-  const indTiles = [...n]
-    .filter((x) => x.unlocked && x.industry && !x.card)
-    .sort((a, b) => HA[b.industry].level - HA[a.industry].level || b.level - a.level);
-  let idleKeep = 8;
-  for (const tl of indTiles) {
-    const avail = roster.filter((c) => e.cards[c.id].tile === null);
-    if (avail.length <= idleKeep) break;
-    const match = avail.find((c) => c.match && c.match.includes(tl.industry)) || avail[0];
-    if (match) assignCard(match.id, tl);
-  }
-  e.landmarks = {};
-  // 7. Max-skill Emperor Lord (8 valid non-conflicting skills per line = 40 skills)
-  const x = e.lord;
-  ((x.name = "经世大帝"),
-    (x.traits = ["t2", "t3", "t6", "t8", "t10", "t14", "t17", "t22", "t25"]),
-    (x.ready = !0));
-  x.exp = { mgmt: 8000, tech: 8000, pol: 8000, amb: 8000, cha: 8000 };
-  x.skills = [
-    "mgmt1", "mgmt2", "mgmt3", "mgmt4", "mgmt5", "mgmt7", "mgmt9", "mgmt11",
-    "tech1", "tech2", "tech3", "tech4", "tech5", "tech7", "tech9", "tech11",
-    "pol1", "pol2", "pol3", "pol4", "pol6", "pol7", "pol9", "pol11",
-    "amb1", "amb2", "amb3", "amb4", "amb5", "amb7", "amb9", "amb11",
-    "cha1", "cha2", "cha3", "cha4", "cha5", "cha7", "cha9", "cha11",
-  ].filter((sid) => qi[sid]);
-  ((x.tile = cap.id), (x.prevTile = cap.id), (x.patrols = 128), (x.stamina = $n(e)), syncActCharges(e, A));
-  ((e.noviceMode = !1),
-    (e.noviceCompleted = !0),
-    (e.foundingBuilds = O.foundingBuilds),
-    (e.admin = { cooldowns: {}, cooldownsQ: {} }),
-    (e.taxes = ["balanced"]));
-  e.lord.insights = { fiscal: 26, industry: 28, welfare: 26, sci: 30 };
-  e.regime = "sci";
-  e.policyCards = ["pc_twobomb", "pc_eastdata", "pc_singularity"];
-  for (const [indId, resId] of [
-    ["X003", "helium3"],
-    ["X009", "supercond"],
-    ["X002", "vibranium"],
-    ["X004", "biospore"],
-    ["X014", "darkmatter"],
-    ["X012", "aether"],
-  ]) {
-    const tl = n.find((z) => z.unlocked && z.industry === indId);
-    if (tl) tl.resource = resId;
-  }
-  e.settings = { ...e.settings, timeScale: 1, rdGear: 2, welGear: 2, infGear: 1, autoPauseModal: !1 };
-  ((e.nationName = "经世完全体帝国"), (e.quarter = 240), (e.gems = 18888));
-  e.stats.fypDone = 4;
-  e.stats = {
-    ...e.stats,
-    pulls: 120,
-    financed: 6,
-    prospects: 18,
-    decrees: 42,
-    relocations: 8,
-    dailyDone: 20,
-    hadBreakthrough: 12,
-    everDebt: !0,
-    everDiv: !0,
-  };
-  // 8. Compute metrics, upgrade all supply edges to Lv.3, activate exclusives, & set 3 Special Zones
-  let m0 = dt(e);
-  for (const tl of n) {
-    if (tl.industry && tl.card && se[tl.card] && se[tl.card].exclusive && ra(e, tl, m0).ok) tl.exclusive = !0;
-  }
-  m0 = dt(e);
-  for (const ed of m0.supplyEdges || []) {
-    e.edges[To(ed.a, ed.b)] = 3;
-  }
-  const topCenters = [...n]
-    .filter((tl) => tl.unlocked && tl.industry && !tl.build)
-    .sort(
-      (a, b) => ((m0.tiles[b.id] && m0.tiles[b.id].gdp) || 0) - ((m0.tiles[a.id] && m0.tiles[a.id].gdp) || 0),
-    );
-  const zUsed = new Set();
-  e.zones = [];
-  for (const c of topCenters) {
-    if (e.zones.length >= 3) break;
-    if (zUsed.has(c.id)) continue;
-    const grp = [c.id, ...(t[c.id] || []).filter((id) => n[id] && n[id].unlocked)];
-    grp.forEach((id) => zUsed.add(id));
-    e.zones.push({ center: c.id, tiles: grp });
-  }
-  // Guarantee 0 stopped tiles if any base resource is missing (never touch wonder hosts/satellites)
-  m0 = dt(e);
-  for (const tl of n) {
-    if (tl.industry && m0.tiles[tl.id] && !m0.tiles[tl.id].running && m0.tiles[tl.id].missing) {
-      for (const grp of m0.tiles[tl.id].missing) {
-        const tags = Array.isArray(grp) ? grp : [grp];
-        for (const tag of tags) {
-          const r = resByName.get(tag);
-          if (r) {
-            const host = n.find(
-              (z) =>
-                z.unlocked &&
-                !z.capital &&
-                z.wonderHost == null &&
-                !z.public &&
-                !z.resource &&
-                r.terrains.includes(z.terrain),
-            );
-            if (host) {
-              host.resource = r.id;
-              break;
-            }
-          }
-        }
-      }
-    }
-  }
-  const mFinal = dt(e);
-  e.treasury = Math.round(mFinal.reserveCap * 0.86);
-  e.stats.peakGdp = mFinal.gdp;
-  const wBuilt = n.filter((z) => z.public && it[z.public] && it[z.public].wonder).length,
-    cBuilt = n.filter((z) => z.public && it[z.public] && !it[z.public].wonder).length;
-  e.log = [
-    {
-      q: 240,
-      text: `欢迎莅临「经世完全体帝国」：${uc} 块辽阔疆域、全 75 产业体系、Lv.6 首都、${wBuilt} 座 Lv.5 国家奇观、${cBuilt} 座满级市政设施与满级高速路网已全面就绪！`,
-      kind: "gold",
-    },
-  ];
-  return e;
-}
-function o9(A = Date.now()) {
-  const e = d7(KI, A),
-    t = Un(e),
-    n = e.tiles;
-  ((e.originMode = "starter"),
-    (e.noviceMode = !1),
-    (e.noviceCompleted = !0),
-    (e.usedFreeGems = !1),
-    (e.milestones = { act1: !0 }),
-    (e.settings.timeScale = 1),
-    (e.settings.autoPauseModal = !1));
-  (n
-    .filter((M) => !M.outer && ks(M.q, M.r) <= 3)
-    .forEach((M, z) => {
-      ((M.unlocked = !0), (M.unlockedAt = z));
-    }),
-    (e.stats.unlocks = n.filter((M) => M.unlocked).length));
-  const s = (M) => M.unlocked && !M.capital && !M.industry && !M.public && !M.build && M.wonderHost == null,
-    f = (M, z, p) => {
-      const H = (F) =>
-        ks(F.q, F.r) -
-        (p != null && p.includes(F.terrain) ? 3 : 0) +
-        (z === void 0 ? 0 : t[z].includes(F.id) ? -10 : 4);
-      let I = n.filter((F) => s(F) && M(F)).sort((F, L) => H(F) - H(L))[0];
-      if (!I) {
-        if (
-          ((I = n
-            .filter((F) => !F.unlocked && !F.outer && M(F) && t[F.id].some((L) => n[L].unlocked))
-            .sort((F, L) => ks(F.q, F.r) - ks(L.q, L.r))[0]),
-          !I)
-        )
-          throw new Error("示范国家放不下");
-        ((I.unlocked = !0), (e.stats.unlocks += 1), (I.unlockedAt = e.stats.unlocks));
-      }
-      return I;
-    },
-    o = (M, z = {}) => {
-      const p = HA[M],
-        H = f((I) => fa(I, p), z.anchor, p.suits);
-      return ((H.industry = M), (H.level = z.level ?? 1), z.resource && (H.resource = z.resource), H);
-    },
-    r = (M, z) => {
-      const p = it[M];
-      if (!p) return null;
-      const H = f((I) => p.terrains.includes(I.terrain), z, p.suits);
-      return ((H.public = M), H);
-    };
-  n.find((M) => M.capital).level = 3;
-  const i = o("121010", { resource: "wheat", level: 2 }),
-    v = o("121010", { anchor: i.id });
-  o("121010", { anchor: v.id });
-  const c = o("201011", { anchor: i.id });
-  o("131110", { level: 2 });
-  const g = o("201010", { level: 2 }),
-    P = o("181015", { resource: "iron", level: 2 });
-  (o("181015", { resource: "copper" }),
-    o("181015", { resource: "quartz" }),
-    o("131010", { resource: "oil" }),
-    o("181010"));
-  const B = o("181014", { anchor: P.id });
-  o("171015", { anchor: B.id });
-  const a = o("171013", { anchor: B.id });
-  o("171014", { anchor: a.id });
-  const Q = o("111011", { level: 3, anchor: B.id });
-  o("171012", { anchor: g.id });
-  const D = o("191011", { level: 2 });
-  (o("191010", { anchor: D.id }),
-    o("101110"),
-    o("191110"),
-    o("181011", { resource: "limestone" }),
-    o("181013", { resource: "timber" }));
-  const l = o("111012");
-  (o("201011", { anchor: l.id }), o("111110"), o("121111"), o("141010"), o("161011"));
-  const u = o("171112"),
-    C = o("171011"),
-    E = o("121011", { anchor: c.id });
-  E.financeLeft = 5;
-  const h = o("191111");
-  ((h.industry = null),
-    (h.build = { kind: "industry", id: "191111", left: 2, total: 3, financed: !1, paid: 200 }),
-    r("c_park", l.id),
-    r("c_themepark"));
-  const d = (M, z, p, H, I = 0) => {
-    ((e.cards[M] = {
-      id: M,
-      level: z,
-      exp: 0,
-      stars: p,
-      copies: I,
-      tile: H ? H.id : null,
-      obtained: Object.keys(e.cards).length,
-    }),
-      H && (H.card = M));
-  };
-  (d("musk2010", 38, 3, Q),
-    d("musk2020", 12, 1, C),
-    d("huang2023", 9, 0, D, 1),
-    d("farmer", 14, 1, i),
-    d("minerboss", 11, 1, P),
-    d("wangw2017", 6, 0, u),
-    d("cook2011", 8, 0, n[0]),
-    d("luo2012", 5, 0, l),
-    d("zhangzm1987", 5, 0, null));
-  for (const M of [i.id, v.id, B.id]) for (const z of t[M]) n[z].unlocked && (e.edges[To(M, z)] = 1);
-  const gzId = POLICY_CARD_MAP.pc_guanzi
-      ? "pc_guanzi"
-      : POLICY_CARD_MAP.pc_guanzhong
-        ? "pc_guanzhong"
-        : (POLICY_CARDS.find((p) => p.name.includes("管子")) || {}).id || "pc_guanzhong",
-    x = e.lord;
-  return (
-    (x.name = "示范主公"),
-    (x.traits = ["t2", "t3", "t6", "t8", "t10", "t14", "t17", "t22", "t25"]),
-    (x.ready = !0),
-    (x.insights = { fiscal: 8, industry: 12, welfare: 8, sci: 6 }),
-    (e.regime = "balanced"),
-    (e.policyCards = [gzId]),
-    (e.stats.pcSeen = [gzId]),
-    (e.foundingBuilds = O.foundingBuilds),
-    (e.admin = { cooldowns: {}, cooldownsQ: {} }),
-    (x.exp = { mgmt: 1900, tech: 800, pol: 1900, amb: 450, cha: 1900 }),
-    (x.skills = [
-      "mgmt1",
-      "mgmt2",
-      "mgmt3",
-      "mgmt4",
-      "mgmt5",
-      "tech1",
-      "tech2",
-      "tech3",
-      "pol1",
-      "pol2",
-      "pol3",
-      "pol4",
-      "pol6",
-      "amb1",
-      "amb2",
-      "cha1",
-      "cha2",
-      "cha3",
-      "cha4",
-      "cha5",
-    ].filter((sid) => qi[sid])),
-    (x.tile = Q.id),
-    (x.prevTile = 0),
-    (x.patrols = 24),
-    (x.stamina = $n(e)),
-    syncActCharges(e, A),
-    (e.taxes = ["industry"]),
-    (e.zones = [{ center: B.id, tiles: [B.id, ...t[B.id]] }]),
-    (e.nationName = "示范共和国"),
-    (e.quarter = 64),
-    (e.treasury = 1800),
-    (e.gems = 3200),
-    (e.log = [
-      {
-        q: 64,
-        text: "欢迎来到示范共和国：基础工农与芯片汽车链已成型，主公正在汽车厂视察，可随时开启五年规划或筹备改制。",
-        kind: "info",
-      },
-    ]),
-    e
-  );
 }
 const VI = [
     "陆家嘴",
@@ -28938,7 +28444,6 @@ const CloudLadder = {
   loading: !1,
   uploading: !1,
   onlyReal: !1,
-  boardMode: "ranked",
   error: null,
   lastSync: 0,
   remote: [],
@@ -28963,14 +28468,6 @@ const CloudLadder = {
     }
     if (this.isConfigured()) setTimeout(() => this.fetchRemote(!0), 1200);
   },
-  setBoardMode(mode) {
-    const next = mode === "sandbox" ? "sandbox" : "ranked";
-    if (this.boardMode !== next) {
-      this.boardMode = next;
-      this.ver++;
-      typeof ie < "u" && ie.refresh();
-    }
-  },
   isEligible(st) {
     return isRankedEligible(st || (typeof ie < "u" ? ie.state : null));
   },
@@ -28978,6 +28475,7 @@ const CloudLadder = {
     const im = r && r.industry_gdp && r.industry_gdp.__meta,
       sm = r && r.save_json && r.save_json.__meta,
       m = im || sm || {},
+      nm = String((r && (r.nation_name || r.name)) || ""),
       schemaVer = Number(
         (r && r.schema_ver) ?? m.schema_ver ?? (r && r.save_json && r.save_json.schema_ver) ?? 0,
       ),
@@ -28985,13 +28483,17 @@ const CloudLadder = {
         (r && r.board_mode) ||
         m.board_mode ||
         (r && r.save_json && r.save_json.board_mode) ||
-        (schemaVer >= 10 ? "ranked" : "sandbox");
+        (schemaVer >= 10 ? "ranked" : "legacy"),
+      nonRanked =
+        schemaVer < 10 ||
+        rawMode === "sandbox" ||
+        Boolean(m.used_free_gems) ||
+        nm.includes("完全体") ||
+        nm.includes("示范");
     return {
       schemaVer,
-      boardMode: rawMode === "sandbox" || schemaVer < 10 ? "sandbox" : "ranked",
-      originMode:
-        m.origin_mode || (r && r.save_json && r.save_json.originMode) || (schemaVer >= 10 ? "fresh" : "legacy"),
-      legacy: schemaVer < 10,
+      ranked: !nonRanked,
+      originMode: m.origin_mode || (r && r.save_json && r.save_json.originMode) || "fresh",
     };
   },
   getCfg() {
@@ -29040,13 +28542,11 @@ const CloudLadder = {
   },
   packSave(st, m) {
     const met = m || dt(st),
-      ranked = isRankedEligible(st),
-      boardMode = ranked ? "ranked" : "sandbox",
       meta = {
         schema_ver: 10,
-        board_mode: boardMode,
-        origin_mode: st.originMode || "fresh",
-        used_free_gems: !!st.usedFreeGems,
+        board_mode: "ranked",
+        origin_mode: "fresh",
+        used_free_gems: !1,
       },
       indMap = {};
     for (const tl of st.tiles) {
@@ -29060,7 +28560,7 @@ const CloudLadder = {
       QQ({
         ...st,
         schema_ver: 10,
-        board_mode: boardMode,
+        board_mode: "ranked",
         __meta: meta,
         log: (st.log || []).slice(-20),
         history: (st.history || []).slice(-24),
@@ -29080,7 +28580,7 @@ const CloudLadder = {
       updated_at: new Date().toISOString(),
     };
   },
-  allRealPlayers(mode = "all") {
+  allRealPlayers() {
     const map = new Map();
     for (const r of this.local)
       r && r.player_id && r.player_id !== this.pid && map.set(r.player_id, { ...r, source: "local" });
@@ -29089,33 +28589,18 @@ const CloudLadder = {
     const list = [];
     for (const r of map.values()) {
       const meta = this.rowMeta(r);
-      const enriched = {
-        ...r,
-        schema_ver: meta.schemaVer,
-        board_mode: meta.boardMode,
-        boardMode: meta.boardMode,
-        origin_mode: meta.originMode,
-      };
-      if (mode === "all") list.push(enriched);
-      else if (mode === "sandbox") {
-        (meta.boardMode === "sandbox" || meta.schemaVer < 10) && list.push(enriched);
-      } else {
-        meta.schemaVer >= 10 && meta.boardMode === "ranked" && list.push(enriched);
+      if (meta.ranked) {
+        list.push({
+          ...r,
+          schema_ver: meta.schemaVer,
+          origin_mode: meta.originMode,
+        });
       }
     }
     return list;
   },
   rankedPlayers() {
-    return this.allRealPlayers("ranked");
-  },
-  sandboxPlayers() {
-    return this.allRealPlayers("sandbox");
-  },
-  counts() {
-    return {
-      ranked: this.allRealPlayers("ranked").length,
-      sandbox: this.allRealPlayers("sandbox").length,
-    };
+    return this.allRealPlayers();
   },
   async fetchRemote(silent = !1) {
     if (!this.isConfigured()) return { ok: !1, msg: "未配置云端天梯" };
@@ -29132,8 +28617,7 @@ const CloudLadder = {
       this.remote = Array.isArray(rows) ? rows : [];
       ((this.lastSync = Date.now()), this.ver++);
       if (!silent && typeof ie < "u") {
-        const cnt = this.counts();
-        ie.toast(`已同步全球天梯（开荒排位 ${cnt.ranked} · 沙盒展示 ${cnt.sandbox}）`, "good");
+        ie.toast(`已同步全球天梯（共 ${this.allRealPlayers().length} 国真人参榜）`, "good");
       }
       return { ok: !0, count: this.remote.length };
     } catch (err) {
@@ -29146,13 +28630,16 @@ const CloudLadder = {
     }
   },
   async uploadSave(st, m) {
+    if (!isRankedEligible(st)) {
+      typeof ie < "u" && ie.toast("该历史存档无法参榜，请从原点开启新局", "warn");
+      return { ok: !1, msg: "存档不符合天梯条件" };
+    }
     if (!this.isConfigured()) {
       typeof ie < "u" && ie.openModal({ type: "cloudCfg" });
       return { ok: !1, msg: "请先配置 Supabase 云端地址与密钥" };
     }
     const c = this.getCfg(),
-      payload = this.packSave(st, m),
-      bMode = payload.industry_gdp.__meta.board_mode;
+      payload = this.packSave(st, m);
     ((this.uploading = !0), (this.error = null));
     typeof ie < "u" && ie.refresh();
     try {
@@ -29166,14 +28653,10 @@ const CloudLadder = {
         throw new Error(`HTTP ${res.status} ${txt.slice(0, 80)}`);
       }
       this.saveCache.set(this.pid, payload.save_json);
-      this.boardMode = bMode;
       await this.fetchRemote(!0);
       typeof ie < "u" &&
-        ie.toast(
-          `「${payload.nation_name}」已上传至【${bMode === "ranked" ? "全球开荒排位榜" : "沙盒展示榜"}】（GDP ${fe(payload.gdp)} 亿）！`,
-          "gold",
-        );
-      return { ok: !0, boardMode: bMode };
+        ie.toast(`「${payload.nation_name}」已上传至全球天梯（GDP ${fe(payload.gdp)} 亿）！`, "gold");
+      return { ok: !0 };
     } catch (err) {
       this.error = String((err && err.message) || err);
       typeof ie < "u" && ie.toast(`上传存档失败：${this.error}`, "warn");
@@ -29205,14 +28688,13 @@ const CloudLadder = {
   importLocalRival(rawText) {
     const parsed = lQ(rawText);
     if (!parsed) return { ok: !1, msg: "无法识别的存档文件" };
+    if (!isRankedEligible(parsed)) return { ok: !1, msg: "仅支持正常开荒存档导入天梯比拼" };
     const m = dt(parsed),
-      ranked = isRankedEligible(parsed),
-      boardMode = ranked ? "ranked" : "sandbox",
       meta = {
         schema_ver: 10,
-        board_mode: boardMode,
-        origin_mode: parsed.originMode || "fresh",
-        used_free_gems: !!parsed.usedFreeGems,
+        board_mode: "ranked",
+        origin_mode: "fresh",
+        used_free_gems: !1,
       },
       indMap = {};
     for (const tl of parsed.tiles) {
@@ -29233,7 +28715,7 @@ const CloudLadder = {
         QQ({
           ...parsed,
           schema_ver: 10,
-          board_mode: boardMode,
+          board_mode: "ranked",
           __meta: meta,
           log: (parsed.log || []).slice(-10),
           history: (parsed.history || []).slice(-12),
@@ -29249,14 +28731,13 @@ const CloudLadder = {
         credit_rating: m.creditRating || "AAA",
         ach_points: achSummary(parsed).pts,
         schema_ver: 10,
-        board_mode: boardMode,
+        board_mode: "ranked",
         industry_gdp: indMap,
         save_json: slim,
         updated_at: new Date().toISOString(),
       };
     this.local = [...this.local.filter((x) => x.player_id !== pid), entry].slice(-30);
     this.saveCache.set(pid, entry.save_json);
-    this.boardMode = boardMode;
     try {
       localStorage.setItem("eunopolis_local_rivals", QQ(this.local));
     } catch {}
@@ -29286,7 +28767,6 @@ function _I(A, e, t = Date.now(), realList = [], onlyReal = !1, meMeta = {}) {
     unlocked: r.unlocked || 1,
     pop: r.population || 0,
     source: r.source || "cloud",
-    boardMode: r.board_mode || "ranked",
     updatedAt: r.updated_at,
   }));
   const me = {
@@ -29300,20 +28780,18 @@ function _I(A, e, t = Date.now(), realList = [], onlyReal = !1, meMeta = {}) {
     quarter: meMeta.quarter || 0,
     unlocked: meMeta.unlocked || 1,
     pop: meMeta.pop || 0,
-    boardMode: meMeta.boardMode || "ranked",
     eligible: meMeta.eligible !== !1,
   };
   const base = onlyReal ? [] : uQ(t);
-  const n = [...base, ...reals, me].sort((f, o) => o.gdp - f.gdp),
-    s = n.findIndex((f) => f.you) + 1;
+  const n = [...base, ...(me.eligible ? [me] : []), ...reals].sort((f, o) => o.gdp - f.gdp),
+    s = me.eligible ? n.findIndex((f) => f.you) + 1 : null;
   return {
     list: n,
     rank: s,
     total: n.length,
-    realCount: reals.length + 1,
-    boardMode: CloudLadder.boardMode,
-    eligible: meMeta.eligible !== !1,
-    percentile: 1 - (s - 1) / Math.max(1, n.length),
+    realCount: reals.length + (me.eligible ? 1 : 0),
+    eligible: me.eligible,
+    percentile: s ? 1 - (s - 1) / Math.max(1, n.length) : 0,
   };
 }
 const $I = 0.82,
@@ -29482,7 +28960,7 @@ class fp {
           ? (this.modal = { type: "offline", report: t })
           : e.lord.pendingEvent && (this.modal = { type: "event" });
     } else {
-      this.state = buildUltimateDemo();
+      this.state = d7(((Math.random() * 2 ** 31) | 0), Date.now());
       this.metrics = dt(this.state);
       const sn = makeGdpSnap(this.state, this.metrics);
       this.state.history = [{ ...sn, treasury: this.state.treasury, preSnap: sn }];
@@ -29577,15 +29055,6 @@ class fp {
       this.refresh(),
       f
     );
-  }
-  claimDemoGems() {
-    return this.act((s) => {
-      s.usedFreeGems = !0;
-      return Ba(s);
-    });
-  }
-  demoGems() {
-    return this.claimDemoGems();
   }
   switchRegime(regId, now = Date.now()) {
     const lockQ = this.state.regimeCdQ ?? this.state.regimeLockUntilQ ?? 0;
@@ -29737,29 +29206,24 @@ class fp {
       e && e.tiles.size === 0 && (this.toast("当前没有符合条件的地块", "warn"), (this.placement = null)),
       this.emit());
   }
-  newGame(e, opts = null) {
+  newGame(_e, opts = null) {
     const t = Date.now(),
-      seed = (opts && opts.seed) || ((Math.random() * 2 ** 31) | 0);
-    let st;
-    if (e === "ultimate") st = buildUltimateDemo(t);
-    else if (e === "showcase" || e === "starter") st = o9(t);
-    else {
+      seed = (opts && opts.seed) || ((Math.random() * 2 ** 31) | 0),
       st = d7(seed, t);
-      st.originMode = "fresh";
-      st.noviceMode = !1;
-      st.noviceCompleted = !0;
-      st.usedFreeGems = !1;
-      st.milestones = {};
-      st.settings.timeScale = 1;
-      st.settings.autoPauseModal = !1;
-      if (opts && Array.isArray(opts.traits) && opts.traits.length) {
-        j4(
-          st,
-          opts.traits,
-          String(opts.lordName ?? "主公").slice(0, 24),
-          String(opts.nationName ?? "经世共和国").slice(0, 32),
-        );
-      }
+    st.originMode = "fresh";
+    st.noviceMode = !1;
+    st.noviceCompleted = !0;
+    st.usedFreeGems = !1;
+    st.milestones = {};
+    st.settings.timeScale = 1;
+    st.settings.autoPauseModal = !1;
+    if (opts && Array.isArray(opts.traits) && opts.traits.length) {
+      j4(
+        st,
+        opts.traits,
+        String(opts.lordName ?? "主公").slice(0, 24),
+        String(opts.nationName ?? "经世共和国").slice(0, 32),
+      );
     }
     ((this.state = st),
       (this.selected = null),
@@ -29769,7 +29233,7 @@ class fp {
       (this.filter = null),
       (this.heldFrac = null),
       (this.decreeTiles = {}),
-      (this.modal = e === "fresh" && st.lord.ready === !1 ? { type: "lordCreate" } : null),
+      (this.modal = st.lord.ready === !1 ? { type: "lordCreate" } : null),
       this.resetCameraHome(),
       this.refresh());
   }
@@ -29982,8 +29446,8 @@ class fp {
   }
   get ladder() {
     const elig = isRankedEligible(this.state),
-      rp = CloudLadder.allRealPlayers(CloudLadder.boardMode),
-      e = `${Math.floor(Date.now() / 36e5)}|${CloudLadder.ver}|${CloudLadder.boardMode}|${CloudLadder.onlyReal ? 1 : 0}|${elig ? 1 : 0}|${this.state.nationName}|${this.metrics.gdp.toFixed(2)}|${this.metrics.creditRating}`;
+      rp = CloudLadder.allRealPlayers(),
+      e = `${Math.floor(Date.now() / 36e5)}|${CloudLadder.ver}|${CloudLadder.onlyReal ? 1 : 0}|${elig ? 1 : 0}|${this.state.nationName}|${this.metrics.gdp.toFixed(2)}|${this.metrics.creditRating}`;
     return (
       (!this.lb || e !== this.lbKey) &&
         ((this.lbKey = e),
@@ -29993,7 +29457,6 @@ class fp {
           quarter: this.state.quarter,
           unlocked: this.metrics.unlocked,
           pop: this.metrics.population,
-          boardMode: elig ? "ranked" : "sandbox",
           eligible: elig,
         }))),
       this.lb
@@ -30008,8 +29471,8 @@ class fp {
         !s.build &&
         (e[s.industry] =
           (e[s.industry] ?? 0) + (((n = this.metrics.tiles[s.id]) == null ? void 0 : n.facility) ?? 0));
-    const rp = CloudLadder.allRealPlayers(CloudLadder.boardMode),
-      t = `${Math.floor(Date.now() / 36e5)}|${CloudLadder.ver}|${CloudLadder.boardMode}|${CloudLadder.onlyReal ? 1 : 0}|${this.state.nationName}|${Object.entries(
+    const rp = CloudLadder.allRealPlayers(),
+      t = `${Math.floor(Date.now() / 36e5)}|${CloudLadder.ver}|${CloudLadder.onlyReal ? 1 : 0}|${this.state.nationName}|${Object.entries(
         e,
       )
         .map(([s, f]) => `${s}:${f.toFixed(1)}`)
@@ -30716,8 +30179,8 @@ const Jr = [0, 1, 2, 3, 4],
     a: `每处运转的产业按“实际生效等级”每级消耗 1 份电、1 份水。首都自带基础供给（Lv.1–6：${Li(O.util.capital)} 份），不足时可建${P9(Object.keys(O.util.power))}供电、${P9(Object.keys(O.util.water))}供水（水气建在河谷或海湾上供水量 ×1.5），或配建市政设施「自来水总厂 / 智能地下管廊」与技术线技能「公用管网（水电总供给 +18%）」。水电富余时公用事业享每点富余 +0.08 亿管网产值津贴（技术线终极「全自动超级工场」还可将管网盈余转化为最高 +15% 工业产出）；出现缺口时全国产业按缺口比例减产（电、水各自最多 −${SA(O.util.cap)}），不会直接停产。`,
   }),
   Nv = () => ({
-    q: "星钻从哪来？「领取沙盒补给」有什么影响？",
-    a: `日常来源包括：委托与勤政宝箱、69 项国家成就、每日签到（◇${O.dailyGems}）、五年规划达标大奖、奇观落成（魅力线「盛世地标」+◇200）与主公随机事件。正式版无任何付费内购：在招募页与设置中可随时点击「领取沙盒补给」（每次 ◇${O.demoGems}，不限次数）；注意一旦领取沙盒补给，该存档会自动归入云端「沙盒展示榜」，不再参与纯白手起家的「全球开荒排位榜」。`,
+    q: "星钻有哪些获取途径？",
+    a: `星钻全部通过治国经营获取：包括每日委托与勤政宝箱、69 项国家成就、每日签到（◇${O.dailyGems}）、五年规划达标大奖、国家奇观落成（魅力线「盛世地标」+◇200）、主公走格子随机奇遇以及满星名士溢出转化。`,
   }),
   w9 = (A) => {
     const e = Tt(A, "govern");
@@ -30953,7 +30416,7 @@ function If(A, e, t, n = {}) {
       return [
         {
           q: "「智能调派」与岗位驻守锁定怎么用？",
-          a: "点击人才库顶部的「智能调派」可选择「仅补齐空岗」或「全局最优重排」：引擎会在零改动的沙盒副本中综合评估首都中枢收益、产业等级上限解锁、专属倍率、供需边与名士羁绊，精确预览调动前后的季度 GDP 与财政净结余差值，确认后方才生效！若某地块不想被自动调换，在地块抽屉或调派页点击「🔒 锁定驻守」即可。",
+          a: "点击人才库顶部的「智能调派」可选择「仅补齐空岗」或「全局最优重排」：引擎会在零改动的模拟副本中综合评估首都中枢收益、产业等级上限解锁、专属倍率、供需边与名士羁绊，精确预览调动前后的季度 GDP 与财政净结余差值，确认后方才生效！若某地块不想被自动调换，在地块抽屉或调派页点击「🔒 锁定驻守」即可。",
         },
         {
           q: "「一键同名突破」会消耗星钻吗？",
@@ -31020,12 +30483,8 @@ function If(A, e, t, n = {}) {
     case "rank":
       return [
         {
-          q: "「全球开荒排位榜」和「沙盒展示榜」怎么区分？",
-          a: "实行严格双轨分榜：从原点纯手打开荒且未领取过沙盒补给的存档，荣登「全球开荒排位榜」公平竞技；起步示范档、完全体帝国或领过沙盒补给的存档，自动归入「沙盒展示榜」供全服观摩宏伟沙盘。",
-        },
-        {
           q: "GDP 总榜与 75 产业龙头榜怎么夺冠？",
-          a: "GDP 总榜按当季全国总产值排名；产业龙头榜按单一产业全国合计产值独立竞逐（专精几处满级匹配集群同样能拿世界龙头，每 4 季自动核定龙头成就，无需手动打开面板）。",
+          a: "所有从原点开荒的国家存档由引擎实时重算核验，公平竞逐天梯：GDP 总榜按当季全国总产值排名；产业龙头榜按单一产业全国合计产值独立竞逐（专精几处满级匹配集群同样能拿世界龙头，每 4 季自动核定龙头成就，无需手动打开面板）。",
         },
         {
           q: "榜上的其他国家是真人还是 AI？",
@@ -31670,17 +31129,10 @@ function CloudInspectModal({ entry: E }) {
       setTimeout(() => URL.revokeObjectURL(u), 1e3));
     A.toast("已下载该玩家存档副本", "good");
   };
-  const trackLabel = snap
-    ? isRankedEligible(snap.state)
-      ? "全球开荒排位榜"
-      : "沙盒展示榜"
-    : E.boardMode === "sandbox" || E.board_mode === "sandbox"
-      ? "沙盒展示榜"
-      : "云端天梯";
   return w(Cn, {
     cls: "cloud-modal",
     title: `国家参观 · ${E.name}`,
-    sub: `玩家 ID: ${E.pid} · ${E.source === "local" ? "本地导入存档" : "云端存档快照"} · ${trackLabel}`,
+    sub: `玩家 ID: ${E.pid} · ${E.source === "local" ? "本地导入存档" : "全球云端天梯"}`,
     children: [
       loading
         ? w("p", { class: "hint", children: "正在拉取并由游戏引擎实时验算该玩家存档…" })
@@ -32074,29 +31526,6 @@ function Ep() {
               onClick: () => ie.openModal({ type: "lordCreate", fromTitle: !0 }),
               children: "开始新游戏",
             }),
-            w("div", {
-              class: "tmenu-subrow",
-              children: [
-                w("button", {
-                  class: "tmenu-btn sub",
-                  onClick: () => ie.newGame("showcase"),
-                  children: "起步示范",
-                }),
-                w("button", {
-                  class: "tmenu-btn sub",
-                  onClick: () => {
-                    if (ie.state && ie.state.originMode === "ultimate") {
-                      ie.openModal(null);
-                      ie.resetCameraHome();
-                      ie.refresh();
-                    } else {
-                      ie.newGame("ultimate");
-                    }
-                  },
-                  children: "终极帝国",
-                }),
-              ],
-            }),
           ],
         }),
         w("div", { class: "title-ver", children: "v1.1 · 实时战略演进" }),
@@ -32150,14 +31579,14 @@ function xp() {
     title: "主公就任",
     sub: "给国家和主公各起个名字，选一套性格就能开始。每条性格都有好处和代价，隐藏性格会在游戏中自动获得。",
     onClose: () => {
-      if (A.modal && A.modal.fromTitle && ie.state && ie.state.originMode === "ultimate") {
+      if (A.modal && A.modal.fromTitle) {
         ie.openModal({ type: "title" });
         return;
       }
       try {
         localStorage.removeItem(DQ);
       } catch {}
-      ie.state = buildUltimateDemo();
+      ie.state = d7(((Math.random() * 2 ** 31) | 0), Date.now());
       ie.metrics = dt(ie.state);
       ie.resetCameraHome();
       ie.openModal({ type: "title" });
@@ -34259,13 +33688,6 @@ function Tp({ results: A }) {
               w("span", {
                 children: [w("small", { children: "持有星钻" }), w("b", { children: w(oP, { v: t.gems }) })],
               }),
-              w("button", {
-                class: "btn small gem-topup",
-                "data-tip-title": "领取沙盒补给",
-                "data-tip": `每次免费领取 ◇${O.demoGems} 星钻（纯单机零内购）。领取后本局存档在云端天梯归入【🏛️ 沙盒展示榜】，不参与纯手打【🏆 全球开荒排位榜】名次争夺。`,
-                onClick: () => claimSandboxSupply(e),
-                children: ["沙盒补给 ◇", O.demoGems],
-              }),
             ],
           }),
           w("div", {
@@ -36222,7 +35644,7 @@ function Yp() {
                       w("button", {
                         class: "th-wallet-btn",
                         "data-tip-title": "招贤馆与星钻储备",
-                        "data-tip": `点击打开招贤馆（查看卡池名录、保底进度或沙盒补给）\n• 橙卡保底：剩 ${orangeLeft} 抽 ｜ 红卡保底：剩 ${redLeft} 抽\n• 单次招贤 ◇${O.pullCost} · 十连九折 ◇${O.tenPullCost}`,
+                        "data-tip": `点击打开招贤馆（查看卡池名录与保底进度）\n• 橙卡保底：剩 ${orangeLeft} 抽 ｜ 红卡保底：剩 ${redLeft} 抽\n• 单次招贤 ◇${O.pullCost} · 十连九折 ◇${O.tenPullCost}`,
                         onClick: () => A.openModal({ type: "recruit" }),
                         children: [w(oP, { v: e.gems }), w("small", { children: "卡池▸" })],
                       }),
@@ -37923,38 +37345,7 @@ function Vp() {
 function isSaveRankedV1(st) {
   if (!st) return !1;
   if (typeof isRankedEligible == "function") return Boolean(isRankedEligible(st));
-  if (st.usedFreeGems) return !1;
-  if (st.originMode) return st.originMode === "fresh";
-  const nm = String(st.nationName || "");
-  return !nm.includes("完全体") && !nm.includes("示范");
-}
-function entryBoardModeV1(r) {
-  if (!r) return "ranked";
-  if (r.boardMode === "sandbox" || r.board_mode === "sandbox") return "sandbox";
-  if (r.boardMode === "ranked" || r.board_mode === "ranked") return "ranked";
-  if (r.save_json && !isSaveRankedV1(r.save_json)) return "sandbox";
-  const nm = String(r.name || r.nation_name || "");
-  if (nm.includes("完全体") || nm.includes("示范")) return "sandbox";
-  return "ranked";
-}
-function claimSandboxSupply(store) {
-  const st = store.state;
-  const exec = () =>
-    store.act((s) => {
-      s.usedFreeGems = !0;
-      return Ba(s);
-    });
-  if (isSaveRankedV1(st)) {
-    store.openModal({
-      type: "confirm",
-      title: `领取沙盒补给（◇${O.demoGems}）？`,
-      body: `每次可免费领取 ◇${O.demoGems} 星钻（国库与主公体力每日首领同步补满）。\n注意：领取沙盒补给后，本局存档在云端天梯将自动归入【🏛️ 沙盒展示榜】，不再参与纯手打【🏆 全球开荒排位榜】名次争夺（单机国家成就与图鉴收集不受影响）。`,
-      okText: `确认领取 ◇${O.demoGems}`,
-      onOk: exec,
-    });
-    return;
-  }
-  exec();
+  return Boolean(st.originMode === "fresh" && !st.usedFreeGems);
 }
 function Wp() {
   const A = Pe(),
@@ -38280,25 +37671,10 @@ function qp() {
     st = A.state,
     met = A.metrics,
     myRanked = isSaveRankedV1(st),
-    [boardTab, setBoardTab] = gt(() => CloudLadder.boardMode || (myRanked ? "ranked" : "sandbox")),
     [n, s] = gt("gdp"),
-    [f, o] = gt(!1),
     fileRef = us(null);
-  const switchBoard = (bm) => {
-    setBoardTab(bm);
-    if (typeof CloudLadder.setBoardMode == "function") CloudLadder.setBoardMode(bm);
-    else {
-      CloudLadder.boardMode = bm;
-      CloudLadder.ver++;
-      A.refresh();
-    }
-  };
-  const allReals = CloudLadder.allRealPlayers("all"),
-    rankedReals = allReals.filter((x) => entryBoardModeV1(x) === "ranked"),
-    sandboxReals = allReals.filter((x) => entryBoardModeV1(x) === "sandbox"),
-    activeReals = boardTab === "ranked" ? rankedReals : sandboxReals,
-    meOnThisBoard = (boardTab === "ranked" && myRanked) || (boardTab === "sandbox" && !myRanked),
-    onlyR = boardTab === "sandbox" ? !0 : CloudLadder.onlyReal;
+  const activeReals = CloudLadder.allRealPlayers(),
+    onlyR = CloudLadder.onlyReal;
   const e = Dn(() => {
     const now = Date.now(),
       meMeta = {
@@ -38307,21 +37683,13 @@ function qp() {
         quarter: st.quarter,
         unlocked: met.unlocked,
         pop: met.population,
-      },
-      full = _I(st.nationName, met.gdp, now, activeReals, onlyR, meMeta);
-    if (meOnThisBoard) return full;
-    const listNoMe = full.list.filter((x) => !x.you);
-    return {
-      list: listNoMe,
-      rank: null,
-      total: listNoMe.length,
-      realCount: activeReals.length,
-      percentile: 0,
-    };
-  }, [A.version, CloudLadder.ver, boardTab, onlyR, myRanked]);
+        eligible: myRanked,
+      };
+    return _I(st.nationName, met.gdp, now, activeReals, onlyR, meMeta);
+  }, [A.version, CloudLadder.ver, onlyR, myRanked]);
   const t = Dn(() => {
     const indOut = {};
-    if (meOnThisBoard) {
+    if (myRanked) {
       for (const tl of st.tiles) {
         if (tl.unlocked && tl.industry && !tl.build) {
           indOut[tl.industry] = (indOut[tl.industry] ?? 0) + (met.tiles[tl.id]?.facility ?? 0);
@@ -38329,7 +37697,7 @@ function qp() {
       }
     }
     return np(st.nationName, indOut, Date.now(), 5, activeReals, onlyR);
-  }, [A.version, CloudLadder.ver, boardTab, onlyR, myRanked]);
+  }, [A.version, CloudLadder.ver, onlyR, myRanked]);
   const r = e.rank ? e.rank - 1 : 0,
     i = e.rank ? e.list.slice(Math.max(0, r - 3), r + 4) : [],
     v = Ee.map((a) => t[a.id]),
@@ -38370,7 +37738,7 @@ function qp() {
               a.real &&
                 w("em", {
                   class: `real-tag${a.you ? " me" : ""}`,
-                  children: a.you ? "我" : a.source === "local" ? "导入" : boardTab === "sandbox" ? "沙盒" : "真人",
+                  children: a.you ? "我" : a.source === "local" ? "导入" : "真人",
                 }),
               a.real &&
                 a.credit &&
@@ -38379,7 +37747,6 @@ function qp() {
                   children: a.credit,
                 }),
               a.real && a.achPts > 0 && w("em", { class: "lb-pts", children: `★${a.achPts}` }),
-              canInspect && qTipC(`#${rk} ${a.name}`, rowTip),
             ],
           }),
           w("b", { children: fe(a.gdp) }),
@@ -38388,9 +37755,8 @@ function qp() {
       idx,
     );
   };
-  const rankedRuleTip = `原点纯手打开荒且未领取沙盒补给的存档，由引擎实时重算核验，公平角逐全球排位与 75 产业龙头。${!myRanked ? "\n（当前本档属于沙盒展示赛道，切至沙盒展示榜可查看本档位置）" : ""}`;
-  const sandboxRuleTip = `陈列示范国或领取过沙盒星钻补给的繁荣帝国，供全服玩家点击参观疆域规划与产业结构。${myRanked ? "\n（当前本档属于开荒排位赛道，切回开荒排位榜可查看本档名次）" : ""}`;
-  const inspectTip = "点击榜单中带有「真人 / 沙盒 / 导入」标签的国家行，即可打开国家快照参观其疆域布局与支柱产业。";
+  const rankedRuleTip = "所有从原点开荒的国家存档由引擎实时重算核验，公平角逐全球 GDP 总榜与 75 产业龙头。";
+  const inspectTip = "点击榜单中带有「真人 / 导入」标签的国家行，即可打开国家快照参观其疆域布局与支柱产业。";
   return w(he, {
     children: [
       w("div", {
@@ -38403,44 +37769,8 @@ function qp() {
                 class: "cb-status",
                 children: [
                   w("i", { class: `cb-dot${online ? " on" : ""}` }),
-                  online
-                    ? `云端天梯 · 排位 ${rankedReals.length + (myRanked ? 1 : 0)} / 沙盒 ${sandboxReals.length + (myRanked ? 0 : 1)}`
-                    : "本地天梯",
+                  online ? `全球云端天梯 · 真人 ${activeReals.length + (myRanked ? 1 : 0)} 国` : "本地天梯",
                 ],
-              }),
-              w("span", {
-                class: `lb-elig-badge ${myRanked ? "ranked" : "sandbox"}`,
-                "data-tip-touch": !0,
-                "data-tip-title": myRanked ? "当前存档：开荒排位资格" : "当前存档：沙盒展示赛道",
-                "data-tip": myRanked
-                  ? "本档从原点纯手打开荒且未领取过沙盒星钻补给，上传后直接参与【开荒排位榜】与 75 产业龙头争夺！"
-                  : "本档为示范帝国或领取过沙盒补给，上传后归入【沙盒展示榜】供全服参观交流。",
-                children: myRanked ? "🏆 开荒排位" : "🏛️ 沙盒展示",
-              }),
-            ],
-          }),
-          w("div", {
-            class: "lb-board-tabs",
-            children: [
-              w("button", {
-                class: `lbt-btn${boardTab === "ranked" ? " on" : ""}`,
-                "data-tip-title": "🏆 开荒排位榜",
-                "data-tip": rankedRuleTip,
-                onClick: () => switchBoard("ranked"),
-                children: w("b", {
-                  style: "display:inline-flex;align-items:center;gap:5px",
-                  children: ["🏆 开荒排位榜", qTipC("🏆 开荒排位榜", rankedRuleTip)],
-                }),
-              }),
-              w("button", {
-                class: `lbt-btn sandbox${boardTab === "sandbox" ? " on" : ""}`,
-                "data-tip-title": "🏛️ 沙盒展示榜",
-                "data-tip": sandboxRuleTip,
-                onClick: () => switchBoard("sandbox"),
-                children: w("b", {
-                  style: "display:inline-flex;align-items:center;gap:5px",
-                  children: ["🏛️ 沙盒展示榜", qTipC("🏛️ 沙盒展示榜", sandboxRuleTip)],
-                }),
               }),
             ],
           }),
@@ -38451,11 +37781,7 @@ function qp() {
                 class: "btn small primary",
                 disabled: CloudLadder.uploading,
                 onClick: () => CloudLadder.uploadSave(A.state, A.metrics),
-                children: CloudLadder.uploading
-                  ? "上传中…"
-                  : myRanked
-                    ? "上传排位榜"
-                    : "上传沙盒榜",
+                children: CloudLadder.uploading ? "上传中…" : "上传天梯",
               }),
               online &&
                 w("button", {
@@ -38507,15 +37833,10 @@ function qp() {
           w("div", {
             "data-tip-touch": !0,
             "data-tip-title": "榜单与排位规则",
-            "data-tip": `${boardTab === "sandbox" ? sandboxRuleTip : rankedRuleTip}\n${inspectTip}`,
+            "data-tip": `${rankedRuleTip}\n${inspectTip}`,
             children: [
               w("span", {
-                children:
-                  boardTab === "sandbox"
-                    ? "沙盒榜排名"
-                    : onlyR
-                      ? "真人 GDP 排名"
-                      : "全球 GDP 排名",
+                children: onlyR ? "真人 GDP 排名" : "全球 GDP 排名",
               }),
               w("strong", {
                 style: "white-space:nowrap",
@@ -38528,7 +37849,7 @@ function qp() {
                       }),
                     ]
                   : [
-                      "参观",
+                      "—",
                       w("small", {
                         style: "font-size:13px;font-weight:600;margin-left:8px;color:var(--muted)",
                         children: `共 ${e.total} 国`,
@@ -38558,24 +37879,19 @@ function qp() {
       w("div", {
         class: "filter-row lb-scope",
         children: [
-          boardTab === "ranked" &&
-            w(he, {
-              children: [
-                w("button", {
-                  class: `pill${onlyR ? "" : " on"}`,
-                  onClick: () => toggleReal(!1),
-                  children: "混合榜",
-                }),
-                w("button", {
-                  class: `pill${onlyR ? " on" : ""}`,
-                  onClick: () => toggleReal(!0),
-                  children: `仅真人 (${rankedReals.length + (myRanked ? 1 : 0)})`,
-                }),
-              ],
-            }),
+          w("button", {
+            class: `pill${onlyR ? "" : " on"}`,
+            onClick: () => toggleReal(!1),
+            children: "混合榜",
+          }),
+          w("button", {
+            class: `pill${onlyR ? " on" : ""}`,
+            onClick: () => toggleReal(!0),
+            children: `仅真人 (${activeReals.length + (myRanked ? 1 : 0)})`,
+          }),
           w("button", {
             class: `pill${n === "gdp" ? " on" : ""}`,
-            style: boardTab === "ranked" ? "margin-left:auto" : void 0,
+            style: "margin-left:auto",
             onClick: () => s("gdp"),
             children: "GDP 总榜",
           }),
@@ -38590,17 +37906,12 @@ function qp() {
         ? w(he, {
             children: [
               w(Qt, {
-                title:
-                  boardTab === "sandbox"
-                    ? "沙盒帝国展览馆"
-                    : onlyR
-                      ? "真人开荒排位榜"
-                      : "全球开荒前十",
+                title: onlyR ? "真人天梯总榜" : "全球天梯前十",
                 children: e.list.length
                   ? w("ol", {
                       class: "ladder",
                       children: e.list
-                        .slice(0, boardTab === "sandbox" || onlyR ? 50 : 10)
+                        .slice(0, onlyR ? 50 : 10)
                         .map((a, Q) => renderRow(a, Q + 1, Q)),
                     })
                   : w("div", {
@@ -38610,7 +37921,6 @@ function qp() {
                     }),
               }),
               !onlyR &&
-                boardTab === "ranked" &&
                 e.rank &&
                 e.rank > 10 &&
                 w(Qt, {
@@ -38792,7 +38102,6 @@ function Zp() {
     t = us(null),
     unlockedCnt = e.tiles.filter((f) => f.unlocked).length,
     landCap = A.metrics.landCap,
-    rankedOk = isSaveRankedV1(e),
     s = (f) => {
       (f(), A.refresh());
     };
@@ -38829,15 +38138,6 @@ function Zp() {
                 "data-tip-title": "疆域规模",
                 "data-tip": `已开拓国土 ${unlockedCnt} 块 / 当前治理上限 ${landCap} 块（满疆域 217 块）`,
                 children: `🗺️ ${unlockedCnt}/${landCap}`,
-              }),
-              w("span", {
-                class: "pill",
-                "data-tip-touch": !0,
-                "data-tip-title": rankedOk ? "开荒排位资格" : "沙盒展示赛道",
-                "data-tip": rankedOk
-                  ? "本档从原点纯手打开荒且未领沙盒补给，上传可角逐【全球开荒排位榜】"
-                  : "本档归入全球天梯【沙盒展示榜】供参观交流",
-                children: rankedOk ? "🏆 开荒排位" : "🏛️ 沙盒展示",
               }),
             ],
           }),
@@ -38974,59 +38274,24 @@ function Zp() {
         ],
       }),
       w(Qt, {
-        title: "开启新局与沙盒补给",
+        title: "重新开局",
         children: w("div", {
           class: "actions wrap",
           children: [
             w("button", {
-              class: "btn gold",
-              "data-tip-title": "完全体示范帝国",
-              "data-tip": "217 块满疆域、全 75 产业体系、8 座满级奇观（归入沙盒展示榜）",
-              onClick: () =>
-                A.openModal({
-                  type: "confirm",
-                  title: "载入完全体示范帝国？",
-                  body: "217 块满疆域（169 核心 + 48 边疆）、全 75 产业体系、Lv.6 首都、8 座 Lv.5 国家奇观与 24 座满级市政设施。该存档归入【沙盒展示榜】，当前进度会被覆盖。",
-                  okText: "立即载入",
-                  onOk: () => A.newGame("ultimate"),
-                }),
-              children: "完全体示范帝国",
-            }),
-            w("button", {
-              class: "btn",
-              "data-tip-title": "起步示范国家",
-              "data-tip": "中盘产业链与现代治理刚起步的示范档（归入沙盒展示榜）",
-              onClick: () =>
-                A.openModal({
-                  type: "confirm",
-                  title: "进入起步示范国家？",
-                  body: "中盘产业链与现代治理刚起步的示范档（归入【沙盒展示榜】）。当前进度会被覆盖。",
-                  okText: "进入",
-                  onOk: () => A.newGame("showcase"),
-                }),
-              children: "起步示范国",
-            }),
-            w("button", {
               class: "btn danger",
               "data-tip-title": "从原点重新开始",
-              "data-tip": "生成全新 217 块随机山河世界，纯手打可登【全球开荒排位榜】",
+              "data-tip": "生成全新的 217 块随机山河世界并重新选择主公性格（当前存档进度将被覆盖）",
               onClick: () =>
                 A.openModal({
                   type: "confirm",
                   title: "从原点重新开始？",
-                  body: "生成全新的 217 块随机山河世界并重新选择主公性格（纯手打可登【全球开荒排位榜】）。当前进度会被覆盖。",
+                  body: "生成全新的 217 块随机山河世界并重新选择主公性格。当前进度会被覆盖。",
                   okText: "重新开始",
                   danger: !0,
                   onOk: () => A.newGame("fresh"),
                 }),
-              children: "从原点开始",
-            }),
-            w("button", {
-              class: "btn ghost",
-              "data-tip-title": "领取沙盒补给（纯单机无内购福利）",
-              "data-tip": `每次免费领取 ◇${O.demoGems} 星钻（国库与主公体力每日首领同步补满）。\n! 领取后本局存档在云端天梯将自动归入【沙盒展示榜】，不再参与开荒排位榜名次争夺`,
-              onClick: () => claimSandboxSupply(A),
-              children: "领取沙盒补给",
+              children: "从原点重新开始",
             }),
           ],
         }),
@@ -40344,11 +39609,11 @@ ${A.capital ? "首都" : "这块地"}产出 +${SA(i.prod)}${
 }
 function pQ({ cost: A, small: e }) {
   return w("button", {
-    class: `btn gem-topup${e ? " small" : ""}`,
-    "data-tip-title": "领取沙盒补给（纯单机无内购福利）",
-    "data-tip": `勘探一次需 ◇${A}。可免费领取 ◇${O.demoGems} 沙盒补给；注意：领取后本局存档在云端天梯将归入【沙盒展示榜】`,
-    onClick: () => claimSandboxSupply(ie),
-    children: [w(NA, { node: Ae.gem, size: 13 }), " 星钻不够 · 领沙盒补给"],
+    class: `btn${e ? " small" : ""}`,
+    disabled: !0,
+    "data-tip-title": `星钻不足（需 ◇${A}）`,
+    "data-tip": `勘探一次需 ◇${A} 星钻。可通过每日委托与勤政宝箱、国家成就、主公走格子随机奇遇或五年规划达标获取星钻。`,
+    children: [w(NA, { node: Ae.gem, size: 13 }), ` 星钻不足 · ◇${A}`],
   });
 }
 function LQ({ tile: A, label: e = "勘探" }) {
@@ -41297,7 +40562,7 @@ const rL = [
     label: "天梯",
     color: "#ff8a70",
     title: "全球天梯",
-    tip: "全球云端开荒排位榜、沙盒展示榜与 75 产业龙头争夺",
+    tip: "全球云端 GDP 总榜、真人帝国参观与 75 产业龙头争夺",
   },
   {
     id: "settings",
@@ -41305,7 +40570,7 @@ const rL = [
     label: "设置",
     color: "#aab4c3",
     title: "世界与存档",
-    tip: "国名、3D 画质、声音地貌、存档导入导出与沙盒补给",
+    tip: "国名、3D 画质、声音地貌、存档导入导出与重新开局",
   },
 ];
 function vL() {
