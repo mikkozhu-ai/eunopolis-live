@@ -23817,6 +23817,19 @@ class OI {
           this._lastPlacement,
           wp,
         );
+      const isTitleBg = Boolean(
+        this.store &&
+          this.store.modal &&
+          (this.store.modal.type === "title" || this.store.modal.fromTitle),
+      );
+      if (isTitleBg) {
+        const titleDist = this.homeDist * 1.48;
+        !this._wasTitleBg && ((this.dist = titleDist), (this._wasTitleBg = !0));
+        this.goalYaw += e * 0.055;
+        this.goalDist = titleDist;
+      } else {
+        this._wasTitleBg = !1;
+      }
       const t = 1 - Math.pow(0.0015, e);
       (this.target.lerp(this.goalTarget, t),
         (this.dist += (this.goalDist - this.dist) * t),
@@ -24042,12 +24055,14 @@ class OI {
         }
       }
       (this.effects.update(e, this.time), this.post.render());
-      const prevAutoClear = this.renderer.autoClear;
-      ((this.renderer.autoClear = !1),
-        this.renderer.setRenderTarget(null),
-        this.renderer.clearDepth(),
-        this.renderer.render(this.uiScene, this.camera),
-        (this.renderer.autoClear = prevAutoClear));
+      if (!isTitleBg) {
+        const prevAutoClear = this.renderer.autoClear;
+        ((this.renderer.autoClear = !1),
+          this.renderer.setRenderTarget(null),
+          this.renderer.clearDepth(),
+          this.renderer.render(this.uiScene, this.camera),
+          (this.renderer.autoClear = prevAutoClear));
+      }
     });
     ((this.el = e),
       (this.cb = t),
@@ -28627,7 +28642,7 @@ class fp {
           : t && t.quarters >= 2
             ? (this.modal = { type: "offline", report: t })
             : e.lord.pendingEvent && (this.modal = { type: "event" }));
-    } else ((this.state = o9()), (this.metrics = dt(this.state)), (this.modal = { type: "title" }));
+    } else ((this.state = buildUltimateDemo()), (this.metrics = dt(this.state)), (this.modal = { type: "title" }));
     lB(this.state, this.metrics);
   }
   subscribe(e) {
@@ -28643,11 +28658,12 @@ class fp {
       const b = be(this.state);
       for (const sk of this.state.legacySkins) !this.state.lord.skinsOff.includes(sk) && b.skins.add(sk);
     }
+    const onTitle = Boolean(this.modal && this.modal.type === "title");
     ((this.metrics = dt(this.state)),
       lB(this.state, this.metrics),
       (this.state.stats.peakGdp = Math.max(this.state.stats.peakGdp, this.metrics.gdp)),
-      EunopolisLegacy.syncFromState(this.state, this.metrics),
-      (this.saveFailed = !f9(this.state)),
+      !onTitle && EunopolisLegacy.syncFromState(this.state, this.metrics),
+      (this.saveFailed = onTitle ? !1 : !f9(this.state)),
       this.emit());
   }
   act(e, t) {
@@ -28938,6 +28954,14 @@ class fp {
       const leg = EunopolisLegacy.load();
       leg.skins.length && (st.legacySkins = [...leg.skins]);
       leg.codexCards.length && (st.legacyCodex = [...leg.codexCards]);
+      if (ngOpts && Array.isArray(ngOpts.traits) && ngOpts.traits.length) {
+        j4(
+          st,
+          ngOpts.traits,
+          String(ngOpts.lordName ?? "主公").slice(0, 24),
+          String(ngOpts.nationName ?? "经世共和国").slice(0, 32),
+        );
+      }
     }
     ((this.state = st),
       (this.selected = null),
@@ -31227,127 +31251,95 @@ function hp() {
 }
 function Ep() {
   const leg = loadLegacySafe(),
-    canNg = leg.totalClears > 0 || leg.points > 0;
+    canNg = leg.totalClears > 0 || leg.points > 0,
+    hasArchive = canNg || (leg.codexCards && leg.codexCards.length > 0);
   return w("div", {
     class: "title-screen",
     children: w("div", {
       class: "title-card",
       children: [
         w("div", {
-          class: "logo",
+          class: "title-brand",
           children: [
-            w("svg", {
-              viewBox: "0 0 40 46",
-              width: "56",
-              height: "64",
-              "shape-rendering": "crispEdges",
-              children: [
-                w("path", {
-                  d: "M20 1 39 12v22L20 45 1 34V12Z",
-                  fill: "none",
-                  stroke: "#58e1ff",
-                  "stroke-width": "1.5",
-                }),
-                w("path", { d: "M7 15 20 8l13 7-13 7Z", fill: "#dfe6ee" }),
-                w("path", { d: "M7 15v14l13 7V22Z", fill: "#9aa6b5" }),
-                w("path", { d: "M20 22v14l13-7V15Z", fill: "#6d7a8c" }),
-              ],
-            }),
             w("div", {
-              children: [
-                w("h1", { children: [Ds.name, w("em", { children: "1.0 正式版 · 纯单机无内购" })] }),
-                w("p", { children: "从一方原点山河，经略为奇点登顶的现代盛世帝国" }),
-              ],
-            }),
-          ],
-        }),
-        w("ul", {
-          class: "title-points",
-          children: [
-            w("li", {
-              children:
-                "217 块六边形山河疆域（169 块核心本土 + 48 块远洋边疆），按真实地球地貌分布，资源与奇异地脉随开拓揭晓",
-            }),
-            w("li", {
-              children: [
-                "75 个现代与科幻产业（含 ",
-                Ee.filter((A) => A.source === "架空").length,
-                " 个终局架空产业），上下游贴邻形成供需干线，电力与供水支撑工业命脉",
-              ],
-            }),
-            w("li", {
-              children:
-                "8 座满级国家奇观（3 格三角基座）与 24 座市政设施；5 大现代国体、30 张名臣政策卡与五年规划驱动治国博弈",
-            }),
-            w("li", {
-              children:
-                "229 位中外名士驻地历练、双轨突破、满级进阶专属产业；角逐全球云端开荒排位榜与 75 产业龙头",
-            }),
-          ],
-        }),
-        w("div", {
-          class: "actions column",
-          children: [
-            canNg &&
-              w("button", {
-                class: "btn gold big ngp-entry-btn",
-                onClick: () => {
-                  ie._ngPlusMode = !0;
-                  ie.newGame("fresh");
-                },
+              class: "title-emblem",
+              children: w("svg", {
+                viewBox: "0 0 40 46",
+                width: "52",
+                height: "60",
                 children: [
-                  "✦ 文明传承 · 开启新纪元 (NG+) ",
-                  w("small", {
-                    children: `可用国运 ${leg.points} 点 · 已通关 ${leg.totalClears} 朝 · 元勋随行 / 天命国策 / 山河剧本`,
+                  w("path", {
+                    d: "M20 1.5 38.5 12v22L20 44.5 1.5 34V12Z",
+                    fill: "rgba(12, 22, 36, 0.75)",
+                    stroke: "#ffcf4a",
+                    "stroke-width": "1.6",
                   }),
+                  w("path", { d: "M7 15 20 8l13 7-13 7Z", fill: "#fff3cc" }),
+                  w("path", { d: "M7 15v14l13 7V22Z", fill: "#d4a84f" }),
+                  w("path", { d: "M20 22v14l13-7V15Z", fill: "#58e1ff" }),
                 ],
               }),
-            w("button", {
-              class: `btn ${canNg ? "primary" : "gold"} big`,
-              onClick: () => {
-                ie._ngPlusMode = !1;
-                ie.newGame("fresh");
-              },
-              children: ["从原点开荒建国 ", w("small", { children: "1 格首都纯手打起步 · 可登全球开荒排位榜" })],
             }),
-            w("button", {
-              class: "btn big",
-              onClick: () => {
-                ie._ngPlusMode = !1;
-                ie.newGame("showcase");
-              },
-              children: ["进入起步示范国家 ", w("small", { children: "基础产业链与主公刚起步，适合快速上手体验" })],
-            }),
-            w("button", {
-              class: "btn big",
-              onClick: () => {
-                ie._ngPlusMode = !1;
-                ie.newGame("ultimate");
-              },
-              children: [
-                "进入完全体示范帝国 ",
-                w("small", {
-                  children: "217 块满疆域 · 全 75 产业 · Lv.6 首都 · 8 座满级国家奇观 · 红橙满配",
-                }),
-              ],
-            }),
+            w("h1", { class: "title-name", children: Ds.name }),
+            w("p", { class: "title-en", children: "E U N O P O L I S" }),
           ],
         }),
         w("div", {
-          class: "title-legacy-row",
+          class: "title-menu",
           children: [
             w("button", {
-              class: "btn small ghost",
-              onClick: () => ie.openModal({ type: "legacyHall" }),
-              children: `📜 列朝国史馆（${leg.totalClears} 朝 · 图鉴 ${(leg.codexCards || []).length}/${eo.length}）`,
+              class: "tmenu-btn hero",
+              onClick: () => {
+                ie._ngPlusMode = !1;
+                ie.openModal({ type: "lordCreate", fromTitle: !0 });
+              },
+              children: "开始新游戏",
             }),
+            canNg &&
+              w("button", {
+                class: "tmenu-btn legacy",
+                onClick: () => {
+                  ie._ngPlusMode = !0;
+                  ie.openModal({ type: "lordCreate", fromTitle: !0 });
+                },
+                children: ["开启新纪元 · 传承", w("em", { children: `国运 ${leg.points}` })],
+              }),
+            w("div", {
+              class: "tmenu-subrow",
+              children: [
+                w("button", {
+                  class: "tmenu-btn sub",
+                  onClick: () => {
+                    ie._ngPlusMode = !1;
+                    ie.newGame("showcase");
+                  },
+                  children: "起步示范",
+                }),
+                w("button", {
+                  class: "tmenu-btn sub",
+                  onClick: () => {
+                    ie._ngPlusMode = !1;
+                    if (ie.state && ie.state.originMode === "ultimate") {
+                      ie.openModal(null);
+                      ie.resetCameraHome();
+                      ie.refresh();
+                    } else {
+                      ie.newGame("ultimate");
+                    }
+                  },
+                  children: "终极帝国",
+                }),
+              ],
+            }),
+            hasArchive &&
+              w("button", {
+                class: "tmenu-link",
+                onClick: () => ie.openModal({ type: "legacyHall", fromTitle: !0 }),
+                children: `列朝国史馆（${leg.totalClears} 朝）`,
+              }),
           ],
         }),
-        w("p", {
-          class: "fine",
-          children:
-            "1.0 正式版 · 纯单机无内购：游戏内无任何充值付费，星钻通过委托、签到、五年规划与事件获取（沙盒赛道亦提供免费补给）。支持 ×1 / ×4 / ×12 三档推演倍速与离线补算。全球天梯采用「云端真人玩家 + AI 模拟国家」双榜体系（开荒排位榜 / 沙盒展示榜）；当代企业家与品牌采用致敬化名，古代名臣与科学先驱保留历史真名。",
-        }),
+        w("div", { class: "title-ver", children: "v1.0 · 纯单机无内购" }),
       ],
     }),
   });
@@ -31396,7 +31388,7 @@ function xp() {
         ? MASTER_VOWS
         : [],
     [e, t] = gt("主公"),
-    [n, s] = gt(A.state.nationName),
+    [n, s] = gt(A.modal && A.modal.fromTitle ? "经世共和国" : A.state.nationName),
     [f, o] = gt(Eg[0].ids),
     [elders, setElders] = gt([]),
     [boons, setBoons] = gt([]),
@@ -31462,7 +31454,20 @@ function xp() {
     wide: !0,
     title: showNg ? "主公就任 · 新纪元传承建国" : "主公就任",
     sub: "给国家和主公各起个名字，选一套性格就能开始。每条性格都有好处和代价，隐藏性格会在游戏中自动获得。",
-    onClose: () => {},
+    onClose: () => {
+      ie._ngPlusMode = !1;
+      if (A.modal && A.modal.fromTitle && ie.state && ie.state.originMode === "ultimate") {
+        ie.openModal({ type: "title" });
+        return;
+      }
+      try {
+        localStorage.removeItem(DQ);
+      } catch {}
+      ie.state = buildUltimateDemo();
+      ie.metrics = dt(ie.state);
+      ie.resetCameraHome();
+      ie.openModal({ type: "title" });
+    },
     children: [
       w("div", {
         class: "field-row",
@@ -31718,6 +31723,12 @@ function xp() {
                   traits: f,
                   lordName: e.trim() || "主公",
                   nationName: n.trim() || "新元帝国",
+                });
+              } else if ((A.modal && A.modal.fromTitle) || A.state.lord.ready !== !1) {
+                A.newGame("fresh", {
+                  traits: f,
+                  lordName: e.trim() || "主公",
+                  nationName: n.trim() || "经世共和国",
                 });
               } else {
                 A.act((g) => j4(g, f, e.trim() || "主公", n)).ok && A.openModal(null);
@@ -32149,7 +32160,7 @@ function EraMilestoneModal({ data }) {
     ],
   });
 }
-function LegacyHallModal() {
+function LegacyHallModal({ m }) {
   const A = Pe(),
     leg = loadLegacySafe(),
     dyns = [...(leg.dynasties || [])].reverse();
@@ -32158,6 +32169,7 @@ function LegacyHallModal() {
     cls: "legacy-hall-modal",
     title: "📜 列朝国史馆 · 文明传承总览",
     sub: "历代通关王朝的国运点、已收集人物星级上限与主公华服永久跨周目传承",
+    onClose: m && m.fromTitle ? () => A.openModal({ type: "title" }) : void 0,
     children: [
       w("div", {
         class: "kpis",
@@ -32221,13 +32233,18 @@ function LegacyHallModal() {
       w("div", {
         class: "actions end",
         children: [
-          w("button", { class: "btn ghost", onClick: () => A.openModal(null), children: "返回" }),
+          w("button", {
+            class: "btn ghost",
+            onClick: () => A.openModal(m && m.fromTitle ? { type: "title" } : null),
+            children: "返回",
+          }),
           (leg.totalClears > 0 || leg.points > 0 || (leg.codexCards && leg.codexCards.length > 0)) &&
             w("button", {
               class: "btn gold",
               onClick: () => {
                 ie._ngPlusMode = !0;
-                A.newGame("fresh");
+                if (m && m.fromTitle) A.openModal({ type: "lordCreate", fromTitle: !0 });
+                else A.newGame("fresh");
               },
               children: "✦ 开启新纪元传承 (NG+)",
             }),
@@ -39619,7 +39636,8 @@ function ModalHostV1() {
 }
 function fL() {
   const A = Pe(),
-    autoP = isAutoModalPaused(A),
+    isTitle = Boolean(A.modal && (A.modal.type === "title" || A.modal.fromTitle)),
+    autoP = !isTitle && isAutoModalPaused(A),
     effView = A.webglFailed ? "2d" : A.state.settings.view;
   $t(() => {
     if (!autoP || A.held) return;
@@ -39634,31 +39652,33 @@ function fL() {
     return () => clearInterval(id);
   }, [autoP, A.held, A.state]);
   return w("div", {
-    class: `app view-${effView}${A.selected !== null && !A.placement ? " has-sheet" : ""}${A.panel ? " has-panel" : ""}${A.modal ? " has-modal" : ""}${A.held && A.state.lord.ready !== !1 ? ` is-held held-${A.held}` : ""}`,
-    children: [
-      w(oL, {}),
-      w(iL, {}),
-      w(gp, {}),
-      autoP &&
-        !A.held &&
-        w("div", {
-          class: "auto-pause-pill",
-          children: [w(NA, { node: Ae.pause, size: 13 }), " 推演自动暂停中（关闭弹窗自动恢复）"],
-        }),
-      w(vL, {}),
-      w(cL, {}),
-      w(BL, {}),
-      w(FlightHud, {}),
-      w(PL, {}),
-      w(LordCompass, {}),
-      w(HudBlV1, {}),
-      w(aL, {}),
-      w(_p, {}),
-      w(kp, {}),
-      w(wL, {}),
-      w(ModalHostV1, {}),
-      w(sL, {}),
-    ],
+    class: `app view-${effView}${isTitle ? " is-title" : ""}${!isTitle && A.selected !== null && !A.placement ? " has-sheet" : ""}${!isTitle && A.panel ? " has-panel" : ""}${A.modal ? " has-modal" : ""}${!isTitle && A.held && A.state.lord.ready !== !1 ? ` is-held held-${A.held}` : ""}`,
+    children: isTitle
+      ? [w(oL, {}), w(ModalHostV1, {}), w(wL, {}), w(sL, {})]
+      : [
+          w(oL, {}),
+          w(iL, {}),
+          w(gp, {}),
+          autoP &&
+            !A.held &&
+            w("div", {
+              class: "auto-pause-pill",
+              children: [w(NA, { node: Ae.pause, size: 13 }), " 推演自动暂停中（关闭弹窗自动恢复）"],
+            }),
+          w(vL, {}),
+          w(cL, {}),
+          w(BL, {}),
+          w(FlightHud, {}),
+          w(PL, {}),
+          w(LordCompass, {}),
+          w(HudBlV1, {}),
+          w(aL, {}),
+          w(_p, {}),
+          w(kp, {}),
+          w(wL, {}),
+          w(ModalHostV1, {}),
+          w(sL, {}),
+        ],
   });
 }
 function oL() {
@@ -40903,6 +40923,15 @@ small {
   right: 0;
   bottom: 0;
   left: 0;
+}
+.map-host {
+  transition:
+    filter 0.35s ease,
+    transform 0.35s ease;
+}
+.app.is-title .map-host {
+  filter: blur(3.8px) saturate(1.16) brightness(0.93);
+  transform: scale(1.025);
 }
 .map-layer canvas {
   display: block;
@@ -42482,62 +42511,158 @@ small {
 }
 .title-screen {
   position: fixed;
-  top: 0;
-  right: 0;
-  bottom: 0;
-  left: 0;
+  inset: 0;
   display: grid;
   place-items: center;
-  background: radial-gradient(80% 70% at 50% 40%, #1928388c, #060a0fe0);
-  -webkit-backdrop-filter: blur(2px);
-  backdrop-filter: blur(2px);
-  z-index: 50;
+  background: radial-gradient(
+    65% 60% at 50% 46%,
+    rgba(10, 18, 30, 0.14) 0%,
+    rgba(6, 11, 18, 0.56) 100%
+  );
+  z-index: 60;
 }
 .title-card {
-  width: min(460px, calc(100vw - 32px));
-  padding: 26px 24px 20px;
-  background: #0e1620eb;
-  border: 1px solid var(--line2);
-  border-top: 2px solid var(--cyan);
-  border-radius: 4px;
-  box-shadow: 0 30px 80px #0009;
-}
-.logo {
-  display: flex;
-  align-items: center;
-  gap: 14px;
-}
-.logo h1 {
-  margin: 0;
-  font-size: 30px;
-  letter-spacing: 0.08em;
-}
-.logo p {
-  margin: 2px 0 0;
-  color: var(--muted);
-  font-size: 13px;
-}
-.title-points {
-  margin: 18px 0 6px;
+  width: min(344px, calc(100vw - 36px));
+  padding: 34px 28px 20px;
   display: flex;
   flex-direction: column;
-  gap: 7px;
-  font-size: 13px;
-  color: #c0ccda;
+  align-items: center;
+  text-align: center;
+  background: linear-gradient(180deg, rgba(16, 26, 40, 0.78) 0%, rgba(9, 15, 24, 0.86) 100%);
+  -webkit-backdrop-filter: blur(18px) saturate(1.2);
+  backdrop-filter: blur(18px) saturate(1.2);
+  border: 1px solid rgba(160, 205, 245, 0.22);
+  border-top: 1px solid rgba(255, 207, 74, 0.55);
+  border-radius: 20px;
+  box-shadow:
+    0 28px 72px rgba(0, 0, 0, 0.65),
+    0 0 0 1px rgba(255, 255, 255, 0.04) inset,
+    0 1px 24px rgba(255, 207, 74, 0.08) inset;
 }
-.title-points li {
-  padding-left: 14px;
-  position: relative;
-  line-height: 1.5;
+.title-brand {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-bottom: 26px;
 }
-.title-points li:before {
-  content: "";
-  position: absolute;
-  left: 0;
-  top: 7px;
-  width: 6px;
-  height: 6px;
-  background: var(--cyan);
+.title-emblem {
+  margin-bottom: 12px;
+  filter: drop-shadow(0 6px 18px rgba(88, 225, 255, 0.22))
+    drop-shadow(0 2px 8px rgba(255, 207, 74, 0.25));
+}
+.title-name {
+  margin: 0;
+  font-size: 34px;
+  font-weight: 800;
+  letter-spacing: 0.18em;
+  padding-left: 0.18em;
+  background: linear-gradient(180deg, #ffffff 15%, #ffe6a6 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  text-shadow: 0 4px 24px rgba(255, 207, 74, 0.18);
+}
+.title-en {
+  margin: 5px 0 0;
+  font: 600 10.5px/1 var(--mono);
+  letter-spacing: 0.32em;
+  padding-left: 0.32em;
+  color: rgba(180, 206, 232, 0.68);
+}
+.title-menu {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.tmenu-btn {
+  width: 100%;
+  height: 46px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 0 16px;
+  border-radius: 12px;
+  font-size: 15px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  cursor: pointer;
+  transition:
+    transform 0.14s ease,
+    filter 0.14s ease,
+    border-color 0.14s ease,
+    background 0.14s ease;
+}
+.tmenu-btn:hover {
+  transform: translateY(-1px);
+  filter: brightness(1.07);
+}
+.tmenu-btn:active {
+  transform: translateY(0);
+}
+.tmenu-btn.hero {
+  height: 50px;
+  font-size: 16px;
+  color: #201402;
+  background: linear-gradient(180deg, #ffe596 0%, #f4b738 100%);
+  border: 1px solid #fff0be;
+  box-shadow:
+    0 8px 24px rgba(244, 183, 56, 0.32),
+    0 1px 0 rgba(255, 255, 255, 0.55) inset;
+}
+.tmenu-btn.legacy {
+  height: 44px;
+  font-size: 14px;
+  color: #e8f8ff;
+  background: linear-gradient(180deg, rgba(26, 78, 108, 0.78), rgba(14, 44, 68, 0.86));
+  border: 1px solid rgba(88, 225, 255, 0.48);
+  box-shadow: 0 6px 18px rgba(18, 90, 130, 0.25);
+}
+.tmenu-btn.legacy em {
+  font-style: normal;
+  font: 700 10.5px/1 var(--mono);
+  padding: 3px 7px;
+  border-radius: 99px;
+  background: rgba(88, 225, 255, 0.2);
+  color: #9beeff;
+}
+.tmenu-subrow {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+.tmenu-btn.sub {
+  height: 40px;
+  font-size: 13.5px;
+  font-weight: 600;
+  color: #dce8f5;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(165, 200, 235, 0.2);
+}
+.tmenu-btn.sub:hover {
+  background: rgba(255, 255, 255, 0.11);
+  border-color: rgba(165, 210, 250, 0.42);
+}
+.tmenu-link {
+  margin-top: 2px;
+  padding: 5px 10px;
+  background: transparent;
+  border: none;
+  color: #ffe08a;
+  font-size: 12px;
+  opacity: 0.85;
+  cursor: pointer;
+}
+.tmenu-link:hover {
+  opacity: 1;
+  text-decoration: underline;
+}
+.title-ver {
+  margin-top: 18px;
+  font: 500 11px/1 var(--mono);
+  color: rgba(160, 182, 206, 0.46);
+  letter-spacing: 0.04em;
 }
 .toasts {
   position: fixed;
