@@ -27904,10 +27904,179 @@ function NI(A, e, t) {
     Math.max(0.2, 1 + (v.mods.cardExp || 0) + c)
   );
 }
+function makeGdpSnap(A, m) {
+  const mm = m || dt(A);
+  let crowdCnt = 0,
+    stoppedCnt = 0,
+    finCnt = 0,
+    buildCnt = 0,
+    builtCnt = 0,
+    indLvSum = 0,
+    cardScore = 0;
+  const byInd = {};
+  for (const tl of A.tiles || []) {
+    if (!tl.unlocked) continue;
+    if (tl.card && A.cards && A.cards[tl.card]) {
+      const co = A.cards[tl.card];
+      cardScore += (co.level || 1) + (co.stars || 0) * 10 + tl.id * 0.01;
+    }
+    if (tl.build) {
+      buildCnt++;
+      continue;
+    }
+    if (tl.industry) {
+      builtCnt++;
+      const tm = mm.tiles && mm.tiles[tl.id];
+      indLvSum += (tm && tm.effLevel) || tl.level || 1;
+      byInd[tl.industry] = (byInd[tl.industry] || 0) + 1;
+      if (tm && !tm.running) stoppedCnt++;
+      if (tl.financeLeft > 0) finCnt++;
+    }
+  }
+  for (const cnt of Object.values(byInd)) if (cnt > O.crowdFree) crowdCnt += cnt - O.crowdFree;
+  let buffOut = 0;
+  for (const b of A.buffs || []) if (b.stat === "output") buffOut += b.value || 0;
+  return {
+    v: 2,
+    q: A.quarter || 0,
+    gdp: mm.gdp,
+    sDiv: Number((mm.surplusDiv || 0).toFixed(4)),
+    powCut: Number(((mm.power && mm.power.cut) || 0).toFixed(4)),
+    watCut: Number(((mm.water && mm.water.cut) || 0).toFixed(4)),
+    lordTile: A.lord ? A.lord.tile : 0,
+    buffCnt: Array.isArray(A.buffs) ? A.buffs.length : 0,
+    buffOut: Number(buffOut.toFixed(4)),
+    stoppedCnt,
+    finCnt,
+    buildCnt,
+    builtCnt,
+    indLvSum,
+    crowdCnt,
+    cardScore: Number(cardScore.toFixed(2)),
+    rdGear: mm.rdGear || 0,
+    welGear: mm.welGear || 0,
+    aust: mm.austerity ? 1 : 0,
+    regime: A.regime || "balanced",
+    consTax: Array.isArray(A.taxes) && A.taxes.includes("consumer") ? 1 : 0,
+  };
+}
+function explainGdpDelta(A, m) {
+  const mm = m || dt(A),
+    cur = makeGdpSnap(A, mm),
+    H = A.history || [],
+    EPS = 5e-4,
+    last = H.length ? H[H.length - 1] : null;
+  let base = cur,
+    phase = "较上季";
+  if (last && last.gdp > 0 && Math.abs(cur.gdp - last.gdp) / last.gdp >= EPS) {
+    base = last;
+    phase = "本季实时";
+  } else if (last && last.preSnap && last.preSnap.gdp > 0) {
+    base = last.preSnap;
+    phase = "上季结算";
+  } else if (H.length >= 2 && last && last.v === 2 && H[H.length - 2].gdp > 0) {
+    base = H[H.length - 2];
+    phase = "较上季";
+  }
+  const rawPct = base.gdp > 0 ? cur.gdp / base.gdp - 1 : 0,
+    diff = cur.gdp - base.gdp,
+    dir = rawPct >= EPS ? "up" : rawPct <= -EPS ? "down" : "flat",
+    pct = dir === "flat" ? 0 : rawPct,
+    reasons = [];
+  if (dir !== "flat" && base.v === 2) {
+    if (cur.lordTile !== base.lordTile) {
+      const t0 = A.tiles && A.tiles[base.lordTile],
+        t1 = A.tiles && A.tiles[cur.lordTile];
+      reasons.push(`主公移驻：停留光环从「${t0 ? Ws(t0) : "原驻地"}」移至「${t1 ? Ws(t1) : "新驻地"}」`);
+    }
+    if (Math.abs(cur.sDiv - base.sDiv) >= 0.01)
+      reasons.push(
+        cur.sDiv < base.sDiv
+          ? "满储分红回落：国库低于满储线，超额消费分红自然退坡"
+          : "满储分红提升：超额国库转化为全民消费分红",
+      );
+    if (Math.abs(cur.powCut - base.powCut) >= 0.002)
+      reasons.push(
+        cur.powCut > base.powCut
+          ? `电力负荷超载：全网减产扩大至 −${SA(cur.powCut)}`
+          : "电力供应改善：全网减产幅度收窄",
+      );
+    if (Math.abs(cur.watCut - base.watCut) >= 0.002)
+      reasons.push(
+        cur.watCut > base.watCut
+          ? `供水负荷超载：全网减产扩大至 −${SA(cur.watCut)}`
+          : "供水供应改善：全网减产幅度收窄",
+      );
+    if (cur.stoppedCnt !== base.stoppedCnt)
+      reasons.push(
+        cur.stoppedCnt > base.stoppedCnt
+          ? `原料缺口停产：新增 ${cur.stoppedCnt - base.stoppedCnt} 处产业待料停产`
+          : "产业链复产：缺料停产产业恢复运转",
+      );
+    if (cur.builtCnt !== base.builtCnt || cur.indLvSum !== base.indLvSum)
+      reasons.push(
+        cur.indLvSum > base.indLvSum || cur.builtCnt > base.builtCnt
+          ? "扩建与升级：新产业完工投产或等级提升"
+          : "地块施工/调整：拆除、搬迁或改建地块",
+      );
+    if (cur.crowdCnt !== base.crowdCnt)
+      reasons.push(
+        cur.crowdCnt > base.crowdCnt
+          ? `同业扎堆稀释：同名产业超 ${O.crowdFree} 处触发扎堆折损`
+          : "同业扎堆减轻：产业布局结构更均衡",
+      );
+    if (Math.abs(cur.buffOut - base.buffOut) >= 0.002 || cur.buffCnt !== base.buffCnt)
+      reasons.push(
+        cur.buffOut < base.buffOut || cur.buffCnt < base.buffCnt
+          ? "限时加成结束：督办或增产政令到期"
+          : "政令/督办生效：限时产出加成激活",
+      );
+    if (cur.finCnt !== base.finCnt)
+      reasons.push(
+        cur.finCnt > base.finCnt
+          ? `融资分期运行：新增融资地块按 ${SA(O.financeUtil)} 产能运转`
+          : "融资分期还清：恢复 100% 满额产能",
+      );
+    if (Math.abs(cur.cardScore - base.cardScore) >= 0.005)
+      reasons.push(pct >= 0 ? "名士成长/调配：在岗人物升级突破或优化派驻" : "名士岗位变动：调离或更换在岗人物");
+    if (
+      cur.aust !== base.aust ||
+      cur.rdGear !== base.rdGear ||
+      cur.welGear !== base.welGear ||
+      cur.regime !== base.regime ||
+      cur.consTax !== base.consTax
+    )
+      reasons.push(
+        cur.aust > base.aust
+          ? "财政紧缩触发：负债达 C 预警，三轨预算加成暂停"
+          : "施政乘区调整：科研/民生预算、税制或体制变更",
+      );
+  }
+  if (dir !== "flat" && !reasons.length)
+    reasons.push(pct >= 0 ? "供需路网升级、市政奇观联动或宜居内需增长" : "路网、特区或综合内需乘区微调");
+  const drags = [];
+  cur.powCut > 0.001 && drags.push(`电力不足减产 −${SA(cur.powCut)}`);
+  cur.watCut > 0.001 && drags.push(`供水不足减产 −${SA(cur.watCut)}`);
+  cur.stoppedCnt > 0 && drags.push(`${cur.stoppedCnt} 处产业缺料停产`);
+  cur.crowdCnt > 0 && !(be(A).mods.noCrowdAll > 0) && drags.push(`${cur.crowdCnt} 处超额同业扎堆折损`);
+  cur.finCnt > 0 && drags.push(`${cur.finCnt} 处融资期按 ${SA(O.financeUtil)} 产能运行`);
+  cur.sDiv > 0.03 && A.treasury <= mm.reserveCap && drags.push("国库低于满储线，满储消费分红回落中");
+  cur.aust && drags.push("C 级债务紧缩：三轨预算加成已暂停");
+  const lines = [
+    `当季产出：${fe(mm.gdp)} 亿/季 · 历史峰值 ${fe(A.stats && A.stats.peakGdp ? A.stats.peakGdp : mm.gdp)} 亿`,
+    dir === "flat"
+      ? "趋势：较上季持平（0.0%）"
+      : `${phase}：${diff >= 0 ? "+" : "−"}${fe(Math.abs(diff))} 亿（${pct >= 0 ? "+" : "−"}${SA(Math.abs(pct), 1)}）`,
+  ];
+  reasons.length && lines.push(`变动原因：\n${reasons.map((x) => `• ${x}`).join("\n")}`);
+  drags.length && lines.push(`当前折损/回落项：\n${drags.map((x) => `• ${x}`).join("\n")}`);
+  return { pct, diff, dir, phase, reasons, drags, tip: lines.join("\n") };
+}
 function N8(A, e = Date.now()) {
   var o, r, i, v;
   syncActCharges(A, e);
   const t = dt(A, e),
+    preSnap = makeGdpSnap(A, t),
     n = { completed: [], levelUps: [], stopped: [], resumed: [], hidden: [], net: t.net, gdp: t.gdp },
     s = be(A);
   A.treasury = Math.max(-t.debtCap * 1.05, A.treasury + t.net);
@@ -27923,7 +28092,10 @@ function N8(A, e = Date.now()) {
         (A._lastDivLogQ == null || A.quarter - A._lastDivLogQ >= 4) &&
         ((A._lastDivLogQ = A.quarter),
         pe(A, "超额国库盈余正按季缓释注入国民消费分红基金（内需与宜居提升）。", "good")));
-  } else A.surplusDiv = Math.max(0, (A.surplusDiv ?? 0) * 0.75 - 0.04);
+  } else {
+    const nextDiv = (A.surplusDiv ?? 0) * 0.45 - 0.12;
+    A.surplusDiv = nextDiv > 0.03 ? nextDiv : 0;
+  }
   A.settings.autoUpgrade && (n.auto = s4(A, t));
   for (const c of A.tiles) {
     if (c.build) {
@@ -27989,7 +28161,8 @@ function N8(A, e = Date.now()) {
       t.net > 0 && yt(A, "pol", 15),
       t.livability >= 25 && yt(A, "cha", Math.round(15 + Math.min(20, (t.livability - 25) * 0.6))));
   }
-  const f = dt(A, e);
+  Gi(A, e);
+  let f = dt(A, e);
   if (A.quarter % 4 === 0) {
     const indTotals = {};
     for (const tl of A.tiles) {
@@ -28028,10 +28201,11 @@ function N8(A, e = Date.now()) {
           until: e + 4 * no(A),
         }));
   }
+  n.hidden = X4(A, f, e);
+  if (n.hidden.length || (n.resumed.length && (s.mods.recovery || 0) > 0)) f = dt(A, e);
+  const postSnap = makeGdpSnap(A, f);
   return (
-    (n.hidden = X4(A, f, e)),
-    Gi(A, e),
-    A.history.push({ q: A.quarter, gdp: f.gdp, treasury: A.treasury }),
+    A.history.push({ ...postSnap, treasury: A.treasury, preSnap }),
     A.history.length > 160 && A.history.splice(0, A.history.length - 160),
     (A.stats.peakGdp = Math.max(A.stats.peakGdp, f.gdp)),
     (n.gdp = f.gdp),
@@ -29926,13 +30100,24 @@ class fp {
     if (e) {
       ((this.state = e), e.lord.ready === !1 && (e.lastTick = Date.now()));
       const t = e.lord.ready === !1 ? null : s9(e);
-      ((this.metrics = dt(e)),
-        e.lord.ready === !1
-          ? (this.modal = { type: "lordCreate" })
-          : t && t.quarters >= 2
-            ? (this.modal = { type: "offline", report: t })
-            : e.lord.pendingEvent && (this.modal = { type: "event" }));
-    } else ((this.state = buildUltimateDemo()), (this.metrics = dt(this.state)), (this.modal = { type: "title" }));
+      this.metrics = dt(e);
+      if (e.lord.ready !== !1) {
+        const sn = makeGdpSnap(e, this.metrics);
+        if (!e.history.length) e.history.push({ ...sn, treasury: e.treasury, preSnap: sn });
+        else if (!e.history[e.history.length - 1].v) e.history[e.history.length - 1] = { ...sn, treasury: e.treasury, preSnap: sn };
+      }
+      e.lord.ready === !1
+        ? (this.modal = { type: "lordCreate" })
+        : t && t.quarters >= 2
+          ? (this.modal = { type: "offline", report: t })
+          : e.lord.pendingEvent && (this.modal = { type: "event" });
+    } else {
+      this.state = buildUltimateDemo();
+      this.metrics = dt(this.state);
+      const sn = makeGdpSnap(this.state, this.metrics);
+      this.state.history = [{ ...sn, treasury: this.state.treasury, preSnap: sn }];
+      this.modal = { type: "title" };
+    }
     lB(this.state, this.metrics);
   }
   subscribe(e) {
@@ -29955,8 +30140,12 @@ class fp {
       Ht("complete");
       this.modal = { type: "noviceUnlock", data: nu };
     }
-    ((this.metrics = dt(this.state)),
-      lB(this.state, this.metrics),
+    this.metrics = dt(this.state);
+    if (!this.state.history.length && this.state.lord.ready !== !1) {
+      const sn = makeGdpSnap(this.state, this.metrics);
+      this.state.history.push({ ...sn, treasury: this.state.treasury, preSnap: sn });
+    }
+    (lB(this.state, this.metrics),
       (this.state.stats.peakGdp = Math.max(this.state.stats.peakGdp, this.metrics.gdp)),
       !onTitle && EunopolisLegacy.syncFromState(this.state, this.metrics),
       (this.saveFailed = onTitle ? !1 : !f9(this.state)),
@@ -36402,15 +36591,19 @@ function Xp() {
         : `${(t.surplusDiv ?? 0) > 0.05 ? `✓ 国库满储分红：内需 +${SA((t.surplusDiv ?? 0) * sRate)} · 宜居 +${Math.round((t.surplusDiv ?? 0) * 5)}\n` : ""}• 储备上限：${fe(t.reserveCap)} 亿（1.5× 软缓冲上限 ${fe(softCap)} 亿）\n• 超额储备每季按 25% 缓释转全民消费分红（分红系数 ${SA(sRate)}）\n• 紧急建设可举债至 −${fe(t.debtCap)} 亿`,
     fbTipTitle = e.quarter <= 40 ? `开国扶持期（第 ${e.quarter}/40 季）` : `开国扶持退坡（剩 ${88 - e.quarter} 季）`,
     fbTipBody = `第 1–40 季满额生效，第 41–88 季平滑退坡（当前系数 ${Math.round(ff * 100)}%）：\n• 税收扶持 +${Math.round(100 * ff)}%\n• 设施维护减免 −${Math.round(45 * ff)}%\n• 公共服务减免 −${Math.round(50 * ff)}%\n• 行政治理减免 −${Math.round(60 * ff)}%${jo(e) > 0 ? `\n• 新行业首次建造半价剩余 ${jo(e)} 次` : ""}`;
+  const gdpDiag =
+    typeof explainGdpDelta == "function"
+      ? explainGdpDelta(e, t)
+      : { tip: `当季总产出 ${fe(t.gdp)} 亿 · 历史峰值 ${fe(e.stats.peakGdp)} 亿（${Ng(e.quarter)}）` };
   return w(he, {
     children: [
       w("div", {
         class: "econ-hero",
         "data-tip-touch": !0,
-        "data-tip-title": "全国季度 GDP",
-        "data-tip": `当季总产出 ${fe(t.gdp)} 亿 · 历史峰值 ${fe(e.stats.peakGdp)} 亿（${Ng(e.quarter)}）`,
+        "data-tip-title": "全国季度 GDP · 趋势诊断",
+        "data-tip": gdpDiag.tip,
         children: [
-          w("span", { children: "GDP / 季" }),
+          w("span", { children: ["GDP / 季 ", _p6bQTip("全国季度 GDP · 趋势诊断", gdpDiag.tip)] }),
           w("strong", { children: [fe(t.gdp), w("span", { class: "eh-unit", children: "亿" })] }),
           w("em", { children: ["峰值 ", fe(e.stats.peakGdp), " · ", Ng(e.quarter)] }),
         ],
@@ -42243,8 +42436,12 @@ function iL() {
   const A = Pe(),
     e = A.state,
     t = A.metrics,
-    n = e.history.length > 1 ? e.history[e.history.length - 2].gdp : t.gdp,
-    s = n > 0 ? t.gdp / n - 1 : 0,
+    gdpDiag =
+      typeof explainGdpDelta == "function"
+        ? explainGdpDelta(e, t)
+        : { pct: 0, dir: "flat", tip: `当季产出：${fe(t.gdp)} 亿/季` },
+    s = gdpDiag.pct,
+    sDir = gdpDiag.dir,
     f = A.ladder,
     cardsOpen = isFeatOpenSafe(e, "cards"),
     rankOpen = isFeatOpenSafe(e, "rank");
@@ -42262,7 +42459,8 @@ function iL() {
         children: [
           w("button", {
             class: "stat gdp",
-            title: "GDP（每季）",
+            "data-tip-title": "全国季度 GDP · 趋势诊断",
+            "data-tip": gdpDiag.tip,
             onClick: () => A.openPanel("economy"),
             children: [
               w(
@@ -42277,15 +42475,19 @@ function iL() {
                 },
                 A.pulse,
               ),
-              w("em", { class: s >= 0 ? "up" : "down", children: [s >= 0 ? "▲" : "▼", SA(Math.abs(s), 1)] }),
+              w("em", {
+                class: sDir,
+                children: sDir === "flat" ? "0.0%" : [sDir === "up" ? "▲" : "▼", SA(Math.abs(s), 1)],
+              }),
             ],
           }),
           w("button", {
             class: `stat${t.debt > 0 ? " in-debt" : ""}`,
-            title:
+            "data-tip-title": t.debt > 0 ? `主权国债 · 信用 ${t.creditRating}` : `国库储备 · 信用 ${t.creditRating}`,
+            "data-tip":
               t.debt > 0
-                ? `主权国债 −${fe(t.debt)} / −${fe(t.debtCap)} 亿 · 信用 ${t.creditRating} · 季息 ${fe(t.debtInterest)} 亿`
-                : `国库储备 ${fe(e.treasury)} / ${fe(t.reserveCap)} 亿 · 信用 ${t.creditRating}（满储溢额转全民分红）`,
+                ? `当前负债 −${fe(t.debt)} / 上限 −${fe(t.debtCap)} 亿\n季度利息：${fe(t.debtInterest)} 亿（每季净结余 ${t.net >= 0 ? "+" : ""}${fe(t.net)} 亿）`
+                : `当前储备 ${fe(e.treasury)} / 满储线 ${fe(t.reserveCap)} 亿\n每季净结余：${t.net >= 0 ? "+" : ""}${fe(t.net)} 亿（超额储备转全民消费分红）`,
             onClick: () => A.openPanel("economy"),
             children: [
               w("b", {
@@ -45667,6 +45869,9 @@ small {
 }
 .stat em.down {
   color: var(--red);
+}
+.stat em.flat {
+  color: var(--muted);
 }
 .nav button {
   border-radius: var(--radius-s);
