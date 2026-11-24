@@ -36542,18 +36542,8 @@ const jp = (A) => {
     ? `${Math.floor(e / 3600)} 小时 ${Math.floor((e % 3600) / 60)} 分`
     : `${Math.floor(e / 60)}:${String(e % 60).padStart(2, "0")}`;
 };
-function _p6bQTip(title, tip, preventDef) {
-  return w("span", {
-    class: "q-tip",
-    "data-tip-touch": !0,
-    "data-tip-title": title,
-    "data-tip": tip,
-    onClick: (ev) => {
-      if (preventDef) ev.preventDefault();
-      ev.stopPropagation();
-    },
-    children: "?",
-  });
+function _p6bQTip() {
+  return null;
 }
 function Xp() {
   const A = Pe(),
@@ -36595,6 +36585,11 @@ function Xp() {
     typeof explainGdpDelta == "function"
       ? explainGdpDelta(e, t)
       : { tip: `当季总产出 ${fe(t.gdp)} 亿 · 历史峰值 ${fe(e.stats.peakGdp)} 亿（${Ng(e.quarter)}）` };
+  const persTips = {
+    output: "产值型：主力拉升全国季度 GDP",
+    tax: "税源型：提供更高税率与稳定现金流",
+    support: "配套型：为上下游与全国提供关键乘区支撑",
+  };
   return w(he, {
     children: [
       w("div", {
@@ -36603,7 +36598,7 @@ function Xp() {
         "data-tip-title": "全国季度 GDP · 趋势诊断",
         "data-tip": gdpDiag.tip,
         children: [
-          w("span", { children: ["GDP / 季 ", _p6bQTip("全国季度 GDP · 趋势诊断", gdpDiag.tip)] }),
+          w("span", { children: "GDP / 季" }),
           w("strong", { children: [fe(t.gdp), w("span", { class: "eh-unit", children: "亿" })] }),
           w("em", { children: ["峰值 ", fe(e.stats.peakGdp), " · ", Ng(e.quarter)] }),
         ],
@@ -36624,11 +36619,7 @@ function Xp() {
                   class: "fb-hd",
                   children: [
                     w("b", {
-                      children: [
-                        e.quarter <= 40 ? `🌱 开国扶持 ${e.quarter}/40季` : `🌿 扶持退坡 ${Math.round(ff * 100)}%`,
-                        " ",
-                        _p6bQTip(fbTipTitle, fbTipBody),
-                      ],
+                      children: e.quarter <= 40 ? `🌱 开国扶持 ${e.quarter}/40季` : `🌿 扶持退坡 ${Math.round(ff * 100)}%`,
                     }),
                     jo(e) > 0 && w("em", { children: `首建半价 ×${jo(e)}` }),
                   ],
@@ -36648,54 +36639,44 @@ function Xp() {
             class: "ledger",
             children: [
               w("li", {
+                "data-tip-touch": !0,
+                "data-tip-title": "季度税收收入",
+                "data-tip": `综合平均税率 ${SA(t.taxRate, 1)}\n现行税制：${taxNames}`,
                 children: [
-                  w("span", {
-                    class: "ld-lbl",
-                    children: [
-                      `💰 税收（${SA(t.taxRate, 1)}）`,
-                      _p6bQTip("季度税收收入", `综合平均税率 ${SA(t.taxRate, 1)}\n现行税制：${taxNames}`),
-                    ],
-                  }),
+                  w("span", { class: "ld-lbl", children: `💰 税收（${SA(t.taxRate, 1)}）` }),
                   w("b", { class: "up", children: ["+", fe(t.revenue)] }),
                 ],
               }),
               w("li", {
+                "data-tip-touch": !0,
+                "data-tip-title": "设施折旧维护",
+                "data-tip": "全国已建产业、市政设施与奇观每季固定运维支出",
                 children: [
-                  w("span", {
-                    class: "ld-lbl",
-                    children: [
-                      "🔧 设施维护",
-                      _p6bQTip("设施折旧维护", "全国已建产业、市政设施与奇观每季固定运维支出"),
-                    ],
-                  }),
+                  w("span", { class: "ld-lbl", children: "🔧 设施维护" }),
                   w("b", { class: "down", children: ["−", fe(t.maintenance)] }),
                 ],
               }),
               w("li", {
+                "data-tip-touch": !0,
+                "data-tip-title": "国民公共服务",
+                "data-tip": "全国教育、医疗社保与基础市政服务开支，随人口规模增长",
                 children: [
-                  w("span", {
-                    class: "ld-lbl",
-                    children: [
-                      "🏥 公共服务",
-                      _p6bQTip("国民公共服务", "全国教育、医疗社保与基础市政服务开支，随人口规模增长"),
-                    ],
-                  }),
+                  w("span", { class: "ld-lbl", children: "🏥 公共服务" }),
                   w("b", { class: "down", children: ["−", fe(t.socialCost ?? 0)] }),
                 ],
               }),
               w("li", {
+                "data-tip-touch": !0,
+                "data-tip-title": "国土行政治理",
+                "data-tip": `已开拓 ${t.unlocked} 块国土的基层行政运转开支`,
                 children: [
-                  w("span", {
-                    class: "ld-lbl",
-                    children: [
-                      `🏛️ 行政治理（${t.unlocked}格）`,
-                      _p6bQTip("国土行政治理", `已开拓 ${t.unlocked} 块国土的基层行政运转开支`),
-                    ],
-                  }),
+                  w("span", { class: "ld-lbl", children: `🏛️ 行政治理（${t.unlocked}格）` }),
                   w("b", { class: "down", children: ["−", fe(t.adminCost ?? 0)] }),
                 ],
               }),
               w("li", {
+                "data-tip-title": "三轨专项预算",
+                "data-tip": "科研、基建、民生三轨预算投入，点击「调拨 →」前往施政面板调整档位",
                 children: [
                   w("span", {
                     class: "ld-lbl",
@@ -36707,7 +36688,6 @@ function Xp() {
                         onClick: () => A.openPanel("policy"),
                         children: "调拨 →",
                       }),
-                      _p6bQTip("三轨专项预算", "科研、基建、民生三轨预算投入，点击「调拨 →」前往施政面板调整档位"),
                     ],
                   }),
                   w("b", {
@@ -36718,14 +36698,11 @@ function Xp() {
               }),
               (t.debtInterest ?? 0) > 0 &&
                 w("li", {
+                  "data-tip-touch": !0,
+                  "data-tip-title": "主权国债季度利息",
+                  "data-tip": `当前季利率 ${SA(t.debtRate ?? 0.016, 1)}，提升信用评级、金融业与首都政治可降息`,
                   children: [
-                    w("span", {
-                      class: "ld-lbl",
-                      children: [
-                        `📉 国债利息（${SA(t.debtRate ?? 0.016, 1)}）`,
-                        _p6bQTip("主权国债季度利息", `当前季利率 ${SA(t.debtRate ?? 0.016, 1)}，提升信用评级、金融业与首都政治可降息`),
-                      ],
-                    }),
+                    w("span", { class: "ld-lbl", children: `📉 国债利息（${SA(t.debtRate ?? 0.016, 1)}）` }),
                     w("b", { class: "down", children: ["−", fe(t.debtInterest)] }),
                   ],
                 }),
@@ -36761,7 +36738,6 @@ function Xp() {
                           class: "cr-tag cr-aaa",
                           children: `分红 +${SA((t.surplusDiv ?? 0) * sRate)}`,
                         }),
-                      _p6bQTip(fmTipTitle, fmTipBody),
                     ],
                   }),
                   w("b", {
@@ -36789,16 +36765,7 @@ function Xp() {
               children: w("div", {
                 class: "drc-hd",
                 children: [
-                  w("b", {
-                    children: [
-                      "🛡️ 债务重整保护",
-                      " ",
-                      _p6bQTip(
-                        "主权债务重整保护期",
-                        `保护期剩余 ${e.debtRestructureUntil - e.quarter} 季：\n• 国债免收季度利息\n• 暂停新增跨零透支与融资建设\n• 建造与开地费 +15%，全国宜居 −10`,
-                      ),
-                    ],
-                  }),
+                  w("b", { children: "🛡️ 债务重整保护" }),
                   w("em", { children: `免息剩 ${e.debtRestructureUntil - e.quarter} 季` }),
                 ],
               }),
@@ -36813,16 +36780,7 @@ function Xp() {
               children: w("div", {
                 class: "drc-hd",
                 children: [
-                  w("b", {
-                    children: [
-                      "⚖️ 债务重组",
-                      " ",
-                      _p6bQTip(
-                        "主权债务重组预案",
-                        `当场核销 50% 国债（减免约 ${fe(forgivenPv)} 亿 → 剩 −${fe(afterDebtPv)} 亿），享 12 季免息保护。\n• 需耗尽主公当前体力（⚡${e.lord.stamina}，至少 2 点）\n• 未来 12 季禁透支/造价+15%/宜居−10（冷却 48 季）${!restChk.ok && restChk.reason ? `\n! ${restChk.reason}` : ""}`,
-                      ),
-                    ],
-                  }),
+                  w("b", { children: "⚖️ 债务重组" }),
                   w("em", { children: restChk.ok ? `减免 ${fe(forgivenPv)}亿` : "未触发" }),
                   w("button", {
                     class: `btn tiny ${restChk.ok ? "gold" : ""}`,
@@ -36890,7 +36848,6 @@ function Xp() {
                       w(NA, { node: v, size: 14, color: c }),
                       " ",
                       r,
-                      _p6bQTip(uTipTitle, uTipBody),
                       w("em", {
                         class: `uc-pill${i.cut > 0 ? " warn" : " ok"}`,
                         children: i.cut > 0 ? `−${SA(i.cut)}` : `+${i.supply - i.demand}`,
@@ -36922,19 +36879,14 @@ function Xp() {
               children: [w("span", { children: "👥 全国人口" }), w("b", { children: RC(t.population) })],
             }),
             w("li", {
+              "data-tip-touch": !0,
+              "data-tip-title": "食品供给乘区",
+              "data-tip":
+                t.foodLv > 0
+                  ? `食品产业有效等级 Lv.${t.foodLv}：基础人口 +${fe(t.foodBasePop, 0)} 万人 · 全国人口乘区 +${SA(t.foodPopMult)}`
+                  : "尚未建成食品类产业；建造后可大幅提升基础人口与内需乘区",
               children: [
-                w("span", {
-                  class: "ld-lbl",
-                  children: [
-                    `🌾 食品供给${t.foodLv > 0 ? ` Lv.${t.foodLv}` : ""}`,
-                    _p6bQTip(
-                      "食品供给乘区",
-                      t.foodLv > 0
-                        ? `食品产业有效等级 Lv.${t.foodLv}：基础人口 +${fe(t.foodBasePop, 0)} 万人 · 全国人口乘区 +${SA(t.foodPopMult)}`
-                        : "尚未建成食品类产业；建造后可大幅提升基础人口与内需乘区",
-                    ),
-                  ],
-                }),
+                w("span", { class: "ld-lbl", children: `🌾 食品供给${t.foodLv > 0 ? ` Lv.${t.foodLv}` : ""}` }),
                 w("b", {
                   class: t.foodLv > 0 ? "up" : "muted",
                   children: t.foodLv > 0 ? `+${SA(t.foodPopMult)}` : "未建",
@@ -36942,32 +36894,20 @@ function Xp() {
               ],
             }),
             w("li", {
+              "data-tip-touch": !0,
+              "data-tip-title": "全国宜居度",
+              "data-tip": `当前宜居度 +${fe(t.livability, 0)}%（当前上限 ${fe(livCap, 0)}%），直接放大全国人口承载与内需`,
               children: [
-                w("span", {
-                  class: "ld-lbl",
-                  children: [
-                    "🏡 全国宜居",
-                    _p6bQTip(
-                      "全国宜居度",
-                      `当前宜居度 +${fe(t.livability, 0)}%（当前上限 ${fe(livCap, 0)}%），直接放大全国人口承载与内需`,
-                    ),
-                  ],
-                }),
+                w("span", { class: "ld-lbl", children: "🏡 全国宜居" }),
                 w("b", { children: `+${fe(t.livability, 0)}% / ${fe(livCap, 0)}%` }),
               ],
             }),
             w("li", {
+              "data-tip-touch": !0,
+              "data-tip-title": "居民内需加成",
+              "data-tip": `由全国人口、宜居度与国库满储分红共同驱动，为面向居民的消费与服务业提供 +${SA(t.demand)} 产值加成`,
               children: [
-                w("span", {
-                  class: "ld-lbl",
-                  children: [
-                    "🛍️ 内需加成",
-                    _p6bQTip(
-                      "居民内需加成",
-                      `由全国人口、宜居度与国库满储分红共同驱动，为面向居民的消费与服务业提供 +${SA(t.demand)} 产值加成`,
-                    ),
-                  ],
-                }),
+                w("span", { class: "ld-lbl", children: "🛍️ 内需加成" }),
                 w("b", { class: "up", children: ["+", SA(t.demand)] }),
               ],
             }),
@@ -36976,10 +36916,6 @@ function Xp() {
       }),
       w(Qt, {
         title: "行业性格",
-        extra: _p6bQTip(
-          "三大行业性格",
-          "• 产值型：主力拉升季度 GDP\n• 税源型：提供更高税率与稳定现金流\n• 配套型：为上下游与全国提供关键乘区支撑",
-        ),
         children: [
           w("div", {
             class: "stack",
@@ -36990,7 +36926,16 @@ function Xp() {
           w("ul", {
             class: "legend pers-legend",
             children: ["output", "tax", "support"].map((r) =>
-              w("li", { children: [w(ar, { p: r }), w("b", { children: SA(t.personalities[r] / f) })] }, r),
+              w(
+                "li",
+                {
+                  "data-tip-touch": !0,
+                  "data-tip-title": "行业性格构成",
+                  "data-tip": persTips[r],
+                  children: [w(ar, { p: r }), w("b", { children: SA(t.personalities[r] / f) })],
+                },
+                r,
+              ),
             ),
           }),
         ],
@@ -37097,10 +37042,10 @@ function Sp() {
     title: "国家奇观",
     extra: w("span", {
       class: "sp-meta",
-      children: [
-        `奇观 ${wTiles.length}/8 · 市政 ${fTiles.length}`,
-        _p6bQTip("国家奇观建造规则", "点击地图已开拓空地，在「国家奇观」页签规划建造（每座奇观占 3 格相邻三角形空地）。"),
-      ],
+      "data-tip-touch": !0,
+      "data-tip-title": "国家奇观建造规则",
+      "data-tip": "点击地图已开拓空地，在「国家奇观」页签规划建造（每座奇观占 3 格相邻三角形空地）。",
+      children: `奇观 ${wTiles.length}/8 · 市政 ${fTiles.length}`,
     }),
     children: [
       wTiles.length
@@ -37879,13 +37824,10 @@ function Jp() {
                   class: "lh-top",
                   children: [
                     w("b", {
-                      children: [
-                        w(S8, { attr: n, size: 15 }),
-                        " ",
-                        P.name,
-                        "专精",
-                        _p6bQTip(`${P.name}线 · ${P.role}`, Kp[n]),
-                      ],
+                      "data-tip-touch": !0,
+                      "data-tip-title": `${P.name}线 · ${P.role}`,
+                      "data-tip": Kp[n],
+                      children: [w(S8, { attr: n, size: 15 }), " ", P.name, "专精"],
                     }),
                     w("div", {
                       class: "lh-tools",
@@ -37989,7 +37931,6 @@ function Jp() {
                         children: [
                           w("span", { class: "skc-slot", children: slotLbl }),
                           w("b", { class: "skc-name", children: l.name }),
-                          _p6bQTip(nodeTipTitle, nodeTipBody),
                           w("em", {
                             class: `skc-tag ${stateCls}`,
                             children: learned
@@ -38014,10 +37955,10 @@ function Jp() {
                     children: [
                       w("div", {
                         class: "sk-tier-hd",
-                        children: [
-                          w("span", { class: "sth-title", children: tm.title }),
-                          _p6bQTip(tm.title, tm.rule),
-                        ],
+                        "data-tip-touch": !0,
+                        "data-tip-title": tm.title,
+                        "data-tip": tm.rule,
+                        children: w("span", { class: "sth-title", children: tm.title }),
                       }),
                       w("div", {
                         class: `sk-tier-row${tm.isFork ? " fork-row" : ""}`,
@@ -38199,15 +38140,8 @@ const Kp = {
   },
   Q9 = ["output", "tax", "support"],
   l9 = (A) => (A >= 36e5 ? `${Math.ceil(A / 36e5)}时` : `${Math.max(1, Math.ceil(A / 6e4))}分`);
-function qTipC(title, tip) {
-  return w("span", {
-    class: "q-tip",
-    "data-tip-touch": !0,
-    "data-tip-title": title,
-    "data-tip": tip,
-    onClick: (ev) => ev.stopPropagation(),
-    children: "?",
-  });
+function qTipC() {
+  return null;
 }
 function Vp() {
   const A = Pe(),
@@ -38528,10 +38462,12 @@ function Vp() {
                         children: [
                           w("div", {
                             class: "bt-lbl",
+                            "data-tip-touch": !0,
+                            "data-tip-title": `${tr.title}专项预算`,
+                            "data-tip": trackTip,
                             children: [
                               w(NA, { node: tr.ico, size: 13, stroke: 2.1 }),
                               w("b", { children: tr.title }),
-                              qTipC(`${tr.title}专项预算`, trackTip),
                               cost > 0 &&
                                 w("span", {
                                   class: "muted",
@@ -38926,11 +38862,12 @@ function Vp() {
               w(Qt, {
                 title: "经济特区",
                 extra: w("span", {
-                  style: "display:inline-flex;align-items:center;gap:4px",
-                  children: [
-                    w("span", { class: "muted", style: "font-size:12px", children: `${e.zones.length}/${B}` }),
-                    qTipC("经济特区规则", zoneRuleTip),
-                  ],
+                  class: "muted",
+                  style: "font-size:12px",
+                  "data-tip-touch": !0,
+                  "data-tip-title": "经济特区规则",
+                  "data-tip": zoneRuleTip,
+                  children: `${e.zones.length}/${B}`,
                 }),
                 children: [
                   !e.zones.length &&
@@ -39313,15 +39250,12 @@ function Wp() {
                   w("div", {
                     class: "es-hd",
                     children: [
-                      w("span", {
-                        style: "display:inline-flex;align-items:center;gap:5px",
-                        children: [
-                          w("b", { children: "🏛️ 盛世纪元碑" }),
-                          qTipC(
-                            "盛世纪元碑",
-                            "达成三幕盛世里程碑将触发纪元庆典画卷并永久铭刻于列朝国史馆；点击已点亮碑铭可重温画卷。",
-                          ),
-                        ],
+                      w("b", {
+                        "data-tip-touch": !0,
+                        "data-tip-title": "盛世纪元碑",
+                        "data-tip":
+                          "达成三幕盛世里程碑将触发纪元庆典画卷并永久铭刻于列朝国史馆；点击已点亮碑铭可重温画卷。",
+                        children: "🏛️ 盛世纪元碑",
                       }),
                       w("button", {
                         class: "btn tiny",
@@ -39705,17 +39639,17 @@ function qp() {
         class: "rank-hero",
         children: [
           w("div", {
+            "data-tip-touch": !0,
+            "data-tip-title": "榜单与排位规则",
+            "data-tip": `${boardTab === "sandbox" ? sandboxRuleTip : rankedRuleTip}\n${inspectTip}`,
             children: [
               w("span", {
-                style: "display:inline-flex;align-items:center;gap:5px",
-                children: [
+                children:
                   boardTab === "sandbox"
                     ? "沙盒榜排名"
                     : onlyR
                       ? "真人 GDP 排名"
                       : "全球 GDP 排名",
-                  qTipC("榜单与排位规则", `${boardTab === "sandbox" ? sandboxRuleTip : rankedRuleTip}\n${inspectTip}`),
-                ],
               }),
               w("strong", {
                 style: "white-space:nowrap",
@@ -39796,7 +39730,6 @@ function qp() {
                     : onlyR
                       ? "真人开荒排位榜"
                       : "全球开荒前十",
-                extra: qTipC("国家快照参观", inspectTip),
                 children: e.list.length
                   ? w("ol", {
                       class: "ladder",
@@ -39851,24 +39784,22 @@ function qp() {
                   : P && P.top[0]
                     ? (() => {
                         const nearTip = `距离龙头最近：「${HA[P.id].name}」（当前排 #${P.you.rank}，榜首产值为你的 ${fe(P.top[0].value / Math.max(0.01, P.you.value))} 倍）。\n攻略：同产业多地块集群建设、升至满级并委派匹配专长人物，可快速登顶龙头。`;
-                        return w("span", {
-                          style: "display:inline-flex;align-items:center;gap:6px",
-                          children: [
-                            w("b", { children: `👑 0 龙头 · 最近：${HA[P.id].short} #${P.you.rank}` }),
-                            qTipC("冲击产业龙头", nearTip),
-                          ],
+                        return w("b", {
+                          "data-tip-touch": !0,
+                          "data-tip-title": "冲击产业龙头",
+                          "data-tip": nearTip,
+                          children: `👑 0 龙头 · 最近：${HA[P.id].short} #${P.you.rank}`,
                         });
                       })()
                     : (() => {
                         const emptyLeadTip = meOnThisBoard
                           ? "国内建成并运转任意产业后，即可参与对应产业的全球产值龙头排名。"
                           : "当前正在浏览另一赛道的产业龙头；切回本档所属榜单可查看实时名次。";
-                        return w("span", {
-                          style: "display:inline-flex;align-items:center;gap:6px",
-                          children: [
-                            w("b", { children: meOnThisBoard ? "暂无运转产业" : "参观其他赛道龙头" }),
-                            qTipC("产业龙头说明", emptyLeadTip),
-                          ],
+                        return w("b", {
+                          "data-tip-touch": !0,
+                          "data-tip-title": "产业龙头说明",
+                          "data-tip": emptyLeadTip,
+                          children: meOnThisBoard ? "暂无运转产业" : "参观其他赛道龙头",
                         });
                       })(),
               }),
@@ -40068,15 +39999,11 @@ function Zp() {
             class: "novice-settings-card",
             style: "display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap",
             children: [
-              w("span", {
-                style: "display:inline-flex;align-items:center;gap:6px",
-                children: [
-                  w("b", { children: `🌱 新手引导 · 第 ${novStg} 幕` }),
-                  qTipC(
-                    `新手渐进引导 · ${novInfo.title}`,
-                    `${novInfo.desc || "随发展阶段逐步解锁高级治国面板，避免开局信息过载。"}\n共 4 幕，熟悉玩法可随时一键展开全部功能。`,
-                  ),
-                ],
+              w("b", {
+                "data-tip-touch": !0,
+                "data-tip-title": `新手渐进引导 · ${novInfo.title}`,
+                "data-tip": `${novInfo.desc || "随发展阶段逐步解锁高级治国面板，避免开局信息过载。"}\n共 4 幕，熟悉玩法可随时一键展开全部功能。`,
+                children: `🌱 新手引导 · 第 ${novStg} 幕`,
               }),
               w("button", {
                 class: "btn small gold nsc-exit-btn",
@@ -40096,7 +40023,6 @@ function Zp() {
       !A.webglFailed &&
         w(Qt, {
           title: "3D 画质",
-          extra: qTipC("3D 画质说明", qualTip),
           children: w("div", {
             class: "seg",
             children: [
@@ -40135,7 +40061,6 @@ function Zp() {
         }),
       w(Qt, {
         title: "声音与视图",
-        extra: qTipC("声音与视图说明", audioViewTip),
         children: w("div", {
           class: "seg",
           children: [
@@ -40241,7 +40166,6 @@ function Zp() {
       }),
       w(Qt, {
         title: "开启新局与沙盒补给",
-        extra: qTipC("模式与天梯资格说明", newGameTip),
         children: w("div", {
           class: "actions wrap",
           children: [
