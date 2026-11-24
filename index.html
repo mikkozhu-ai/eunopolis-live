@@ -34144,6 +34144,10 @@ function Tp({ results: A }) {
   const e = Pe(),
     t = e.state,
     [poolOpen, setPoolOpen] = gt(!1),
+    orangeDone = (t.pity && t.pity.orange) || 0,
+    redDone = (t.pity && t.pity.red) || 0,
+    orangeLeft = Math.max(1, O.pityOrange - orangeDone),
+    redLeft = Math.max(1, O.pityRed - redDone),
     n = (s) => {
       const f = ie.act((o) => B4(o, s));
       f.ok && ie.openModal({ type: "recruit", results: f.data });
@@ -34152,16 +34156,8 @@ function Tp({ results: A }) {
     wide: !0,
     cls: "recruit-modal",
     help: If("recruit", t, e.metrics),
-    title: "人才招募",
-    sub: w(he, {
-      children: [
-        "橙卡保底还有 ",
-        O.pityOrange - t.pity.orange,
-        " 抽 · 红卡保底还有 ",
-        O.pityRed - t.pity.red,
-        " 抽",
-      ],
-    }),
+    title: "招贤馆 · 名士招募",
+    sub: `已收录 ${Object.keys(t.cards).length}/${eo.length} 位名士 · 橙卡保底剩 ${orangeLeft} 抽 · 红卡保底剩 ${redLeft} 抽`,
     children: [
       A
         ? w("div", {
@@ -34172,13 +34168,16 @@ function Tp({ results: A }) {
                 "button",
                 {
                   class: `pull-card t${o.tier}`,
-                  style: { animationDelay: `${f * 90}ms`, "--tier": Xe[o.tier] },
+                  style: { animationDelay: `${f * 75}ms`, "--tier": Xe[o.tier] },
                   onClick: () => ie.openModal({ type: "card", id: s.card }),
                   children: [
-                    w(Ls, { id: s.card, size: 64 }),
-                    w("b", { children: o.name }),
+                    w(Ls, { id: s.card, size: 62 }),
+                    w("b", { style: { color: o.tier >= 3 ? Xe[o.tier] : "#eef5fc" }, children: o.name }),
                     w("small", { children: o.era ?? Ke[o.tier] }),
-                    w("em", { children: s.isNew ? "NEW" : s.refund ? `封顶返还 ◇${s.refund}` : "同名卡 +1" }),
+                    w("em", {
+                      class: s.isNew ? "is-new" : "",
+                      children: s.isNew ? "✦ 新收录" : s.refund ? `满星返 ◇${s.refund}` : "同名 +1",
+                    }),
                   ],
                 },
                 f,
@@ -34186,13 +34185,70 @@ function Tp({ results: A }) {
             }),
           })
         : w("div", {
-            class: "recruit-hero",
-            children: w("div", {
-              class: "odds",
-              children: [4, 3, 2, 1, 0].map((s) =>
-                w("span", { style: { color: Xe[s] }, children: [Ke[s], " ", na[s], "%"] }, s),
-              ),
-            }),
+            class: "recruit-hero v11",
+            children: [
+              w("div", {
+                class: "recruit-pity-grid",
+                children: [
+                  w("div", {
+                    class: "rp-card orange",
+                    "data-tip-touch": !0,
+                    "data-tip-title": "橙卡保底机制",
+                    "data-tip": `每 ${O.pityOrange} 抽必出至少 1 位橙色或红色传世名士；提前抽出将重置保底计数。`,
+                    children: [
+                      w("div", {
+                        class: "rp-hd",
+                        children: [
+                          w("b", { children: "✦ 橙卡保底" }),
+                          w("em", { children: `剩 ${orangeLeft} 抽` }),
+                        ],
+                      }),
+                      w(ei, {
+                        value: orangeDone,
+                        max: O.pityOrange,
+                        color: Xe[3],
+                        label: `${orangeDone} / ${O.pityOrange}`,
+                      }),
+                    ],
+                  }),
+                  w("div", {
+                    class: "rp-card red",
+                    "data-tip-touch": !0,
+                    "data-tip-title": "红卡保底机制",
+                    "data-tip": `每 ${O.pityRed} 抽必出 1 位红色千古绝代名士；提前抽出将重置保底计数。`,
+                    children: [
+                      w("div", {
+                        class: "rp-hd",
+                        children: [
+                          w("b", { children: "🔥 红卡保底" }),
+                          w("em", { children: `剩 ${redLeft} 抽` }),
+                        ],
+                      }),
+                      w(ei, {
+                        value: redDone,
+                        max: O.pityRed,
+                        color: Xe[4],
+                        label: `${redDone} / ${O.pityRed}`,
+                      }),
+                    ],
+                  }),
+                ],
+              }),
+              w("div", {
+                class: "odds v11-odds",
+                children: [4, 3, 2, 1, 0].map((s) =>
+                  w(
+                    "span",
+                    {
+                      class: "odd-pill",
+                      style: { "--tc": Xe[s] },
+                      children: [w("i", {}), Ke[s], " ", w("b", { children: `${na[s]}%` })],
+                    },
+                    s,
+                  ),
+                ),
+              }),
+            ],
           }),
       w("div", {
         class: "recruit-foot sticky-bottom",
@@ -34244,19 +34300,23 @@ function Tp({ results: A }) {
           }),
         ],
       }),
-      w("div", {
-        class: "actions center",
-        children: w("button", {
-          class: "btn ghost small",
-          onClick: () => e.openPanel("cards"),
-          children: "查看人才库",
+      e.panel !== "cards" &&
+        w("div", {
+          class: "actions center",
+          children: w("button", {
+            class: "btn ghost small",
+            onClick: () => {
+              e.openModal(null);
+              e.openPanel("cards");
+            },
+            children: "前往人才面板",
+          }),
         }),
-      }),
       w("details", {
         class: "pool",
         onToggle: (ev) => setPoolOpen(ev.currentTarget.open),
         children: [
-          w("summary", { children: ["卡池一览（", eo.length, " 张 · 展开加载）"] }),
+          w("summary", { children: ["卡池名录一览（全 ", eo.length, " 位名士）"] }),
           poolOpen &&
             w("div", {
               class: "pool-grid",
@@ -36017,19 +36077,71 @@ function Yp() {
     [q, setQ] = gt(""),
     [flt, setFlt] = gt("all"),
     [srt, setSrt] = gt("default");
-  const idleCnt = ownedArr.filter((c) => c.tile === null).length,
+  const stationedCnt = ownedArr.filter((c) => c.tile !== null).length,
+    idleCnt = ownedArr.length - stationedCnt,
     btCnt = ownedArr.filter((c) => Boolean(cardBtMode(e, c))).length,
+    activeBonds = A.metrics && Array.isArray(A.metrics.bonds) ? A.metrics.bonds.length : 0,
+    orangeLeft = Math.max(1, O.pityOrange - ((e.pity && e.pity.orange) || 0)),
+    redLeft = Math.max(1, O.pityRed - ((e.pity && e.pity.red) || 0)),
     btInfo =
       typeof countCopyBreakthroughs == "function"
         ? countCopyBreakthroughs(e)
         : { cardCount: 0, totalStars: 0 };
+  const tierBreak = [4, 3, 2, 1, 0]
+      .map((tr) => {
+        const totT = eo.filter((d) => d.tier === tr).length,
+          ownT = ownedArr.filter((c) => se[c.id] && se[c.id].tier === tr).length;
+        return `${Ke[tr]} ${ownT}/${totT}`;
+      })
+      .join(" · "),
+    heroTipTitle = `名士阁总览 (${ownedArr.length}/${eo.length})`,
+    heroTipBody = `• 图鉴收录：${tierBreak}\n• 岗位配置：在岗 ${stationedCnt} 人 · 待命 ${idleCnt} 人${
+      activeBonds > 0 ? ` · 已激活羁绊 ${activeBonds} 组` : ""
+    }\n• 招贤保底：橙卡保底剩 ${orangeLeft} 抽 · 红卡保底剩 ${redLeft} 抽`,
+    doDirectPull = (cnt) => {
+      const need = cnt === 10 ? O.tenPullCost : O.pullCost;
+      if (e.gems < need) {
+        A.openModal({ type: "recruit" });
+        return;
+      }
+      const res = A.act((st) => B4(st, cnt));
+      if (res && res.ok) A.openModal({ type: "recruit", results: res.data });
+    },
+    switchTab = (nextTab) => {
+      s(nextTab);
+      if (nextTab === "owned" && ["unowned", "t4", "t3", "t2"].includes(flt)) setFlt("all");
+      if (nextTab === "all" && ["stationed", "idle", "bt"].includes(flt)) setFlt("all");
+    };
+  const pillDefs =
+    n === "owned"
+      ? [
+          { id: "all", label: `全部 ${ownedArr.length}` },
+          { id: "stationed", label: `在岗 ${stationedCnt}` },
+          { id: "idle", label: `待命 ${idleCnt}` },
+          { id: "bt", label: `可突破 ${btCnt}` },
+          { id: "ex", label: "★ 专属" },
+          { id: "top", label: "红橙" },
+        ]
+      : [
+          { id: "all", label: `全部 ${eo.length}` },
+          { id: "unowned", label: `未获 ${eo.length - ownedArr.length}` },
+          { id: "t4", label: "红卡" },
+          { id: "t3", label: "橙卡" },
+          { id: "t2", label: "紫卡" },
+          { id: "ex", label: "★专属" },
+        ];
   const list = Dn(() => {
-    const base = n === "owned" ? ownedArr.map((o) => se[o.id]) : [...eo];
+    const base = n === "owned" ? ownedArr.map((o) => se[o.id]).filter(Boolean) : [...eo];
     const qq = q.trim().toLowerCase();
     const filtered = base.filter((o) => {
       const r = e.cards[o.id];
+      if (flt === "stationed" && !(r && r.tile !== null)) return !1;
       if (flt === "idle" && !(r && r.tile === null)) return !1;
       if (flt === "bt" && !(r && cardBtMode(e, r))) return !1;
+      if (flt === "unowned" && r) return !1;
+      if (flt === "t4" && o.tier !== 4) return !1;
+      if (flt === "t3" && o.tier !== 3) return !1;
+      if (flt === "t2" && o.tier !== 2) return !1;
       if (flt === "ex" && !o.exclusive) return !1;
       if (flt === "top" && o.tier < 3) return !1;
       if (!qq) return !0;
@@ -36067,6 +36179,7 @@ function Yp() {
         const diff = (b.attrs[srt] || 0) - (a.attrs[srt] || 0);
         if (diff !== 0) return diff;
       }
+      if (n === "all" && Boolean(ra) !== Boolean(rb)) return rb ? 1 : -1;
       return (
         b.tier - a.tier ||
         (rb ? rb.level : 0) - (ra ? ra.level : 0) ||
@@ -36078,76 +36191,221 @@ function Yp() {
   return w(he, {
     children: [
       w("div", {
-        class: "recruit-bar compact",
-        children: [
-          w("span", {
-            class: "rb-gems",
-            "data-tip-title": "持有星钻",
-            "data-tip": "可用于招募名士、星钻突破升星与重塑主公执政纲领",
-            children: w("b", { children: w(oP, { v: e.gems }) }),
-          }),
-          w("button", {
-            class: "btn primary",
-            "data-tip-title": "名士招募",
-            "data-tip": `单次招募 ◇${O.pullCost} 星钻，支持单抽与十连招募`,
-            onClick: () => A.openModal({ type: "recruit" }),
-            children: `✦ 招募 · ◇${O.pullCost}`,
-          }),
-        ],
-      }),
-      w("div", {
-        class: "roster-quick-actions",
-        children: [
-          w("button", {
-            class: `btn small ${btInfo.cardCount > 0 ? "gold" : ""}`,
-            disabled: !(btInfo.cardCount > 0),
-            "data-tip-title": `同名卡一键突破 (${btInfo.cardCount})`,
-            "data-tip": `将所有满足等级且持有同名卡的人物一键升星（绝不消耗星钻）${
-              btInfo.cardCount > 0 ? `\n✓ 当前可突破 ${btInfo.cardCount} 位人物，共提升 ${btInfo.totalStars} 颗星级` : ""
-            }`,
-            onClick: () => {
-              const res = A.act((st) => batchBreakthroughCopies(st));
-              if (res && res.ok && !res.msg && res.data) {
-                A.toast(
-                  `已完成 ${res.data.cardCount} 位名士突破，共提升 ${res.data.totalStars} 颗星级，未消耗星钻`,
-                  "gold",
-                );
-              }
-            },
-            children: `✦ 一键突破 (${btInfo.cardCount})`,
-          }),
-          w("button", {
-            class: "btn small primary",
-            "data-tip-title": "智能人员调派",
-            "data-tip": "支持「仅补空岗」与「全国最优重排」双方案，自动保护锁岗地块并预演全国 GDP 与净结余变化",
-            onClick: () => A.openModal({ type: "autoDeploy" }),
-            children: "⚡ 智能调派",
-          }),
-        ],
-      }),
-      w("div", {
-        class: "roster-toolbar",
+        class: "talent-hero",
         children: [
           w("div", {
-            class: "roster-top-row",
+            class: "th-head",
+            children: [
+              w("div", {
+                class: "th-emblem",
+                "data-tip-touch": !0,
+                "data-tip-title": heroTipTitle,
+                "data-tip": heroTipBody,
+                children: w(_e, { name: "people", size: 20 }),
+              }),
+              w("div", {
+                class: "th-meta",
+                children: [
+                  w("div", {
+                    class: "th-meta-top",
+                    children: [
+                      w("b", {
+                        class: "th-title",
+                        "data-tip-touch": !0,
+                        "data-tip-title": heroTipTitle,
+                        "data-tip": heroTipBody,
+                        children: [
+                          "名士阁",
+                          w("em", { class: "th-cnt", children: `${ownedArr.length}/${eo.length}` }),
+                        ],
+                      }),
+                      w("button", {
+                        class: "th-wallet-btn",
+                        "data-tip-title": "招贤馆与星钻储备",
+                        "data-tip": `点击打开招贤馆（查看卡池名录、保底进度或沙盒补给）\n• 橙卡保底：剩 ${orangeLeft} 抽 ｜ 红卡保底：剩 ${redLeft} 抽\n• 单次招贤 ◇${O.pullCost} · 十连九折 ◇${O.tenPullCost}`,
+                        onClick: () => A.openModal({ type: "recruit" }),
+                        children: [w(oP, { v: e.gems }), w("small", { children: "卡池▸" })],
+                      }),
+                    ],
+                  }),
+                  w("div", {
+                    class: "th-pills-row",
+                    children: [
+                      w("span", {
+                        class: "th-pill",
+                        "data-tip-touch": !0,
+                        "data-tip-title": "岗位派驻",
+                        "data-tip": `当前驻守地块 ${stationedCnt} 人 · 待命 ${idleCnt} 人`,
+                        children: ["🏛️ 在岗 ", w("b", { children: stationedCnt })],
+                      }),
+                      activeBonds > 0
+                        ? w("span", {
+                            class: "th-pill gold",
+                            "data-tip-touch": !0,
+                            "data-tip-title": "名士羁绊共振",
+                            "data-tip": `全国同时派驻已激活 ${activeBonds} 组历史/商业名士羁绊加成`,
+                            children: ["✦ 羁绊 ", w("b", { children: activeBonds })],
+                          })
+                        : w("span", {
+                            class: "th-pill",
+                            "data-tip-touch": !0,
+                            "data-tip-title": "待命后备",
+                            "data-tip": `当前共有 ${idleCnt} 位名士待命，可通过「智能调派」一键上岗`,
+                            children: ["⏳ 待命 ", w("b", { children: idleCnt })],
+                          }),
+                      w("span", {
+                        class: "th-pill pity",
+                        "data-tip-touch": !0,
+                        "data-tip-title": "招募保底进度",
+                        "data-tip": `橙卡保底还差 ${orangeLeft} 抽 · 红卡保底还差 ${redLeft} 抽`,
+                        children: `橙保底 ${orangeLeft}抽`,
+                      }),
+                    ],
+                  }),
+                ],
+              }),
+            ],
+          }),
+          w("div", {
+            class: "th-bar",
+            "data-tip-touch": !0,
+            "data-tip-title": heroTipTitle,
+            "data-tip": heroTipBody,
+            children: w("i", { style: { width: `${(ownedArr.length / Math.max(1, eo.length)) * 100}%` } }),
+          }),
+          w("div", {
+            class: "th-acts",
             children: [
               w("button", {
-                class: `pill${n === "owned" ? " on" : ""}`,
-                onClick: () => s("owned"),
-                children: ["已拥有 ", ownedArr.length],
+                class: "th-act featured",
+                "data-tip-title": `十连招贤 · 九折特惠（◇${O.tenPullCost}）`,
+                "data-tip": `一次招募 10 位名士，立省 ◇${O.pullCost * 10 - O.tenPullCost} 星钻\n• 橙卡保底剩 ${orangeLeft} 抽 · 红卡保底剩 ${redLeft} 抽\n• ${
+                  e.gems >= O.tenPullCost ? "✓ 点击直接十连招募" : "星钻不足时点击打开招贤馆"
+                }`,
+                onClick: () => doDirectPull(10),
+                children: [
+                  w("em", { class: "tha-corner", children: "九折" }),
+                  w("span", { class: "tha-ico", children: w(_e, { name: "gem", size: 16 }) }),
+                  w("b", { children: "十连招贤" }),
+                  w("span", {
+                    class: "tha-sub",
+                    children: [w(_e, { name: "gem", size: 10 }), " ", O.tenPullCost],
+                  }),
+                ],
               }),
               w("button", {
-                class: `pill${n === "all" ? " on" : ""}`,
-                onClick: () => s("all"),
-                children: ["图鉴 ", eo.length],
+                class: "th-act pull1",
+                "data-tip-title": `单次招贤（◇${O.pullCost}）`,
+                "data-tip": `招募 1 位名士（橙卡保底剩 ${orangeLeft} 抽 · 红卡保底剩 ${redLeft} 抽）\n• ${
+                  e.gems >= O.pullCost ? "✓ 点击直接招募 1 次" : "星钻不足时点击打开招贤馆"
+                }`,
+                onClick: () => doDirectPull(1),
+                children: [
+                  w("span", { class: "tha-ico", children: w(_e, { name: "fic", size: 16 }) }),
+                  w("b", { children: "单次招贤" }),
+                  w("span", {
+                    class: "tha-sub",
+                    children: [w(_e, { name: "gem", size: 10 }), " ", O.pullCost],
+                  }),
+                ],
+              }),
+              w("button", {
+                class: "th-act deploy",
+                "data-tip-title": "智能人员调派",
+                "data-tip": "支持「仅补空岗」与「全国最优重排」双方案，自动保护锁岗地块（🔒）并实时预演全国 GDP 与财政净结余变化",
+                onClick: () => A.openModal({ type: "autoDeploy" }),
+                children: [
+                  w("span", { class: "tha-ico", children: w(_e, { name: "bolt", size: 16 }) }),
+                  w("b", { children: "智能调派" }),
+                  w("span", {
+                    class: "tha-sub",
+                    children: idleCnt > 0 ? `待命 ${idleCnt}` : `在岗 ${stationedCnt}`,
+                  }),
+                ],
+              }),
+              w("button", {
+                class: `th-act bt${btInfo.cardCount > 0 ? " ready" : ""}`,
+                "data-tip-title": `同名卡一键突破 (${btInfo.cardCount})`,
+                "data-tip": `将所有满足等级且持有同名卡的名士一键升星（绝不消耗星钻）${
+                  btInfo.cardCount > 0
+                    ? `\n✓ 当前可突破 ${btInfo.cardCount} 位名士，共提升 ${btInfo.totalStars} 颗星级`
+                    : "\n• 当前暂无满足等级的同名卡可一键升星"
+                }`,
+                onClick: () => {
+                  if (!(btInfo.cardCount > 0)) {
+                    A.toast("当前暂无满足等级的同名卡可一键突破，点击名士可单独查看突破条件", "info");
+                    return;
+                  }
+                  const res = A.act((st) => batchBreakthroughCopies(st));
+                  if (res && res.ok && !res.msg && res.data) {
+                    A.toast(
+                      `已完成 ${res.data.cardCount} 位名士突破，共提升 ${res.data.totalStars} 颗星级，未消耗星钻`,
+                      "gold",
+                    );
+                  }
+                },
+                children: [
+                  btInfo.cardCount > 0 &&
+                    w("em", { class: "tha-corner", children: `+${btInfo.totalStars}★` }),
+                  w("span", { class: "tha-ico", children: w(_e, { name: "up", size: 16 }) }),
+                  w("b", { children: "一键突破" }),
+                  w("span", {
+                    class: "tha-sub",
+                    children: btInfo.cardCount > 0 ? `可升 ${btInfo.cardCount}` : "同名升星",
+                  }),
+                ],
+              }),
+            ],
+          }),
+        ],
+      }),
+      w("div", {
+        class: "seg tabs talent-subtabs",
+        children: [
+          w("button", {
+            class: n === "owned" ? "on" : "",
+            onClick: () => switchTab("owned"),
+            children: w("b", { children: `👥 麾下名士 (${ownedArr.length})` }),
+          }),
+          w("button", {
+            class: n === "all" ? "on" : "",
+            onClick: () => switchTab("all"),
+            children: w("b", { children: `📖 全名士图鉴 (${ownedArr.length}/${eo.length})` }),
+          }),
+        ],
+      }),
+      w("div", {
+        class: "talent-bar",
+        children: [
+          w("div", {
+            class: "tb-row",
+            children: [
+              w("div", {
+                class: "tb-search",
+                children: [
+                  w(_e, { name: "search", size: 14 }),
+                  w("input", {
+                    type: "search",
+                    placeholder: "搜索姓名 / 适配行业 / 专属",
+                    value: q,
+                    onInput: (ev) => setQ(ev.target.value),
+                  }),
+                  q &&
+                    w("button", {
+                      class: "tb-clear",
+                      "aria-label": "清空搜索",
+                      onClick: () => setQ(""),
+                      children: "×",
+                    }),
+                ],
               }),
               w("select", {
-                class: "roster-sort",
+                class: "tb-sort",
                 "aria-label": "人物排序",
                 value: srt,
                 onChange: (ev) => setSrt(ev.target.value),
                 children: [
-                  w("option", { value: "default", children: "排序：品质" }),
+                  w("option", { value: "default", children: "按品质" }),
                   w("option", { value: "mgmt", children: "按管理" }),
                   w("option", { value: "tech", children: "按技术" }),
                   w("option", { value: "pol", children: "按政治" }),
@@ -36157,22 +36415,9 @@ function Yp() {
               }),
             ],
           }),
-          w("input", {
-            class: "roster-search",
-            type: "search",
-            placeholder: "搜索姓名 / 行业",
-            value: q,
-            onInput: (ev) => setQ(ev.target.value),
-          }),
           w("div", {
-            class: "filter-row roster-pills",
-            children: [
-              { id: "all", label: "全部" },
-              { id: "idle", label: `待命${idleCnt ? ` (${idleCnt})` : ""}` },
-              { id: "bt", label: `可突破${btCnt ? ` (${btCnt})` : ""}` },
-              { id: "ex", label: "有专属" },
-              { id: "top", label: "红橙卡" },
-            ].map((fpItem) =>
+            class: "filter-row tb-pills",
+            children: pillDefs.map((fpItem) =>
               w(
                 "button",
                 {
@@ -36186,12 +36431,38 @@ function Yp() {
           }),
         ],
       }),
-      n === "owned" && !ownedArr.length && w("p", { class: "empty", children: "尚未招募人物" }),
+      n === "owned" &&
+        !ownedArr.length &&
+        w("div", {
+          class: "talent-empty",
+          children: [
+            w("span", { children: "麾下尚无名士，招贤纳士以掌管全国百业与首都中枢" }),
+            w("button", {
+              class: "btn small gold",
+              onClick: () => A.openModal({ type: "recruit" }),
+              children: "✦ 前往招贤馆",
+            }),
+          ],
+        }),
       (ownedArr.length > 0 || n === "all") &&
         !list.length &&
-        w("p", { class: "empty", children: "无匹配人物" }),
+        w("div", {
+          class: "talent-empty",
+          children: [
+            w("span", { children: "当前筛选条件下暂无匹配名士" }),
+            (q || flt !== "all") &&
+              w("button", {
+                class: "btn tiny ghost",
+                onClick: () => {
+                  setQ("");
+                  setFlt("all");
+                },
+                children: "重置筛选",
+              }),
+          ],
+        }),
       w("div", {
-        class: "card-grid",
+        class: "card-grid v11",
         children: list.map((o) => {
           const r = e.cards[o.id],
             i = (r == null ? void 0 : r.tile) != null ? e.tiles[r.tile] : null,
@@ -36210,7 +36481,9 @@ function Yp() {
               .slice(0, 5)
               .map((mid) => (HA[mid] ? HA[mid].short || HA[mid].name : mid))
               .join("、"),
-            cardTipTitle = `${o.name}${o.title ? ` · ${o.title}` : ""}${r ? `（Lv.${r.level}/${Zn(o.tier)}）` : "（未招募）"}`,
+            cardTipTitle = `${o.name}${o.era ? ` · ${o.era}` : ""}${o.title ? ` · ${o.title}` : ""}${
+              r ? `（Lv.${r.level}/${Zn(o.tier)}）` : "（未收录）"
+            }`,
             cardTipLines = [
               `五维：管理 ${o.attrs.mgmt} · 技术 ${o.attrs.tech} · 政治 ${o.attrs.pol} · 野心 ${o.attrs.amb} · 魅力 ${o.attrs.cha}`,
             ];
@@ -36230,51 +36503,51 @@ function Yp() {
           return w(
             "button",
             {
-              class: `card-tile t${o.tier}${r ? "" : " unowned"}`,
+              class: `card-tile v11 t${o.tier}${r ? "" : " unowned"}`,
               style: { "--tier": Xe[o.tier] },
               "data-tip-title": cardTipTitle,
               "data-tip": cardTipLines.join("\n"),
               onClick: () => A.openModal({ type: "card", id: o.id }),
               children: [
-                w(Ls, { id: o.id, size: 52, dim: !r }),
-                w(Jo, { def: o }),
-                srt !== "default" &&
-                  w("span", {
-                    class: "ct-attr-sort",
-                    style: { color: A0[srt] },
-                    children: `${lg[srt]} ${o.attrs[srt]}`,
-                  }),
-                r
-                  ? w(he, {
-                      children: [
-                        w("span", {
-                          class: "ct-lv",
-                          children: [
-                            "Lv.",
-                            r.level,
-                            " ",
-                            w(PQ, { stars: r.stars, max: Is[o.tier] }),
-                          ],
-                        }),
-                        w("span", {
-                          class: `ct-where${i ? " stationed" : ""}`,
-                          children: whereShort,
-                        }),
-                      ],
-                    })
-                  : w(L0, { tier: o.tier }),
+                o.exclusive && w("span", { class: "ex-mark", children: "专" }),
                 btMode &&
-                  w("span", {
-                    class: `badge${btMode === "gem" ? " gem-bt" : ""}`,
-                    children: btMode === "gem" ? "星钻突破" : "可突破",
+                  w("em", {
+                    class: `ct-bt-pill${btMode === "gem" ? " gem" : ""}`,
+                    children: btMode === "gem" ? "钻突" : "突破",
                   }),
-                isLocked &&
-                  w("span", {
-                    class: "ct-lock-badge",
-                    title: "驻守岗位已锁定（智能调派不挪动）",
-                    children: "🔒",
-                  }),
-                o.exclusive && w("span", { class: "ex-mark", title: o.exclusive.name, children: "专" }),
+                w("span", {
+                  class: "ct-face",
+                  children: [
+                    w(Ls, { id: o.id, size: 52, dim: !r }),
+                    srt !== "default" &&
+                      w("span", {
+                        class: "ct-attr-tag",
+                        style: { "--ac": A0[srt] },
+                        children: `${lg[srt][0]}${o.attrs[srt]}`,
+                      }),
+                  ],
+                }),
+                w("b", {
+                  class: "ct-name",
+                  style: { color: r ? (o.tier >= 3 ? Xe[o.tier] : "#eef5fc") : "#9fb1c4" },
+                  children: o.name,
+                }),
+                w("span", {
+                  class: "ct-mid",
+                  children: r
+                    ? [
+                        w("span", { class: "ct-lv", children: `Lv.${r.level}` }),
+                        w(PQ, { stars: r.stars, max: Is[o.tier] }),
+                      ]
+                    : [
+                        w(L0, { tier: o.tier }),
+                        o.era && w("small", { class: "ct-era", children: o.era }),
+                      ],
+                }),
+                w("span", {
+                  class: `ct-where${r ? (i ? " stationed" : " idle") : " unowned-tag"}`,
+                  children: r ? `${isLocked ? "🔒 " : ""}${whereShort}` : "未收录",
+                }),
               ],
             },
             o.id,
@@ -53870,6 +54143,624 @@ button.dcard {
     gap: 5px;
   }
 }
+
+/* =========================================================
+   Unified Talent Panel (名士阁 · 招贤与调遣一体化设计)
+   Matches Industry (.ind-summary) & Lord (.lordcard) grammar
+   ========================================================= */
+.talent-hero {
+  display: flex;
+  flex-direction: column;
+  gap: 9px;
+  padding: 11px 12px 12px;
+  border-radius: var(--radius);
+  background:
+    linear-gradient(155deg, rgba(255, 207, 74, 0.16), rgba(179, 136, 255, 0.1) 54%, rgba(8, 13, 22, 0.86)),
+    #080d14b3;
+  border: 1px solid rgba(255, 207, 74, 0.36);
+  box-shadow:
+    0 10px 26px rgba(0, 0, 0, 0.28),
+    inset 0 1px rgba(255, 255, 255, 0.08);
+}
+.th-head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.th-emblem {
+  width: 42px;
+  height: 42px;
+  border-radius: 12px;
+  display: grid;
+  place-items: center;
+  flex: none;
+  color: #ffe28a;
+  background: linear-gradient(145deg, rgba(255, 207, 74, 0.2), rgba(157, 107, 255, 0.16) 65%, rgba(10, 16, 26, 0.9));
+  border: 1.5px solid rgba(255, 207, 74, 0.52);
+  box-shadow:
+    0 4px 12px rgba(0, 0, 0, 0.32),
+    inset 0 1px rgba(255, 255, 255, 0.16);
+}
+.th-meta {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+.th-meta-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px;
+}
+.th-title {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 6px;
+  font-size: 15px;
+  color: #ffe9a8;
+  min-width: 0;
+}
+.th-cnt {
+  font: 700 11.5px/1 var(--mono);
+  font-style: normal;
+  color: #bfefff;
+  padding: 2px 6px;
+  border-radius: 99px;
+  background: rgba(88, 225, 255, 0.13);
+  border: 1px solid rgba(88, 225, 255, 0.28);
+}
+.th-wallet-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 3px 9px;
+  border-radius: 99px;
+  background: rgba(18, 14, 34, 0.78);
+  border: 1px solid rgba(196, 155, 255, 0.44);
+  color: #efe6ff;
+  font-size: 12.5px;
+  font-weight: 700;
+  transition:
+    border-color 0.14s,
+    background 0.14s,
+    transform 0.08s;
+}
+.th-wallet-btn:hover {
+  border-color: #d9bfff;
+  background: rgba(157, 107, 255, 0.24);
+}
+.th-wallet-btn:active {
+  transform: translateY(1px);
+}
+.th-wallet-btn .gems {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-family: var(--mono);
+}
+.th-wallet-btn small {
+  font: 600 10px/1 var(--mono);
+  color: #cbb5ff;
+  opacity: 0.9;
+}
+.th-pills-row {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  flex-wrap: wrap;
+}
+.th-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  padding: 1.5px 7px;
+  border-radius: 99px;
+  font-size: 10.5px;
+  color: #cbdbee;
+  background: rgba(10, 17, 28, 0.65);
+  border: 1px solid rgba(160, 200, 240, 0.18);
+}
+.th-pill b {
+  font-family: var(--mono);
+  color: #eef6ff;
+}
+.th-pill.gold {
+  color: #ffe6a1;
+  border-color: rgba(255, 207, 74, 0.35);
+  background: rgba(255, 207, 74, 0.11);
+}
+.th-pill.gold b {
+  color: #ffe9a8;
+}
+.th-pill.pity {
+  margin-left: auto;
+  color: #dec9ff;
+  border-color: rgba(196, 155, 255, 0.3);
+  background: rgba(157, 107, 255, 0.11);
+}
+.th-bar {
+  height: 6px;
+  border-radius: 99px;
+  background: rgba(255, 255, 255, 0.09);
+  overflow: hidden;
+}
+.th-bar > i {
+  display: block;
+  height: 100%;
+  border-radius: 99px;
+  background: linear-gradient(90deg, #ffcf4a, #58e1ff 65%, #c79bff);
+  box-shadow: 0 0 10px rgba(88, 225, 255, 0.45);
+  transition: width 0.35s ease;
+}
+
+/* Integrated 4-Action Deck inside .talent-hero (sibling of .lc-acts) */
+.th-acts {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 6px;
+  margin-top: 1px;
+}
+.th-act {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 3px;
+  padding: 8px 4px 7px;
+  border-radius: 10px;
+  background: rgba(10, 17, 27, 0.78);
+  border: 1px solid rgba(160, 200, 240, 0.2);
+  color: #e6f0fa;
+  text-align: center;
+  transition:
+    transform 0.08s ease,
+    border-color 0.14s ease,
+    background 0.14s ease,
+    box-shadow 0.14s ease;
+}
+.th-act:hover {
+  transform: translateY(-1px);
+  border-color: rgba(88, 225, 255, 0.55);
+  background: rgba(20, 32, 48, 0.9);
+}
+.th-act:active {
+  transform: translateY(0);
+}
+.th-act .tha-ico {
+  position: relative;
+  width: 28px;
+  height: 28px;
+  border-radius: 8px;
+  display: grid;
+  place-items: center;
+  background: rgba(255, 255, 255, 0.06);
+  color: var(--cyan);
+}
+.th-act > b {
+  font-size: 11.5px;
+  line-height: 1.2;
+  white-space: nowrap;
+}
+.th-act .tha-sub {
+  display: inline-flex;
+  align-items: center;
+  gap: 2.5px;
+  font: 700 10px/1.2 var(--mono);
+  color: #96abc2;
+  white-space: nowrap;
+}
+.th-act .tha-corner {
+  position: absolute;
+  top: -5px;
+  right: -3px;
+  padding: 1px 4.5px;
+  border-radius: 99px;
+  font: 700 9px/1.25 system-ui, sans-serif;
+  font-style: normal;
+  background: #231400;
+  color: #ffe38e;
+  border: 1px solid rgba(255, 214, 102, 0.65);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.45);
+}
+.th-act.featured {
+  color: #271700;
+  background: linear-gradient(180deg, #ffe28c, #e5a92a);
+  border-color: rgba(255, 232, 163, 0.85);
+  box-shadow:
+    0 5px 14px rgba(255, 207, 74, 0.26),
+    inset 0 1px rgba(255, 255, 255, 0.65);
+}
+.th-act.featured:hover {
+  filter: brightness(1.05);
+  border-color: #fff2c2;
+  background: linear-gradient(180deg, #ffe89e, #ebb338);
+}
+.th-act.featured .tha-ico {
+  background: rgba(38, 22, 0, 0.14);
+  color: #271700;
+}
+.th-act.featured > b {
+  color: #231400;
+}
+.th-act.featured .tha-sub {
+  color: rgba(35, 20, 0, 0.82);
+}
+.th-act.pull1 {
+  border-color: rgba(196, 155, 255, 0.34);
+  background: linear-gradient(180deg, rgba(157, 107, 255, 0.16), rgba(10, 17, 27, 0.82));
+}
+.th-act.pull1 .tha-ico {
+  color: #d6b8ff;
+  background: rgba(157, 107, 255, 0.16);
+}
+.th-act.pull1:hover {
+  border-color: #c79bff;
+}
+.th-act.pull1 .tha-sub {
+  color: #d3bdff;
+}
+.th-act.bt.ready {
+  border-color: rgba(255, 207, 74, 0.58);
+  background: linear-gradient(180deg, rgba(255, 207, 74, 0.18), rgba(12, 19, 30, 0.86));
+  box-shadow: 0 0 12px rgba(255, 207, 74, 0.16);
+}
+.th-act.bt.ready .tha-ico {
+  color: var(--gold);
+  background: rgba(255, 207, 74, 0.16);
+}
+.th-act.bt.ready .tha-sub {
+  color: #ffe082;
+}
+.th-act.bt.ready .tha-corner {
+  background: var(--gold);
+  color: #241600;
+  border-color: #fff0b8;
+}
+
+/* Segmented Subtabs & Unified Filter Toolbar */
+.talent-subtabs {
+  margin: 10px 0 8px;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+.talent-subtabs button {
+  flex-direction: row;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 7px 8px;
+  text-align: center;
+  font-size: 12px;
+}
+.talent-bar {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+  margin-bottom: 10px;
+}
+.tb-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.tb-search {
+  flex: 1;
+  min-width: 0;
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 0 8px 0 10px;
+  height: 32px;
+  border-radius: 9px;
+  background: rgba(7, 12, 20, 0.82);
+  border: 1px solid rgba(160, 200, 240, 0.2);
+  color: var(--muted);
+  transition: border-color 0.14s;
+}
+.tb-search:focus-within {
+  border-color: var(--cyan);
+  color: var(--cyan);
+}
+.tb-search input {
+  flex: 1;
+  min-width: 0;
+  border: 0 !important;
+  background: transparent !important;
+  padding: 0 !important;
+  height: 100%;
+  font-size: 12px;
+  color: #eaf3fb;
+  outline: none;
+  box-shadow: none !important;
+}
+.tb-clear {
+  width: 18px;
+  height: 18px;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.1);
+  color: #b8cadc;
+  font-size: 12px;
+  line-height: 1;
+  display: grid;
+  place-items: center;
+}
+.tb-clear:hover {
+  background: rgba(255, 255, 255, 0.2);
+  color: #fff;
+}
+.tb-sort {
+  flex: none;
+  height: 32px;
+  padding: 0 8px;
+  border-radius: 9px;
+  font-size: 11.5px;
+  font-weight: 600;
+  color: #d6e6f6;
+  background: rgba(7, 12, 20, 0.82);
+  border: 1px solid rgba(160, 200, 240, 0.2);
+}
+.tb-pills {
+  margin-bottom: 0;
+  gap: 4px;
+}
+.tb-pills .pill {
+  padding: 3px 7.5px;
+  font-size: 11px;
+}
+.talent-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  padding: 22px 14px;
+  border-radius: var(--radius);
+  border: 1px dashed rgba(160, 200, 240, 0.22);
+  background: rgba(8, 13, 22, 0.52);
+  text-align: center;
+  color: var(--muted);
+  font-size: 12.5px;
+}
+
+/* Sculpted Modern Character Cards (.card-grid.v11 & .card-tile.v11) */
+.card-grid.v11 {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+}
+.card-tile.v11 {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  padding: 10px 6px 8px;
+  border-radius: 12px;
+  background:
+    linear-gradient(180deg, color-mix(in srgb, var(--tier) 18%, rgba(16, 25, 38, 0.92)) 0%, rgba(8, 13, 22, 0.94) 58%);
+  border: 1px solid color-mix(in srgb, var(--tier) 42%, rgba(160, 200, 240, 0.14));
+  box-shadow:
+    0 4px 12px rgba(0, 0, 0, 0.26),
+    inset 0 1px rgba(255, 255, 255, 0.07);
+  transition:
+    transform 0.12s ease,
+    border-color 0.14s ease,
+    box-shadow 0.14s ease;
+}
+.card-tile.v11:hover {
+  transform: translateY(-2px);
+  border-color: var(--tier);
+  box-shadow:
+    0 8px 18px rgba(0, 0, 0, 0.42),
+    0 0 14px color-mix(in srgb, var(--tier) 26%, transparent);
+}
+.card-tile.v11.unowned {
+  opacity: 0.72;
+  background: linear-gradient(180deg, color-mix(in srgb, var(--tier) 8%, rgba(12, 18, 28, 0.85)), rgba(7, 11, 18, 0.9));
+  border-color: color-mix(in srgb, var(--tier) 24%, rgba(160, 200, 240, 0.12));
+}
+.card-tile.v11.unowned:hover {
+  opacity: 0.95;
+  border-color: color-mix(in srgb, var(--tier) 65%, transparent);
+}
+.card-tile.v11 .ct-face {
+  position: relative;
+  line-height: 0;
+  margin-bottom: 1px;
+}
+.card-tile.v11 .avatar {
+  border-radius: 11px;
+  border-width: 2px;
+  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.35);
+}
+.card-tile.v11.t4 .avatar,
+.card-tile.v11.t3 .avatar {
+  box-shadow:
+    0 3px 10px rgba(0, 0, 0, 0.4),
+    0 0 10px color-mix(in srgb, var(--tier) 28%, transparent);
+}
+.card-tile.v11 .ex-mark {
+  top: 5px;
+  left: 5px;
+  padding: 1px 4px;
+  border-radius: 5px;
+  font: 700 9.5px/1.25 system-ui, sans-serif;
+  background: rgba(24, 16, 4, 0.86);
+  border: 1px solid rgba(255, 207, 74, 0.65);
+  color: var(--gold);
+}
+.card-tile.v11 .ct-bt-pill {
+  position: absolute;
+  top: 5px;
+  right: 5px;
+  padding: 1px 5px;
+  border-radius: 99px;
+  font: 700 9.5px/1.3 system-ui, sans-serif;
+  font-style: normal;
+  background: var(--gold);
+  color: #261800;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.4);
+}
+.card-tile.v11 .ct-bt-pill.gem {
+  background: linear-gradient(135deg, #a575ff, #6f3fe8);
+  color: #fff;
+}
+.card-tile.v11 .ct-attr-tag {
+  position: absolute;
+  right: -4px;
+  bottom: -3px;
+  padding: 1px 4.5px;
+  border-radius: 6px;
+  font: 700 9.5px/1.25 var(--mono);
+  background: rgba(8, 13, 22, 0.92);
+  border: 1px solid var(--ac, var(--cyan));
+  color: var(--ac, var(--cyan));
+}
+.card-tile.v11 .ct-name {
+  display: block;
+  max-width: 100%;
+  font-size: 12.5px;
+  font-weight: 700;
+  line-height: 1.25;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.card-tile.v11 .ct-mid {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  min-height: 16px;
+  max-width: 100%;
+}
+.card-tile.v11 .ct-lv {
+  font: 600 10.5px/1 var(--mono);
+  color: #cbd9e8;
+}
+.card-tile.v11 .stars i {
+  width: 6px;
+  height: 6px;
+}
+.card-tile.v11 .tier-tag {
+  border-radius: 5px;
+  padding: 0 5px;
+  font-size: 10px;
+  line-height: 15px;
+  background: rgba(8, 13, 22, 0.65);
+}
+.card-tile.v11 .ct-era {
+  font-size: 10px;
+  color: var(--muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 48px;
+}
+.card-tile.v11 .ct-where {
+  margin-top: 1px;
+  max-width: 100%;
+  padding: 1.5px 7px;
+  border-radius: 99px;
+  font-size: 10px;
+  line-height: 1.35;
+}
+.card-tile.v11 .ct-where.unowned-tag {
+  color: #7c90a6;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px dashed rgba(160, 200, 240, 0.18);
+}
+
+/* Recruit Hall Modal Polish (.recruit-hero.v11 & .pull-card) */
+.recruit-hero.v11 {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 4px 0 8px;
+}
+.recruit-pity-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+}
+.rp-card {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 9px 11px;
+  border-radius: 11px;
+  background: rgba(8, 13, 22, 0.72);
+  border: 1px solid rgba(160, 200, 240, 0.18);
+}
+.rp-card.orange {
+  border-color: rgba(255, 179, 71, 0.38);
+  background: linear-gradient(155deg, rgba(255, 179, 71, 0.12), rgba(8, 13, 22, 0.78));
+}
+.rp-card.red {
+  border-color: rgba(255, 107, 122, 0.38);
+  background: linear-gradient(155deg, rgba(255, 107, 122, 0.12), rgba(8, 13, 22, 0.78));
+}
+.rp-hd {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 12px;
+}
+.rp-hd em {
+  font: 700 11px var(--mono);
+  font-style: normal;
+  color: #e4effb;
+}
+.odds.v11-odds {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 6px;
+}
+.odd-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 3px 9px;
+  border-radius: 99px;
+  font-size: 11.5px;
+  color: #dce8f5;
+  background: rgba(8, 13, 22, 0.75);
+  border: 1px solid color-mix(in srgb, var(--tc) 42%, rgba(160, 200, 240, 0.16));
+}
+.odd-pill i {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--tc);
+  box-shadow: 0 0 6px var(--tc);
+}
+.odd-pill b {
+  font-family: var(--mono);
+  color: var(--tc);
+}
+.pull-card {
+  border-radius: 12px;
+  padding: 12px 8px 10px;
+}
+.pull-card .avatar,
+.pool-item .avatar {
+  border-radius: 10px;
+}
+.pull-card em.is-new {
+  color: #ffe38a;
+  font-weight: 700;
+}
+@media (max-width: 760px) {
+  .recruit-pity-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
 </style>
   </head>
   <body>
