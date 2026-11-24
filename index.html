@@ -30969,7 +30969,8 @@ function dQ({ act: A, wide: e }) {
               : "不限次数",
           })
         : w("span", {
-            class: "act-left",
+            class: `act-left${f.maxCharges >= 7 ? " dense" : ""}`,
+            "data-n": f.maxCharges || 0,
             "aria-hidden": "true",
             children: f.maxCharges
               ? Array.from({ length: f.maxCharges }, (B, a) => w("i", { class: a < f.charges ? "on" : "" }, a))
@@ -36352,6 +36353,19 @@ const jp = (A) => {
     ? `${Math.floor(e / 3600)} 小时 ${Math.floor((e % 3600) / 60)} 分`
     : `${Math.floor(e / 60)}:${String(e % 60).padStart(2, "0")}`;
 };
+function _p6bQTip(title, tip, preventDef) {
+  return w("span", {
+    class: "q-tip",
+    "data-tip-touch": !0,
+    "data-tip-title": title,
+    "data-tip": tip,
+    onClick: (ev) => {
+      if (preventDef) ev.preventDefault();
+      ev.stopPropagation();
+    },
+    children: "?",
+  });
+}
 function Xp() {
   const A = Pe(),
     e = A.state,
@@ -36379,14 +36393,25 @@ function Xp() {
         : { ok: !1, reason: "当前不满足主权债务重组条件" },
     curDebt = Math.max(0, -e.treasury),
     forgivenPv = curDebt < 100 ? curDebt : Math.round(curDebt * 0.5 * 10) / 10,
-    afterDebtPv = Math.max(0, Math.round((curDebt - forgivenPv) * 10) / 10);
+    afterDebtPv = Math.max(0, Math.round((curDebt - forgivenPv) * 10) / 10),
+    taxNames = e.taxes.map((r) => Ks[r].name).join(" + "),
+    fmTipTitle = `${t.debt > 0 ? "主权国债余额" : "国库现金储备"} · 信用 ${t.creditRating}`,
+    fmTipBody =
+      t.debt > 0
+        ? `赤字运行中 · 剩余信用额度 ${fe(Math.max(0, t.debtCap - t.debt))} 亿（上限 −${fe(t.debtCap)} 亿）\n${restActive ? `✓ 重整免息保护中（剩 ${e.debtRestructureUntil - e.quarter} 季）` : "• 发展金融业与提升首都政治可提额降息"}`
+        : `${(t.surplusDiv ?? 0) > 0.05 ? `✓ 国库满储分红：内需 +${SA((t.surplusDiv ?? 0) * sRate)} · 宜居 +${Math.round((t.surplusDiv ?? 0) * 5)}\n` : ""}• 储备上限：${fe(t.reserveCap)} 亿（1.5× 软缓冲上限 ${fe(softCap)} 亿）\n• 超额储备每季按 25% 缓释转全民消费分红（分红系数 ${SA(sRate)}）\n• 紧急建设可举债至 −${fe(t.debtCap)} 亿`,
+    fbTipTitle = e.quarter <= 40 ? `开国扶持期（第 ${e.quarter}/40 季）` : `开国扶持退坡（剩 ${88 - e.quarter} 季）`,
+    fbTipBody = `第 1–40 季满额生效，第 41–88 季平滑退坡（当前系数 ${Math.round(ff * 100)}%）：\n• 税收扶持 +${Math.round(100 * ff)}%\n• 设施维护减免 −${Math.round(45 * ff)}%\n• 公共服务减免 −${Math.round(50 * ff)}%\n• 行政治理减免 −${Math.round(60 * ff)}%${jo(e) > 0 ? `\n• 新行业首次建造半价剩余 ${jo(e)} 次` : ""}`;
   return w(he, {
     children: [
       w("div", {
         class: "econ-hero",
+        "data-tip-touch": !0,
+        "data-tip-title": "全国季度 GDP",
+        "data-tip": `当季总产出 ${fe(t.gdp)} 亿 · 历史峰值 ${fe(e.stats.peakGdp)} 亿（${Ng(e.quarter)}）`,
         children: [
           w("span", { children: "GDP / 季" }),
-          w("strong", { children: [fe(t.gdp), w("small", { children: "亿" })] }),
+          w("strong", { children: [fe(t.gdp), w("span", { class: "eh-unit", children: "亿" })] }),
           w("em", { children: ["峰值 ", fe(e.stats.peakGdp), " · ", Ng(e.quarter)] }),
         ],
       }),
@@ -36398,26 +36423,30 @@ function Xp() {
             e.quarter < 88 &&
             w("div", {
               class: "founding-banner",
+              "data-tip-touch": !0,
+              "data-tip-title": fbTipTitle,
+              "data-tip": fbTipBody,
               children: [
                 w("div", {
                   class: "fb-hd",
                   children: [
                     w("b", {
-                      children:
-                        e.quarter <= 40
-                          ? `🌱 开国扶持期 · 满额生效（第 ${e.quarter}/40 季）`
-                          : `🌿 开国扶持平滑退坡（剩 ${88 - e.quarter} 季 · 系数 ${Math.round(ff * 100)}%）`,
+                      children: [
+                        e.quarter <= 40 ? `🌱 开国扶持 ${e.quarter}/40季` : `🌿 扶持退坡 ${Math.round(ff * 100)}%`,
+                        " ",
+                        _p6bQTip(fbTipTitle, fbTipBody),
+                      ],
                     }),
-                    jo(e) > 0 && w("em", { children: `首建半价剩 ${jo(e)} 次` }),
+                    jo(e) > 0 && w("em", { children: `首建半价 ×${jo(e)}` }),
                   ],
                 }),
                 w("div", {
                   class: "fb-pills",
                   children: [
-                    w("span", { children: `税收扶持 +${Math.round(100 * ff)}%` }),
-                    w("span", { children: `维护减免 −${Math.round(45 * ff)}%` }),
-                    w("span", { children: `社保减免 −${Math.round(50 * ff)}%` }),
-                    w("span", { children: `行政减免 −${Math.round(60 * ff)}%` }),
+                    w("span", { children: `税 +${Math.round(100 * ff)}%` }),
+                    w("span", { children: `维 −${Math.round(45 * ff)}%` }),
+                    w("span", { children: `社 −${Math.round(50 * ff)}%` }),
+                    w("span", { children: `政 −${Math.round(60 * ff)}%` }),
                   ],
                 }),
               ],
@@ -36427,39 +36456,65 @@ function Xp() {
             children: [
               w("li", {
                 children: [
-                  w("span", { children: ["税收收入 · 平均税率 ", SA(t.taxRate, 1)] }),
+                  w("span", {
+                    class: "ld-lbl",
+                    children: [
+                      `💰 税收（${SA(t.taxRate, 1)}）`,
+                      _p6bQTip("季度税收收入", `综合平均税率 ${SA(t.taxRate, 1)}\n现行税制：${taxNames}`),
+                    ],
+                  }),
                   w("b", { class: "up", children: ["+", fe(t.revenue)] }),
                 ],
               }),
               w("li", {
                 children: [
-                  w("span", { children: "设施折旧维护" }),
+                  w("span", {
+                    class: "ld-lbl",
+                    children: [
+                      "🔧 设施维护",
+                      _p6bQTip("设施折旧维护", "全国已建产业、市政设施与奇观每季固定运维支出"),
+                    ],
+                  }),
                   w("b", { class: "down", children: ["−", fe(t.maintenance)] }),
                 ],
               }),
               w("li", {
                 children: [
-                  w("span", { children: "国民公共服务（教育/医保/市政）" }),
+                  w("span", {
+                    class: "ld-lbl",
+                    children: [
+                      "🏥 公共服务",
+                      _p6bQTip("国民公共服务", "全国教育、医疗社保与基础市政服务开支，随人口规模增长"),
+                    ],
+                  }),
                   w("b", { class: "down", children: ["−", fe(t.socialCost ?? 0)] }),
                 ],
               }),
               w("li", {
                 children: [
-                  w("span", { children: `国土行政治理（${t.unlocked} 块国土）` }),
+                  w("span", {
+                    class: "ld-lbl",
+                    children: [
+                      `🏛️ 行政治理（${t.unlocked}格）`,
+                      _p6bQTip("国土行政治理", `已开拓 ${t.unlocked} 块国土的基层行政运转开支`),
+                    ],
+                  }),
                   w("b", { class: "down", children: ["−", fe(t.adminCost ?? 0)] }),
                 ],
               }),
               w("li", {
                 children: [
                   w("span", {
+                    class: "ld-lbl",
                     children: [
-                      "三轨专项预算 ",
+                      "🎯 专项预算",
                       w("button", {
                         class: "link",
-                        style: "font-size:11px;margin-left:4px",
+                        style: "font-size:11px;margin-left:2px",
                         onClick: () => A.openPanel("policy"),
-                        children: "去施政调拨 →",
+                        children: "调拨 →",
                       }),
+                      _p6bQTip("三轨专项预算", "科研、基建、民生三轨预算投入，点击「调拨 →」前往施政面板调整档位"),
                     ],
                   }),
                   w("b", {
@@ -36471,14 +36526,20 @@ function Xp() {
               (t.debtInterest ?? 0) > 0 &&
                 w("li", {
                   children: [
-                    w("span", { children: `主权国债利息（${SA(t.debtRate ?? 0.016, 1)}/季）` }),
+                    w("span", {
+                      class: "ld-lbl",
+                      children: [
+                        `📉 国债利息（${SA(t.debtRate ?? 0.016, 1)}）`,
+                        _p6bQTip("主权国债季度利息", `当前季利率 ${SA(t.debtRate ?? 0.016, 1)}，提升信用评级、金融业与首都政治可降息`),
+                      ],
+                    }),
                     w("b", { class: "down", children: ["−", fe(t.debtInterest)] }),
                   ],
                 }),
               w("li", {
                 class: "total",
                 children: [
-                  w("span", { children: t.net >= 0 ? "财政净结余" : "财政季度赤字" }),
+                  w("span", { children: t.net >= 0 ? "📊 财政净结余" : "📊 财政赤字" }),
                   w("b", { class: t.net >= 0 ? "up" : "down", children: [t.net >= 0 ? "+" : "", fe(t.net)] }),
                 ],
               }),
@@ -36486,6 +36547,9 @@ function Xp() {
           }),
           w("div", {
             class: `fiscal-meter${t.debt > 0 ? " in-debt" : ""}`,
+            "data-tip-touch": !0,
+            "data-tip-title": fmTipTitle,
+            "data-tip": fmTipBody,
             children: [
               w("div", {
                 class: "fm-top",
@@ -36493,11 +36557,18 @@ function Xp() {
                   w("span", {
                     class: "fm-title",
                     children: [
-                      t.debt > 0 ? "主权国债余额" : "国库现金储备",
+                      t.debt > 0 ? "🏦 主权国债余额" : "🏦 国库现金储备",
                       w("em", {
                         class: `cr-tag cr-${t.creditRating === "AAA" ? "aaa" : t.creditRating === "AA" ? "aa" : t.creditRating === "A" ? "a" : "bad"}`,
-                        children: ["信用 ", t.creditRating],
+                        children: t.creditRating,
                       }),
+                      t.debt <= 0 &&
+                        (t.surplusDiv ?? 0) > 0.05 &&
+                        w("em", {
+                          class: "cr-tag cr-aaa",
+                          children: `分红 +${SA((t.surplusDiv ?? 0) * sRate)}`,
+                        }),
+                      _p6bQTip(fmTipTitle, fmTipBody),
                     ],
                   }),
                   w("b", {
@@ -36514,83 +36585,88 @@ function Xp() {
                 max: Math.max(1, t.debt > 0 ? t.debtCap : t.reserveCap),
                 color: t.debt > 0 ? (t.debtRatio >= 0.7 ? "var(--red)" : "#ffb84d") : "var(--cyan)",
               }),
-              w("small", {
-                class: "fm-note",
-                children:
-                  t.debt > 0
-                    ? `赤字运行中 · 信用额度还剩 ${fe(Math.max(0, t.debtCap - t.debt))} 亿${restActive ? `（重整免息剩 ${e.debtRestructureUntil - e.quarter} 季）` : "（金融业与首都政治可提额降息）"}`
-                    : (t.surplusDiv ?? 0) > 0.05
-                      ? `✓ 国库满储（1.5× 软缓冲 ${fe(softCap)} 亿，超额每季按 25% 缓释转分红）：内需 +${SA((t.surplusDiv ?? 0) * sRate)} · 宜居 +${Math.round((t.surplusDiv ?? 0) * 5)}`
-                      : `储备上限 ${fe(t.reserveCap)} 亿（1.5× 软缓冲上限 ${fe(softCap)} 亿，超额每季按 25% 转全民消费分红，分红系数 ${SA(sRate)}）；紧急建设可举债至 −${fe(t.debtCap)} 亿`,
-              }),
             ],
           }),
           restActive &&
             w("div", {
               class: "debt-rescue-card active",
-              children: [
-                w("div", {
-                  class: "drc-hd",
-                  children: [
-                    w("b", { children: "🛡️ 主权债务重整保护期生效中" }),
-                    w("em", { children: `剩余 ${e.debtRestructureUntil - e.quarter} 季` }),
-                  ],
-                }),
-                w("p", {
-                  class: "drc-desc",
-                  children:
-                    "保护期内国债免收利息；期间暂停新增透支与融资建设，建造与开地费 +15%，全国宜居 −10。",
-                }),
-              ],
+              "data-tip-touch": !0,
+              "data-tip-title": "主权债务重整保护期",
+              "data-tip": `保护期剩余 ${e.debtRestructureUntil - e.quarter} 季：\n• 国债免收季度利息\n• 暂停新增跨零透支与融资建设\n• 建造与开地费 +15%，全国宜居 −10`,
+              children: w("div", {
+                class: "drc-hd",
+                children: [
+                  w("b", {
+                    children: [
+                      "🛡️ 债务重整保护",
+                      " ",
+                      _p6bQTip(
+                        "主权债务重整保护期",
+                        `保护期剩余 ${e.debtRestructureUntil - e.quarter} 季：\n• 国债免收季度利息\n• 暂停新增跨零透支与融资建设\n• 建造与开地费 +15%，全国宜居 −10`,
+                      ),
+                    ],
+                  }),
+                  w("em", { children: `免息剩 ${e.debtRestructureUntil - e.quarter} 季` }),
+                ],
+              }),
             }),
           !restActive &&
             t.debt > 0 &&
             w("div", {
               class: `debt-rescue-card${restChk.ok ? " ready" : " cool"}`,
-              children: [
-                w("div", {
-                  class: "drc-hd",
-                  children: [
-                    w("b", { children: "⚖️ 主权债务重组预案" }),
-                    w("em", { children: restChk.ok ? "危机触发 · 可启动" : "条件未触发" }),
-                  ],
-                }),
-                w("p", {
-                  class: "drc-desc",
-                  children: `当场核销 50% 主权国债（减免约 ${fe(forgivenPv)} 亿 → 剩 −${fe(afterDebtPv)} 亿），并享 12 季国债免息；需耗尽主公当前体力（⚡${e.lord.stamina}，至少 2 点），未来 12 季禁透支/造价+15%/宜居−10（冷却 48 季）。`,
-                }),
-                !restChk.ok &&
-                  restChk.reason &&
-                  w("small", { class: "drc-reason", children: restChk.reason }),
-                w("button", {
-                  class: `btn small ${restChk.ok ? "gold" : ""}`,
-                  disabled: !restChk.ok,
-                  onClick: () =>
-                    A.openModal({
-                      type: "confirm",
-                      title: "确认【启动主权债务重组】？",
-                      body: `当前主权国债 −${fe(curDebt)} 亿（季息 −${fe(t.debtInterest ?? 0)} 亿）。\n\n签署重整协议后：\n• 立即核销 50% 国债（减免 ${fe(forgivenPv)} 亿，剩余 −${fe(afterDebtPv)} 亿）\n• 未来 12 个季度享受主权国债免息保护\n• 消耗主公当前全部体力（⚡${e.lord.stamina}）\n• 12 季内禁止跨零透支与融资、建造与开地费 +15%、全国宜居 −10（重组冷却 48 季）`,
-                      okText: "启动主权债务重组",
-                      onOk: () =>
-                        typeof A.restructureDebt == "function"
-                          ? A.restructureDebt()
-                          : A.act((st) => restructureDebt(st, A.metrics)),
-                    }),
-                  children: "【启动主权债务重组】",
-                }),
-              ],
+              "data-tip-touch": !0,
+              "data-tip-title": "主权债务重组预案",
+              "data-tip": `当场核销 50% 国债（减免约 ${fe(forgivenPv)} 亿 → 剩 −${fe(afterDebtPv)} 亿），享 12 季免息保护。\n• 需耗尽主公当前体力（⚡${e.lord.stamina}，至少 2 点）\n• 未来 12 季禁透支/造价+15%/宜居−10（冷却 48 季）${!restChk.ok && restChk.reason ? `\n! ${restChk.reason}` : ""}`,
+              children: w("div", {
+                class: "drc-hd",
+                children: [
+                  w("b", {
+                    children: [
+                      "⚖️ 债务重组",
+                      " ",
+                      _p6bQTip(
+                        "主权债务重组预案",
+                        `当场核销 50% 国债（减免约 ${fe(forgivenPv)} 亿 → 剩 −${fe(afterDebtPv)} 亿），享 12 季免息保护。\n• 需耗尽主公当前体力（⚡${e.lord.stamina}，至少 2 点）\n• 未来 12 季禁透支/造价+15%/宜居−10（冷却 48 季）${!restChk.ok && restChk.reason ? `\n! ${restChk.reason}` : ""}`,
+                      ),
+                    ],
+                  }),
+                  w("em", { children: restChk.ok ? `减免 ${fe(forgivenPv)}亿` : "未触发" }),
+                  w("button", {
+                    class: `btn tiny ${restChk.ok ? "gold" : ""}`,
+                    disabled: !restChk.ok,
+                    onClick: () =>
+                      A.openModal({
+                        type: "confirm",
+                        title: "确认【启动主权债务重组】？",
+                        body: `当前主权国债 −${fe(curDebt)} 亿（季息 −${fe(t.debtInterest ?? 0)} 亿）。\n\n签署重整协议后：\n• 立即核销 50% 国债（减免 ${fe(forgivenPv)} 亿，剩余 −${fe(afterDebtPv)} 亿）\n• 未来 12 个季度享受主权国债免息保护\n• 消耗主公当前全部体力（⚡${e.lord.stamina}）\n• 12 季内禁止跨零透支与融资、建造与开地费 +15%、全国宜居 −10（重组冷却 48 季）`,
+                        okText: "启动主权债务重组",
+                        onOk: () =>
+                          typeof A.restructureDebt == "function"
+                            ? A.restructureDebt()
+                            : A.act((st) => restructureDebt(st, A.metrics)),
+                      }),
+                    children: "启动重组",
+                  }),
+                ],
+              }),
             }),
-          w("p", {
-            class: "fine",
+          w("div", {
+            class: "econ-chip-row",
             children: [
-              "税制：",
-              e.taxes.map((r) => Ks[r].name).join(" + "),
-              "。",
-              "行业 ",
-              t.diversity,
-              " 种，产业多样性 +",
-              SA(divB, 1),
-              "。",
+              w("span", {
+                class: "chip chip-info",
+                "data-tip-touch": !0,
+                "data-tip-title": "现行税制组合",
+                "data-tip": `已启用税种：${taxNames}\n综合平均税率：${SA(t.taxRate, 1)}（可在「施政」面板调整）`,
+                children: `⚖️ ${taxNames}`,
+              }),
+              w("span", {
+                class: "chip chip-ok",
+                "data-tip-touch": !0,
+                "data-tip-title": "产业多样性加成",
+                "data-tip": `全国已建成运转 ${t.diversity} 种不同行业，提供全国产出加成 +${SA(divB, 1)}`,
+                children: `🧩 ${t.diversity} 行业 +${SA(divB, 1)}`,
+              }),
             ],
           }),
         ],
@@ -36602,30 +36678,45 @@ function Xp() {
           children: [
             ["电力", t.power, Ae.zap, "#ffd866"],
             ["供水", t.water, Ae.drop, "#8fd3ff"],
-          ].map(([r, i, v, c]) =>
-            w(
+          ].map(([r, i, v, c]) => {
+            const uTipTitle = `${r}供需平衡`,
+              uTipBody =
+                i.cut > 0
+                  ? `! ${r}不足（需求 ${i.demand} / 供给 ${i.supply}，缺口 ${i.demand - i.supply}）\n除自备${r === "电力" ? "电源" : "水源"}产业外，全国产业产出 −${SA(i.cut)}`
+                  : `✓ ${r}充足（需求 ${i.demand} / 供给 ${i.supply}，富余 ${i.supply - i.demand}）`;
+            return w(
               "div",
               {
                 class: `util-card${i.cut > 0 ? " short" : ""}`,
+                "data-tip-touch": !0,
+                "data-tip-title": uTipTitle,
+                "data-tip": uTipBody,
                 children: [
-                  w("h5", { children: [w(NA, { node: v, size: 14, color: c }), " ", r] }),
-                  w("strong", { children: [i.demand, w("small", { children: [" / ", i.supply] })] }),
+                  w("h5", {
+                    children: [
+                      w(NA, { node: v, size: 14, color: c }),
+                      " ",
+                      r,
+                      _p6bQTip(uTipTitle, uTipBody),
+                      w("em", {
+                        class: `uc-pill${i.cut > 0 ? " warn" : " ok"}`,
+                        children: i.cut > 0 ? `−${SA(i.cut)}` : `+${i.supply - i.demand}`,
+                      }),
+                    ],
+                  }),
+                  w("strong", {
+                    children: [i.demand, w("span", { class: "uc-cap", children: [" / ", i.supply] })],
+                  }),
                   w(ei, {
                     value: i.demand,
                     max: Math.max(i.supply, i.demand, 1),
                     color: i.cut > 0 ? "var(--red)" : c,
                   }),
-                  w("em", {
-                    children:
-                      i.cut > 0
-                        ? `不够用：除了自己供${r === "电力" ? "电" : "水"}的，全国产业 −${SA(i.cut)}`
-                        : `够用，还富余 ${i.supply - i.demand}`,
-                  }),
                 ],
               },
               r,
-            ),
-          ),
+            );
+          }),
         }),
       }),
       w(Sp, {}),
@@ -36635,29 +36726,55 @@ function Xp() {
           class: "ledger",
           children: [
             w("li", {
-              children: [w("span", { children: "全国人口" }), w("b", { children: RC(t.population) })],
+              children: [w("span", { children: "👥 全国人口" }), w("b", { children: RC(t.population) })],
             }),
             w("li", {
               children: [
-                w("span", { children: ["食品供给", t.foodLv > 0 ? `（有效 Lv.${t.foodLv}）` : ""] }),
+                w("span", {
+                  class: "ld-lbl",
+                  children: [
+                    `🌾 食品供给${t.foodLv > 0 ? ` Lv.${t.foodLv}` : ""}`,
+                    _p6bQTip(
+                      "食品供给乘区",
+                      t.foodLv > 0
+                        ? `食品产业有效等级 Lv.${t.foodLv}：基础人口 +${fe(t.foodBasePop, 0)} 万人 · 全国人口乘区 +${SA(t.foodPopMult)}`
+                        : "尚未建成食品类产业；建造后可大幅提升基础人口与内需乘区",
+                    ),
+                  ],
+                }),
                 w("b", {
                   class: t.foodLv > 0 ? "up" : "muted",
-                  children:
-                    t.foodLv > 0
-                      ? `+${fe(t.foodBasePop, 0)} 万人 · 人口 +${SA(t.foodPopMult)}`
-                      : "未建食品 · 建后提升人口与内需",
+                  children: t.foodLv > 0 ? `+${SA(t.foodPopMult)}` : "未建",
                 }),
               ],
             }),
             w("li", {
               children: [
-                w("span", { children: "宜居度（放大人口）" }),
-                w("b", { children: ["+", fe(t.livability, 0), "% / 上限 ", fe(livCap, 0), "%"] }),
+                w("span", {
+                  class: "ld-lbl",
+                  children: [
+                    "🏡 全国宜居",
+                    _p6bQTip(
+                      "全国宜居度",
+                      `当前宜居度 +${fe(t.livability, 0)}%（当前上限 ${fe(livCap, 0)}%），直接放大全国人口承载与内需`,
+                    ),
+                  ],
+                }),
+                w("b", { children: `+${fe(t.livability, 0)}% / ${fe(livCap, 0)}%` }),
               ],
             }),
             w("li", {
               children: [
-                w("span", { children: "内需加成（面向居民的产业）" }),
+                w("span", {
+                  class: "ld-lbl",
+                  children: [
+                    "🛍️ 内需加成",
+                    _p6bQTip(
+                      "居民内需加成",
+                      `由全国人口、宜居度与国库满储分红共同驱动，为面向居民的消费与服务业提供 +${SA(t.demand)} 产值加成`,
+                    ),
+                  ],
+                }),
                 w("b", { class: "up", children: ["+", SA(t.demand)] }),
               ],
             }),
@@ -36666,6 +36783,10 @@ function Xp() {
       }),
       w(Qt, {
         title: "行业性格",
+        extra: _p6bQTip(
+          "三大行业性格",
+          "• 产值型：主力拉升季度 GDP\n• 税源型：提供更高税率与稳定现金流\n• 配套型：为上下游与全国提供关键乘区支撑",
+        ),
         children: [
           w("div", {
             class: "stack",
@@ -36730,18 +36851,21 @@ function Xp() {
               {
                 children: w("button", {
                   class: "row-btn",
+                  "data-tip-title": `${r.industry ? HA[r.industry].name : "地块"} · Lv.${r.level}`,
+                  "data-tip": `${r.industry && HA[r.industry].brand ? `代表品牌：${HA[r.industry].brand}\n` : ""}当季产出：${fe(t.tiles[r.id].gdp)} 亿（点击定位）`,
                   onClick: () => {
                     (A.select(r.id), A.openPanel(null));
                   },
                   children: [
                     w("span", {
+                      class: "rb-lhs",
                       children: [
-                        r.industry ? HA[r.industry].name : "—",
-                        " ",
-                        w("small", { children: [r.industry ? HA[r.industry].brand : "", " · Lv.", r.level] }),
+                        r.industry && w(vn, { industry: r.industry, size: 22 }),
+                        w("span", { class: "rb-nm", children: r.industry ? HA[r.industry].name : "—" }),
+                        w("em", { class: "rb-lv", children: `Lv.${r.level}` }),
                       ],
                     }),
-                    w("b", { children: fe(t.tiles[r.id].gdp) }),
+                    w("b", { children: `${fe(t.tiles[r.id].gdp)} 亿` }),
                   ],
                 }),
               },
@@ -36757,7 +36881,7 @@ function Xp() {
           children: e.log
             .slice(0, 30)
             .map((r, i) =>
-              w("li", { class: r.kind, children: [w("small", { children: Ng(r.q) }), r.text] }, i),
+              w("li", { class: r.kind, children: [w("span", { class: "log-q", children: Ng(r.q) }), r.text] }, i),
             ),
         }),
       }),
@@ -36773,9 +36897,18 @@ function Sp() {
   const fTiles = e.tiles.filter(
     (tl) => tl.unlocked && !tl.build && tl.public && it[tl.public] && !it[tl.public].wonder,
   );
+  const autoTipTitle = "自动升级产业规则",
+    autoTipBody =
+      "开启后每季度最多自动升级 2 块产业地，最多动用当前国库现金的 50%，优先升级「每亿投入换来边际 GDP 最多」的地块。";
   return w(Qt, {
     title: "国家奇观",
-    extra: w("small", { class: "muted", children: `${wTiles.length}/8 · 市政 ${fTiles.length}` }),
+    extra: w("span", {
+      class: "sp-meta",
+      children: [
+        `奇观 ${wTiles.length}/8 · 市政 ${fTiles.length}`,
+        _p6bQTip("国家奇观建造规则", "点击地图已开拓空地，在「国家奇观」页签规划建造（每座奇观占 3 格相邻三角形空地）。"),
+      ],
+    }),
     children: [
       wTiles.length
         ? w("div", {
@@ -36787,7 +36920,8 @@ function Sp() {
                 {
                   class: "civ-chip-w",
                   onClick: () => A.focusTile(tl.id),
-                  title: `点击定位「${wd.name}」`,
+                  "data-tip-title": `${wd.name} · Lv.${tl.level}`,
+                  "data-tip": wd.desc ? `${wd.desc}\n点击定位奇观所在地块` : "点击定位奇观所在地块",
                   children: [
                     w(vn, { pub: wd.id, size: 18 }),
                     w("b", { children: wd.name }),
@@ -36798,13 +36932,21 @@ function Sp() {
               );
             }),
           })
-        : w("p", {
-            class: "hint",
-            children: "尚未建成奇观。点地图空地，在「国家奇观」页签规划建造（每座占 3 格三角形空地）。",
+        : w("div", {
+            class: "sp-empty-row",
+            "data-tip-touch": !0,
+            "data-tip-title": "尚未建成国家奇观",
+            "data-tip": "点击地图已开拓空地，在「国家奇观」页签规划建造（每座奇观占 3 格相邻三角形空地）。",
+            children: [
+              w("span", { class: "muted", children: "🏛️ 暂无建成奇观" }),
+              _p6bQTip("如何建造国家奇观", "点击地图空地 → 选择「国家奇观」页签即可规划建造（每座占 3 格相邻三角形空地）。"),
+            ],
           }),
       w("label", {
-        class: "toggle-row",
+        class: "toggle-row compact",
         style: "margin-top:8px",
+        "data-tip-title": autoTipTitle,
+        "data-tip": autoTipBody,
         children: [
           w("input", {
             type: "checkbox",
@@ -36813,11 +36955,11 @@ function Sp() {
               ((e.settings.autoUpgrade = s.target.checked), A.refresh());
             },
           }),
-          w("span", {
-            children: [
-              w("b", { children: "自动升级产业" }),
-              w("small", { children: "每季最多升两块地，只花一半国库，优先升“每亿投入换来 GDP 最多”的地块" }),
-            ],
+          w("b", { children: "🤖 自动升级产业" }),
+          _p6bQTip(autoTipTitle, autoTipBody, !0),
+          w("em", {
+            class: `tr-state${e.settings.autoUpgrade ? " on" : ""}`,
+            children: e.settings.autoUpgrade ? "已开启" : "已关闭",
           }),
         ],
       }),
@@ -36861,36 +37003,49 @@ function Np() {
               ? B.ind.source === "架空"
               : B.ind.sector === n,
     g = o.filter(c),
-    P = hf.map((B) => ({ sid: B, list: g.filter((a) => a.ind.sector === B) })).filter((B) => B.list.length);
+    P = hf.map((B) => ({ sid: B, list: g.filter((a) => a.ind.sector === B) })).filter((B) => B.list.length),
+    sumTipTitle = `全国产业图谱 (${i}/${r})`,
+    sumTipBody = `• 已建成行业：${i} / ${r} 种\n• 当前满足前置可新建：${v} 种\n• 架空未来产业：${
+      ficOpen
+        ? f
+          ? `未达门槛（${f}）`
+          : "✓ 已全面开放建造"
+        : `随发展阶段开放（需首都 Lv.${O.fictionCapital}、${O.fictionDiversity} 种行业）`
+    }`;
   return w(he, {
     children: [
       w("div", {
-        class: "ind-summary",
+        class: "ind-summary compact",
+        "data-tip-touch": !0,
+        "data-tip-title": sumTipTitle,
+        "data-tip": sumTipBody,
         children: [
           w("div", {
-            class: "is-num",
-            children: [w("b", { children: i }), w("small", { children: ["/ ", r, " 种已建"] })],
-          }),
-          w("div", { class: "is-bar", children: w("i", { style: { width: `${(i / Math.max(1, r)) * 100}%` } }) }),
-          w("div", {
-            class: "ind-sum-row",
+            class: "ind-sum-top",
             children: [
-              w("small", {
-                class: "muted",
+              w("div", {
+                class: "ind-sum-pills",
                 children: [
-                  "现在还能新建 ",
-                  v,
-                  " 种。",
-                  ficOpen ? (f ? `${f}。` : "架空产业已开放。") : "",
+                  w("span", { class: "is-pill built", children: ["🏭 已建 ", w("b", { children: `${i}/${r}` })] }),
+                  w("span", { class: "is-pill ready", children: ["✦ 可建 ", w("b", { children: v })] }),
+                  ficOpen &&
+                    w("span", {
+                      class: `is-pill fic${f ? " off" : ""}`,
+                      children: f ? "🔒 架空" : "✨ 架空",
+                    }),
+                  _p6bQTip(sumTipTitle, sumTipBody),
                 ],
               }),
               w("button", {
                 class: "btn small primary tree-open-btn",
+                "data-tip-title": "全景产业建筑树",
+                "data-tip": "查看全行业上下游供需关系与解锁链路",
                 onClick: () => A.openModal({ type: "tree" }),
                 children: [w(NA, { node: Ae.hex, size: 13 }), " 建筑树"],
               }),
             ],
           }),
+          w("div", { class: "is-bar", children: w("i", { style: { width: `${(i / Math.max(1, r)) * 100}%` } }) }),
         ],
       }),
       w("div", {
@@ -36909,7 +37064,7 @@ function Np() {
           w("button", {
             class: `pill${n === "ready" ? " on" : ""}`,
             onClick: () => s("ready"),
-            children: ["能新建 ", v],
+            children: ["可建 ", v],
           }),
           ficOpen &&
             w("button", {
@@ -36932,7 +37087,7 @@ function Np() {
             ),
         ],
       }),
-      !g.length && w("p", { class: "empty", children: "这一类里还没有。" }),
+      !g.length && w("p", { class: "empty", children: "暂无匹配行业" }),
       P.map((B) =>
         w(
           "section",
@@ -36944,76 +37099,84 @@ function Np() {
                 children: [
                   w(NA, { node: r0[B.sid], size: 15, color: lt[B.sid].color }),
                   lt[B.sid].name,
-                  w("small", { children: [B.list.filter((a) => a.built).length, "/", B.list.length] }),
+                  w("span", {
+                    class: "ig-cnt",
+                    children: `${B.list.filter((a) => a.built).length}/${B.list.length}`,
+                  }),
                 ],
               }),
               w("ul", {
                 class: "ind-cards",
                 children: B.list.map(({ ind: a, built: Q, running: D, miss: l, gated: u, ready: C }) => {
                   const E = Q ? (D < Q ? "warn" : "on") : C ? "ready" : "no",
-                    h =
-                      a.harvest && !a.harvestOptional
-                        ? a.harvest
-                            .map((d) => ke[d].name)
-                            .slice(0, 3)
-                            .join("、")
-                        : "";
+                    resNames =
+                      a.harvest && a.harvest.length
+                        ? a.harvest.map((d) => (ke[d] ? ke[d].name : d)).join("、")
+                        : "",
+                    hasExotic = Boolean(
+                      a.exotic || (a.harvest && a.harvest.some((d) => ke[d] && ke[d].exotic)),
+                    ),
+                    indTipTitle = `${a.name} · ${lt[a.sector].name}${a.source === "架空" ? " · 架空" : ""}`,
+                    indTipLines = [
+                      `• 产出：${a.makes || "综合服务"}${
+                        a.needs && a.needs.length
+                          ? ` ｜ 原料：${a.needs.map((grp) => grp.join("/")).join(" + ")}`
+                          : " ｜ 无前置原料"
+                      }`,
+                    ];
+                  if (resNames) {
+                    indTipLines.push(`• 资源地块：${a.harvestOptional ? "可选增产 " : "需建于 "}${resNames}`);
+                  }
+                  if (a.brand) {
+                    indTipLines.push(`• 代表品牌：${a.brand}`);
+                  }
+                  if (Q > 0) {
+                    indTipLines.push(
+                      D < Q
+                        ? `! 已建 ${Q} 处（其中 ${Q - D} 处停产，点击查看详情）`
+                        : `✓ 已建 ${Q} 处（全部正常运转）`,
+                    );
+                  } else if (u) {
+                    indTipLines.push(`! 架空门槛未到：需首都 Lv.${O.fictionCapital}、${O.fictionDiversity} 种已建行业`);
+                  } else if (l.length) {
+                    indTipLines.push(`! 缺少前置产出：${l.map((d) => d.join("/")).join("、")}`);
+                  } else {
+                    indTipLines.push("✓ 前置齐备，可直接在空地规划建造");
+                  }
+                  const indTipBody = indTipLines.join("\n");
                   return w(
                     "li",
                     {
                       children: w("button", {
-                        class: `ind-card ${E}`,
+                        class: `ind-card single-row ${E}`,
                         style: `--c:${xs(a)}`,
+                        "data-tip-touch": !0,
+                        "data-tip-title": indTipTitle,
+                        "data-tip": indTipBody,
                         onClick: () => A.openModal({ type: "industry", id: a.id }),
                         children: [
-                          w(vn, { industry: a.id, size: 40, dim: E === "no" }),
+                          w(vn, { industry: a.id, size: 28, dim: E === "no" }),
                           w("span", {
                             class: "ic-main",
                             children: [
-                              w("b", {
-                                children: [
-                                  a.name,
-                                  a.source === "架空" && w("em", { class: "fic", children: "架空" }),
-                                ],
-                              }),
-                              Q
-                                ? w("small", {
-                                    children: [
-                                      w(Ec, { tag: a.makes, size: 12 }),
-                                      " 产出",
-                                      a.makes,
-                                      D < Q ? ` · ${Q - D} 处停产` : "",
-                                    ],
-                                  })
-                                : u
-                                  ? w("small", {
-                                      class: "down",
-                                      children: [
-                                        "门槛未到：首都 Lv.",
-                                        O.fictionCapital,
-                                        "、",
-                                        O.fictionDiversity,
-                                        " 种行业",
-                                      ],
-                                    })
-                                  : l.length
-                                    ? w("small", {
-                                        class: "down",
-                                        children: ["还缺 ", l.map((d) => d.join("/")).join("、")],
-                                      })
-                                    : w("small", {
-                                        class: "up",
-                                        children: h ? `可建 · 要建在有${h}的地上` : `可建 · 产出${a.makes}`,
-                                      }),
+                              w("b", { children: a.name }),
+                              a.source === "架空" && w("em", { class: "fic", children: "架空" }),
+                              hasExotic && w("em", { class: "fic exo", children: "奇珍" }),
+                              Q > 0 &&
+                                D < Q &&
+                                w("em", { class: "ic-warn-tag", children: `停${Q - D}` }),
                             ],
                           }),
                           w("span", {
                             class: "ic-side",
-                            children: Q
-                              ? w(he, { children: [w("b", { children: Q }), w("small", { children: "处" })] })
-                              : C
-                                ? w("i", { class: "ic-dot" })
-                                : w(NA, { node: Ae.lock, size: 13 }),
+                            children: [
+                              Q
+                                ? w("b", { class: "ic-cnt", children: `${Q} 处` })
+                                : C
+                                  ? w("i", { class: "ic-dot" })
+                                  : w(NA, { node: Ae.lock, size: 13 }),
+                              _p6bQTip(indTipTitle, indTipBody),
+                            ],
                           }),
                         ],
                       }),
@@ -37099,15 +37262,20 @@ function Yp() {
   return w(he, {
     children: [
       w("div", {
-        class: "recruit-bar",
+        class: "recruit-bar compact",
         children: [
           w("span", {
-            children: [w("small", { children: "持有星钻" }), w("b", { children: w(oP, { v: e.gems }) })],
+            class: "rb-gems",
+            "data-tip-title": "持有星钻",
+            "data-tip": "可用于招募名士、星钻突破升星与重塑主公执政纲领",
+            children: w("b", { children: w(oP, { v: e.gems }) }),
           }),
           w("button", {
             class: "btn primary",
+            "data-tip-title": "名士招募",
+            "data-tip": `单次招募 ◇${O.pullCost} 星钻，支持单抽与十连招募`,
             onClick: () => A.openModal({ type: "recruit" }),
-            children: ["招募人物 ", w("small", { children: ["◇", O.pullCost, " 一次"] })],
+            children: `✦ 招募 · ◇${O.pullCost}`,
           }),
         ],
       }),
@@ -37163,12 +37331,12 @@ function Yp() {
                 value: srt,
                 onChange: (ev) => setSrt(ev.target.value),
                 children: [
-                  w("option", { value: "default", children: "排序：默认品质" }),
-                  w("option", { value: "mgmt", children: "按管理降序" }),
-                  w("option", { value: "tech", children: "按技术降序" }),
-                  w("option", { value: "pol", children: "按政治降序" }),
-                  w("option", { value: "amb", children: "按野心降序" }),
-                  w("option", { value: "cha", children: "按魅力降序" }),
+                  w("option", { value: "default", children: "排序：品质" }),
+                  w("option", { value: "mgmt", children: "按管理" }),
+                  w("option", { value: "tech", children: "按技术" }),
+                  w("option", { value: "pol", children: "按政治" }),
+                  w("option", { value: "amb", children: "按野心" }),
+                  w("option", { value: "cha", children: "按魅力" }),
                 ],
               }),
             ],
@@ -37176,7 +37344,7 @@ function Yp() {
           w("input", {
             class: "roster-search",
             type: "search",
-            placeholder: "搜姓名 / 头衔 / 专属 / 匹配行业或板块（如 芯片、金融）",
+            placeholder: "搜索姓名 / 行业",
             value: q,
             onInput: (ev) => setQ(ev.target.value),
           }),
@@ -37184,7 +37352,7 @@ function Yp() {
             class: "filter-row roster-pills",
             children: [
               { id: "all", label: "全部" },
-              { id: "idle", label: `待命闲置${idleCnt ? ` (${idleCnt})` : ""}` },
+              { id: "idle", label: `待命${idleCnt ? ` (${idleCnt})` : ""}` },
               { id: "bt", label: `可突破${btCnt ? ` (${btCnt})` : ""}` },
               { id: "ex", label: "有专属" },
               { id: "top", label: "红橙卡" },
@@ -37202,29 +37370,60 @@ function Yp() {
           }),
         ],
       }),
-      n === "owned" && !ownedArr.length && w("p", { class: "empty", children: "还没有人物，去招募吧。" }),
+      n === "owned" && !ownedArr.length && w("p", { class: "empty", children: "尚未招募人物" }),
       (ownedArr.length > 0 || n === "all") &&
         !list.length &&
-        w("p", { class: "empty", children: "没有符合当前搜索与筛选条件的人物。" }),
+        w("p", { class: "empty", children: "无匹配人物" }),
       w("div", {
         class: "card-grid",
         children: list.map((o) => {
           const r = e.cards[o.id],
             i = (r == null ? void 0 : r.tile) != null ? e.tiles[r.tile] : null,
             isLocked = Boolean(i && i.cardLocked),
-            btMode = r ? cardBtMode(e, r) : null;
+            btMode = r ? cardBtMode(e, r) : null,
+            whereShort = i
+              ? i.capital
+                ? "首都"
+                : i.industry && HA[i.industry]
+                  ? HA[i.industry].short || HA[i.industry].name
+                  : i.public && it[i.public]
+                    ? it[i.public].short || it[i.public].name.slice(0, 4)
+                    : Ws(i)
+              : "待命",
+            matchNames = (o.match || [])
+              .slice(0, 5)
+              .map((mid) => (HA[mid] ? HA[mid].short || HA[mid].name : mid))
+              .join("、"),
+            cardTipTitle = `${o.name}${o.title ? ` · ${o.title}` : ""}${r ? `（Lv.${r.level}/${Zn(o.tier)}）` : "（未招募）"}`,
+            cardTipLines = [
+              `五维：管理 ${o.attrs.mgmt} · 技术 ${o.attrs.tech} · 政治 ${o.attrs.pol} · 野心 ${o.attrs.amb} · 魅力 ${o.attrs.cha}`,
+            ];
+          if (matchNames) {
+            cardTipLines.push(`适配行业：${matchNames}${(o.match || []).length > 5 ? " 等" : ""}`);
+          }
+          if (o.exclusive) {
+            const exIndName =
+              o.exclusive.industry && HA[o.exclusive.industry] ? `（${HA[o.exclusive.industry].name}）` : "";
+            cardTipLines.push(
+              `★ 专属「${o.exclusive.name}」${exIndName}${o.exclusive.desc ? `：${o.exclusive.desc}` : ""}`,
+            );
+          }
+          if (r) {
+            cardTipLines.push(`当前岗位：${i ? `驻守 ${Ws(i)}${isLocked ? "（岗位锁定）" : ""}` : "待命闲置"}`);
+          }
           return w(
             "button",
             {
               class: `card-tile t${o.tier}${r ? "" : " unowned"}`,
               style: { "--tier": Xe[o.tier] },
+              "data-tip-title": cardTipTitle,
+              "data-tip": cardTipLines.join("\n"),
               onClick: () => A.openModal({ type: "card", id: o.id }),
               children: [
                 w(Ls, { id: o.id, size: 52, dim: !r }),
                 w(Jo, { def: o }),
-                w("small", { class: "ct-title", children: o.title }),
                 srt !== "default" &&
-                  w("small", {
+                  w("span", {
                     class: "ct-attr-sort",
                     style: { color: A0[srt] },
                     children: `${lg[srt]} ${o.attrs[srt]}`,
@@ -37237,15 +37436,13 @@ function Yp() {
                           children: [
                             "Lv.",
                             r.level,
-                            "/",
-                            Zn(o.tier),
                             " ",
                             w(PQ, { stars: r.stars, max: Is[o.tier] }),
                           ],
                         }),
-                        w("small", {
-                          class: "ct-where",
-                          children: i ? `${Ws(i)}${isLocked ? " 🔒" : ""}` : "待命",
+                        w("span", {
+                          class: `ct-where${i ? " stationed" : ""}`,
+                          children: whereShort,
                         }),
                       ],
                     })
@@ -37272,37 +37469,43 @@ function Yp() {
   });
 }
 const SK_TIER_META = [
-  { tier: 0, title: "T1 主干必得", isFork: !1, capstone: !1 },
-  { tier: 1, title: "T2 主干进阶", isFork: !1, capstone: !1 },
-  { tier: 2, title: "T3 中层分流 · 二选一", isFork: !0, capstone: !1 },
-  { tier: 3, title: "T4 深层专精 · 二选一", isFork: !0, capstone: !1 },
-  { tier: 4, title: "T5 高阶路线 · 二选一", isFork: !0, capstone: !1 },
-  { tier: 5, title: "T6 ★ 终极执政纲领 · 二选一", isFork: !0, capstone: !0 },
+  { tier: 0, title: "T1 主干", rule: "主干基石 · 同层两项皆可点亮", isFork: !1, capstone: !1 },
+  { tier: 1, title: "T2 进阶", rule: "主干进阶 · 同层两项皆可点亮", isFork: !1, capstone: !1 },
+  { tier: 2, title: "T3 分流", rule: "中层分流 · 同层互斥择一专精", isFork: !0, capstone: !1 },
+  { tier: 3, title: "T4 专精", rule: "深层专精 · 同层互斥择一专精", isFork: !0, capstone: !1 },
+  { tier: 4, title: "T5 高阶", rule: "高阶路线 · 同层互斥择一专精", isFork: !0, capstone: !1 },
+  { tier: 5, title: "T6 ★ 终极", rule: "终极执政纲领 · 同层互斥择一专精", isFork: !0, capstone: !0 },
 ];
 function LordActCardV1({ act: actKey }) {
   const A = Pe(),
     e = A.state,
     t = e.lord,
-    info = Tt(e, actKey),
-    maxC = info.maxCharges ?? info.perDay ?? 0,
-    curC = maxC > 0 ? (info.charges ?? info.left ?? 0) : 0,
+    actInfo = Tt(e, actKey),
+    maxC = actInfo.maxCharges ?? actInfo.perDay ?? 0,
+    curC = maxC > 0 ? (actInfo.charges ?? actInfo.left ?? 0) : 0,
     isRolled = actKey === "survey" && A.placement && A.placement.kind === "move",
     isEvent = actKey === "survey" && Boolean(t.pendingEvent),
+    fmtShort = typeof c9 == "function" ? c9 : l9,
     tipTitle =
       maxC > 0
-        ? `${lc[actKey]} · 体力 ${info.cost} · 充能 ${curC}/${maxC}${curC < maxC && info.nextInMs > 0 ? `（充能 ${Vc(info.nextInMs)}）` : ""}`
-        : `${lc[actKey]} · 体力 ${info.cost} · 不限次 · 按体力${actKey === "govern" ? "（按政令季度冷却）" : ""}`;
+        ? `${lc[actKey]} · 体力 ${actInfo.cost} · 充能 ${curC}/${maxC}${curC < maxC && actInfo.nextInMs > 0 ? `（${Vc(actInfo.nextInMs)}）` : ""}`
+        : `${lc[actKey]} · 体力 ${actInfo.cost} · 不限次数`,
+    tipBody = `${T0[actKey] || ""}\n• 每次消耗体力：⚡${actInfo.cost}${
+      maxC > 0
+        ? `\n• 充能上限：${curC}/${maxC}${curC < maxC && actInfo.nextInMs > 0 ? `（下点充能 ${Vc(actInfo.nextInMs)}）` : "（已满额）"}`
+        : `\n• 次数规则：不限次数，按当前体力施展${actKey === "govern" ? "（各项政令按季度独立冷却）" : ""}`
+    }${actInfo.block && !isRolled && !isEvent ? `\n! ${actInfo.block}` : ""}`;
   return w("button", {
-    class: `act-btn wide act-${actKey} lac-card${isRolled ? " rolled" : ""}${isEvent ? " alert" : ""}${info.block && !isRolled && !isEvent ? " off" : ""}`,
+    class: `act-btn wide act-${actKey} lac-card${isRolled ? " rolled" : ""}${isEvent ? " alert" : ""}${actInfo.block && !isRolled && !isEvent ? " off" : ""}`,
     "data-tip-title": tipTitle,
-    "data-tip": `${T0[actKey] || ""}${info.block && !isRolled && !isEvent ? `\n! ${info.block}` : ""}`,
+    "data-tip": tipBody,
     onClick: () => A.runAct(actKey),
     children: [
       w("span", {
         class: "act-ico",
         children: [
           w(NA, { node: fo[actKey] ?? Ae.crown, size: 19, stroke: 2.1 }),
-          w("i", { class: "act-cost", children: info.cost }),
+          w("i", { class: "act-cost", children: actInfo.cost }),
         ],
       }),
       w("b", { children: isEvent ? "待定夺" : isRolled ? "择路中" : lc[actKey] }),
@@ -37311,28 +37514,22 @@ function LordActCardV1({ act: actKey }) {
             class: "lac-quota",
             children: [
               w("span", {
-                class: "lac-pips",
+                class: maxC >= 7 ? "lac-pips dense" : "lac-pips",
                 "aria-hidden": "true",
                 children: Array.from({ length: maxC }, (_, idx) =>
                   w("i", { class: idx < curC ? "on" : "" }, idx),
                 ),
               }),
-              w("small", {
+              w("span", {
                 class: "lac-sub",
                 children:
-                  curC < maxC && info.nextInMs > 0
-                    ? `${curC}/${maxC} · 充能 ${Vc(info.nextInMs)}`
-                    : `${curC}/${maxC} · 满额`,
+                  curC < maxC && actInfo.nextInMs > 0 ? fmtShort(actInfo.nextInMs) : `${curC}/${maxC}`,
               }),
             ],
           })
         : w("span", {
             class: "lac-quota unlim",
-            children: [
-              w("small", { class: "lac-sub", children: "不限次 · 按体力" }),
-              actKey === "govern" &&
-                w("small", { class: "lac-sub sub2", children: "按政令季度冷却" }),
-            ],
+            children: w("span", { class: "lac-sub", children: "不限" }),
           }),
     ],
   });
@@ -37347,6 +37544,7 @@ function Jp() {
     [, setLiveTick] = gt(0),
     v = typeof matchMedia == "function" && matchMedia("(hover: none)").matches,
     c = e.tiles[t.tile],
+    tileName = Ws(c),
     maxLv = typeof SKILL_MAX_LV < "u" ? SKILL_MAX_LV : 8,
     maxTotalSkills = Fo.length * maxLv,
     g = Vl(t.exp[n] ?? 0),
@@ -37376,7 +37574,9 @@ function Jp() {
           },
     lordActKeys = ["survey", "govern", "mentor", "supervise", "trade"].filter((k) =>
       k === "govern" ? isFeatOpenSafe(e, "policy") : k === "trade" ? isFeatOpenSafe(e, "trade") : !0,
-    );
+    ),
+    locTipTitle = `主公驻跸：${tileName}`,
+    locTipBody = `• 亲临加成：主公停驻当地可提供亲临督导增益，并在每季结算对应五维历练（点击移镜定位）\n• 执政履历：调研 ${t.patrols} 次 · 施政 ${e.stats.decrees || 0} 次 · 指点 ${t.stats.mentors || 0} 次 · 督办 ${t.stats.supervises || 0} 次 · 贸易 ${t.stats.trades || 0} 次`;
   $t(() => {
     const id = setInterval(() => setLiveTick((x) => x + 1), 2e3);
     return () => clearInterval(id);
@@ -37391,25 +37591,32 @@ function Jp() {
             children: [
               w("button", {
                 class: "lc-face",
-                "data-tip": "找到主公：镜头移到主公所在的地块",
+                "data-tip-title": locTipTitle,
+                "data-tip": locTipBody,
                 onClick: () => A.focusTile(t.tile),
                 children: w(hQ, { size: 60 }),
               }),
               w("div", {
                 class: "lc-who",
                 children: [
-                  w("b", { children: ["主公 ", t.name, w("em", { class: "lc-tlv", children: `总 Lv.${totalLv}/${maxTotalSkills}` })] }),
-                  w("small", {
+                  w("div", {
+                    class: "lc-who-top",
                     children: [
-                      "现在在",
-                      Ws(c),
-                      " · 调研 ",
-                      t.patrols,
-                      " 次",
-                      t.stats.supervises ? ` · 督办 ${t.stats.supervises} 次` : "",
-                      t.stats.mentors ? ` · 指点 ${t.stats.mentors} 次` : "",
-                      t.stats.trades ? ` · 贸易 ${t.stats.trades} 次` : "",
-                      e.stats.decrees ? ` · 施政 ${e.stats.decrees} 次` : "",
+                      w("b", {
+                        children: [
+                          "主公 ",
+                          t.name,
+                          w("em", { class: "lc-tlv", children: `Lv.${totalLv}/${maxTotalSkills}` }),
+                        ],
+                      }),
+                      w("button", {
+                        class: "lc-loc-chip",
+                        "data-tip-touch": !0,
+                        "data-tip-title": locTipTitle,
+                        "data-tip": locTipBody,
+                        onClick: () => A.focusTile(t.tile),
+                        children: `📍 ${tileName}`,
+                      }),
                     ],
                   }),
                   w(iP, { wide: !0 }),
@@ -37430,17 +37637,17 @@ function Jp() {
           w("button", {
             class: f === "skills" ? "on" : "",
             onClick: () => o("skills"),
-            children: [w("b", { children: `五维专精树 (${learnedTotal}/${maxTotalSkills})` })],
+            children: w("b", { children: `🌳 专精 (${learnedTotal}/${maxTotalSkills})` }),
           }),
           w("button", {
             class: f === "skins" ? "on" : "",
             onClick: () => o("skins"),
-            children: [w("b", { children: `外观衣橱 (${unlockedSkins.length}/${skinsAll.length || 15})` })],
+            children: w("b", { children: `👘 衣橱 (${unlockedSkins.length}/${skinsAll.length || 15})` }),
           }),
           w("button", {
             class: f === "traits" ? "on" : "",
             onClick: () => o("traits"),
-            children: [w("b", { children: "主公性格" })],
+            children: w("b", { children: `🎭 性格 (${t.traits.length + t.hidden.length})` }),
           }),
         ],
       }),
@@ -37458,17 +37665,12 @@ function Jp() {
                     class: `line-tab${n === Q.id ? " on" : ""}`,
                     style: `--lc:${A0[Q.id]}`,
                     "data-tip-title": `${Q.name}线 · ${Q.role}（Lv.${lnLv}/${maxLv}）`,
-                    "data-tip": `${Kp[Q.id]}${
-                      D > 0
-                        ? `
-✓ 有 ${D} 个技能点可以用`
-                        : ""
-                    }`,
+                    "data-tip": `${Kp[Q.id]}${D > 0 ? `\n✓ 可用技能点：${D}` : ""}`,
                     onClick: () => s(Q.id),
                     children: [
                       w(S8, { attr: Q.id, size: 17 }),
                       w("b", { children: Q.name }),
-                      w("small", { class: "lt-lv", children: `Lv.${lnLv}` }),
+                      w("span", { class: "lt-lv", children: `Lv.${lnLv}` }),
                       D > 0 && w("i", { class: "pt", children: D }),
                     ],
                   },
@@ -37488,14 +37690,14 @@ function Jp() {
                         w(S8, { attr: n, size: 15 }),
                         " ",
                         P.name,
-                        "线 · ",
-                        P.role,
+                        "专精",
+                        _p6bQTip(`${P.name}线 · ${P.role}`, Kp[n]),
                       ],
                     }),
                     w("div", {
                       class: "lh-tools",
                       children: [
-                        w("em", { class: `lh-pts${a > 0 ? " has" : ""}`, children: `可用点 ${a}` }),
+                        w("em", { class: `lh-pts${a > 0 ? " has" : ""}`, children: `点数 ${a}` }),
                         w("button", {
                           class: `btn tiny respec-btn${ri.canRespec ? "" : " off"}`,
                           disabled: !ri.canRespec,
@@ -37519,10 +37721,10 @@ function Jp() {
                             }),
                           children:
                             ri.cdLeftQ > 0
-                              ? `重塑纲领 · 剩${ri.cdLeftQ}季`
+                              ? `重塑 (${ri.cdLeftQ}季)`
                               : ri.free
-                                ? "重塑纲领 · 首次免费"
-                                : `重塑纲领 · ◇${ri.cost}`,
+                                ? "免费重塑"
+                                : `重塑 ◇${ri.cost}`,
                         }),
                       ],
                     }),
@@ -37533,8 +37735,8 @@ function Jp() {
                   max: g.need || 1,
                   color: A0[n],
                   label: g.need
-                    ? `Lv.${g.level}/${maxLv} · ${Math.floor(g.into)}/${g.need} 经验`
-                    : `Lv.${maxLv}/${maxLv} 已满级`,
+                    ? `Lv.${g.level}/${maxLv} · ${Math.floor(g.into)}/${g.need}`
+                    : `Lv.${maxLv}/${maxLv} MAX`,
                 }),
               ],
             }),
@@ -37564,52 +37766,49 @@ function Jp() {
                       tipStatus = learned
                         ? "✓ 已点亮生效"
                         : excluded
-                          ? "! 已择另一分支（可通过「重塑纲领」更换路线）"
+                          ? "! 已择同层另一分支（可通过「重塑」更换路线）"
                           : available
                             ? v
                               ? "✓ 再点一下学习（消耗 1 技能点）"
                               : "✓ 点击点亮此节点（消耗 1 技能点）"
                             : nodeOpen
                               ? `! 待技能点：多参与${P.name}类事务积累历练升级`
-                              : "! 前置层级尚未满足";
+                              : "! 前置层级尚未满足",
+                      nodeTipTitle = `${l.name} · ${tm.title}`,
+                      nodeTipBody = `${l.effect}\n${tipStatus}`;
                     return w(
                       "button",
                       {
                         class: `sk-card ${stateCls}${tm.capstone ? " capstone" : ""}${r === l.id ? " armed" : ""}`,
                         "aria-label": `${l.name}：${l.effect}`,
                         "data-tip-touch": !0,
-                        "data-tip-title": `${l.name} · ${tm.title}`,
-                        "data-tip": `${l.effect}\n${tipStatus}`,
+                        "data-tip-title": nodeTipTitle,
+                        "data-tip": nodeTipBody,
                         onClick: () => {
                           if (learned) return;
                           if (excluded) {
-                            A.toast("已选择同层另一专精分支，可通过上方「重塑纲领」更换", "warn");
+                            A.toast("已选择同层另一专精分支，可通过上方「重塑」更换", "warn");
                             return;
                           }
                           if (v && available && r !== l.id) return i(l.id);
                           (i(null), A.act((h) => k4(h, l.id)));
                         },
                         children: [
-                          w("div", {
-                            class: "skc-hd",
-                            children: [
-                              w("span", { class: "skc-slot", children: slotLbl }),
-                              w("b", { children: l.name }),
-                              w("em", {
-                                class: `skc-tag ${stateCls}`,
-                                children: learned
-                                  ? "已点亮"
-                                  : excluded
-                                    ? "互斥"
-                                    : available
-                                      ? "+ 点亮"
-                                      : nodeOpen
-                                        ? "待点亮"
-                                        : w(NA, { node: Ae.lock, size: 10 }),
-                              }),
-                            ],
+                          w("span", { class: "skc-slot", children: slotLbl }),
+                          w("b", { class: "skc-name", children: l.name }),
+                          _p6bQTip(nodeTipTitle, nodeTipBody),
+                          w("em", {
+                            class: `skc-tag ${stateCls}`,
+                            children: learned
+                              ? "✓"
+                              : excluded
+                                ? "互斥"
+                                : available
+                                  ? "+"
+                                  : nodeOpen
+                                    ? "待点"
+                                    : w(NA, { node: Ae.lock, size: 10 }),
                           }),
-                          w("small", { class: "skc-desc", children: l.effect }),
                         ],
                       },
                       l.id,
@@ -37624,9 +37823,7 @@ function Jp() {
                         class: "sk-tier-hd",
                         children: [
                           w("span", { class: "sth-title", children: tm.title }),
-                          w("small", {
-                            children: tm.isFork ? "同层互斥 · 择一专精" : "主干基石 · 皆可点亮",
-                          }),
+                          _p6bQTip(tm.title, tm.rule),
                         ],
                       }),
                       w("div", {
@@ -37655,19 +37852,31 @@ function Jp() {
           children: [
             w("div", {
               class: "wardrobe-hero",
+              "data-tip-touch": !0,
+              "data-tip-title": "主公外观衣橱",
+              "data-tip": `五维专精等级之和达到目标即自动免费解锁对应盛世外观（已解锁 ${unlockedSkins.length}/${skinsAll.length} 套），解锁后可随时穿戴或隐藏。`,
               children: [
                 w("div", {
                   class: "wh-top",
                   children: [
-                    w("b", { children: `主公总等级 Lv.${totalLv} / ${maxTotalSkills}` }),
-                    w("small", { children: `已解锁 ${unlockedSkins.length} / ${skinsAll.length} 套国风与盛世外观` }),
+                    w("b", {
+                      children: [
+                        `主公总等级 Lv.${totalLv}/${maxTotalSkills}`,
+                        " ",
+                        _p6bQTip(
+                          "主公外观衣橱",
+                          `五维专精等级之和达到目标即自动免费解锁对应盛世外观（已解锁 ${unlockedSkins.length}/${skinsAll.length} 套），解锁后可随时穿戴或隐藏。`,
+                        ),
+                      ],
+                    }),
+                    w("em", { class: "wh-cnt", children: `${unlockedSkins.length}/${skinsAll.length}` }),
                   ],
                 }),
                 w(ei, {
                   value: totalLv,
                   max: maxTotalSkills,
                   color: "var(--gold)",
-                  label: `五维等级合计 ${totalLv}/${maxTotalSkills} · 随总等级自动免费解锁`,
+                  label: `Lv.${totalLv} / ${maxTotalSkills}`,
                 }),
               ],
             }),
@@ -37676,23 +37885,30 @@ function Jp() {
               children: skinsAll.map((sk) => {
                 const unlocked =
                     typeof isSkinUnlocked == "function" ? isSkinUnlocked(e, sk.id) : totalLv >= sk.unlockLv,
-                  wearing = unlocked && !(t.skinsOff && t.skinsOff.includes(sk.id));
+                  wearing = unlocked && !(t.skinsOff && t.skinsOff.includes(sk.id)),
+                  skTipTitle = `${sk.name} · Lv.${sk.unlockLv}`,
+                  skTipBody = `${sk.effect}\n${
+                    unlocked
+                      ? wearing
+                        ? "✓ 当前穿戴生效中（点击按钮可隐藏外观）"
+                        : "• 当前已隐藏外观（点击按钮恢复穿戴）"
+                      : `🔒 需主公总等级达到 Lv.${sk.unlockLv} 自动解锁（当前 Lv.${totalLv}）`
+                  }`;
                 return w(
                   "div",
                   {
                     class: `wardrobe-card${unlocked ? (wearing ? " unlocked wearing" : " unlocked") : " locked"}`,
+                    "data-tip-touch": !0,
+                    "data-tip-title": skTipTitle,
+                    "data-tip": skTipBody,
                     children: [
-                      w("div", {
-                        class: "wc-hd",
-                        children: [
-                          w("b", { children: sk.name }),
-                          w("em", { children: `Lv.${sk.unlockLv}` }),
-                        ],
-                      }),
-                      w("small", { class: "wc-desc", children: sk.effect }),
+                      w("i", { class: `wc-dot${wearing ? " on" : unlocked ? " open" : ""}` }),
+                      w("b", { children: sk.name }),
+                      w("em", { class: "wc-lv", children: `Lv.${sk.unlockLv}` }),
+                      _p6bQTip(skTipTitle, skTipBody),
                       unlocked
                         ? w("button", {
-                            class: `btn tiny ${wearing ? "gold" : "ghost"}`,
+                            class: `btn tiny wc-btn ${wearing ? "gold" : "ghost"}`,
                             onClick: () =>
                               typeof toggleWardrobeSkin == "function"
                                 ? A.act((st) => toggleWardrobeSkin(st, sk.id))
@@ -37700,9 +37916,9 @@ function Jp() {
                                     ? [...(t.skinsOff || []), sk.id]
                                     : (t.skinsOff || []).filter((x) => x !== sk.id)),
                                   A.refresh()),
-                            children: wearing ? "穿戴中" : "已隐藏",
+                            children: wearing ? "穿戴" : "隐藏",
                           })
-                        : w("span", { class: "wc-lock", children: `总等级 Lv.${sk.unlockLv} 解锁` }),
+                        : w("span", { class: "wc-lock", children: "🔒" }),
                     ],
                   },
                   sk.id,
@@ -37717,56 +37933,63 @@ function Jp() {
             w(Qt, {
               title: `天生性格 (${t.traits.length})`,
               children: w("ul", {
-                class: "trait-list",
+                class: "trait-list compact",
                 children: [
                   t.traits.map((Q) => {
-                    const D = Vi[Q];
+                    const D = Vi[Q],
+                      trTipTitle = `天生性格 · ${D.name}`,
+                      trTipBody = `✓ 增益：+ ${D.good}\n! 代价：− ${D.bad}`;
                     return w(
                       "li",
                       {
+                        class: "trait-row innate",
+                        "data-tip-touch": !0,
+                        "data-tip-title": trTipTitle,
+                        "data-tip": trTipBody,
                         children: [
+                          w("span", { class: "tr-ico", children: "🎭" }),
                           w("b", { children: D.name }),
-                          w("small", { class: "up", children: ["+ ", D.good] }),
-                          w("small", { class: "down", children: ["− ", D.bad] }),
+                          _p6bQTip(trTipTitle, trTipBody),
+                          w("em", { class: "tr-pill on", children: "生效" }),
                         ],
                       },
                       Q,
                     );
                   }),
-                  !t.traits.length && w("li", { class: "muted", children: "还没有确定性格。" }),
+                  !t.traits.length && w("li", { class: "muted tr-empty", children: "暂无天生性格" }),
                 ],
               }),
             }),
             w(Qt, {
               title: `隐藏性格 (${t.hidden.length}/${Z9.length})`,
               children: w("ul", {
-                class: "trait-list",
-                children: Z9.map((Q) =>
-                  t.hidden.includes(Q.id)
-                    ? w(
-                        "li",
-                        {
-                          class: "hidden-on",
-                          children: [
-                            w("b", { children: Q.name }),
-                            w("small", { class: "up", children: Q.effect }),
-                            w("small", { class: "muted", children: Q.condition }),
-                          ],
-                        },
-                        Q.id,
-                      )
-                    : w(
-                        "li",
-                        {
-                          class: "hidden-off",
-                          children: [
-                            w("b", { children: "？？？" }),
-                            w("small", { class: "muted", children: Q.hint }),
-                          ],
-                        },
-                        Q.id,
-                      ),
-                ),
+                class: "trait-list compact",
+                children: Z9.map((Q) => {
+                  const isAwake = t.hidden.includes(Q.id),
+                    trTipTitle = isAwake ? `隐藏性格 · ${Q.name}` : "未觉醒隐藏性格",
+                    trTipBody = isAwake
+                      ? `✓ 效果：${Q.effect}\n• 达成条件：${Q.condition}`
+                      : `觉醒线索：${Q.hint}`;
+                  return w(
+                    "li",
+                    {
+                      class: `trait-row ${isAwake ? "hidden-on" : "hidden-off"}`,
+                      "data-tip-touch": !0,
+                      "data-tip-title": trTipTitle,
+                      "data-tip": trTipBody,
+                      children: [
+                        w("span", { class: "tr-ico", children: isAwake ? "✦" : "🔒" }),
+                        w("b", { children: isAwake ? Q.name : "？？？" }),
+                        _p6bQTip(trTipTitle, trTipBody),
+                        w("em", {
+                          class: `tr-pill ${isAwake ? "gold" : "muted"}`,
+                          children: isAwake ? "已觉醒" : "未觉醒",
+                        }),
+                      ],
+                    },
+                    Q.id,
+                  );
+                }),
               }),
             }),
           ],
@@ -37783,6 +38006,16 @@ const Kp = {
   },
   Q9 = ["output", "tax", "support"],
   l9 = (A) => (A >= 36e5 ? `${Math.ceil(A / 36e5)}时` : `${Math.max(1, Math.ceil(A / 6e4))}分`);
+function qTipC(title, tip) {
+  return w("span", {
+    class: "q-tip",
+    "data-tip-touch": !0,
+    "data-tip-title": title,
+    "data-tip": tip,
+    onClick: (ev) => ev.stopPropagation(),
+    children: "?",
+  });
+}
 function Vp() {
   const A = Pe(),
     e = A.state,
@@ -37804,7 +38037,7 @@ function Vp() {
     r = d0(e, n),
     i = Dn(() => qc(e, t), [t]);
   const v = (C) =>
-    C.untilQ !== void 0 ? `还剩 ${Math.max(0, C.untilQ - e.quarter)} 季` : `还剩 ${jp(C.until - n)}`;
+    C.untilQ !== void 0 ? `剩 ${Math.max(0, C.untilQ - e.quarter)} 季` : `剩 ${jp(C.until - n)}`;
   const c = new Map();
   for (const C of f) {
     const src = String(C.src || "");
@@ -37868,13 +38101,19 @@ function Vp() {
         : t,
     [hovB, A.version],
   );
+  const dualTaxOn = be(e).rules.has("dualTax");
   const renderTaxSection = () =>
     w(Qt, {
       title: "税制结构",
-      extra: w("small", {
-        class: "muted",
-        children: be(e).rules.has("dualTax") ? "双轨复合税制 · 点击切换" : "点击切换",
-      }),
+      extra: dualTaxOn
+        ? w("span", {
+            class: "pill",
+            "data-tip-touch": !0,
+            "data-tip-title": "双轨复合税制",
+            "data-tip": "已习得双轨复合税制，可同时保持两套税制叠加生效",
+            children: "双轨生效",
+          })
+        : null,
       children: w("ul", {
         class: "tax-grid",
         children: V9.map((C) => {
@@ -37882,21 +38121,23 @@ function Vp() {
             h = P.includes(C.id),
             d = C.rule ? Wi.find((z) => z.rule === C.rule) : void 0,
             x = E
-              ? "生效中"
+              ? "✓ 当前生效中"
               : h
-                ? "点一下切换到此税制"
+                ? "点击切换到此税制"
                 : C.minCapLv
-                  ? `需首都升至 Lv.${C.minCapLv} 自动解锁`
-                  : `需先学${d ? a(d.line) + "线技能「" + d.name + "」" : "政治线技能"}`,
-            M = h && !E;
+                  ? `解锁条件：首都升至 Lv.${C.minCapLv}`
+                  : `解锁条件：学习${d ? a(d.line) + "线技能「" + d.name + "」" : "政治线技能"}`,
+            M = h && !E,
+            tipBody = `${C.effect}\n税收系数：${Q9.map((z) => `${Oi[z]} ×${C.coef[z]}`).join(" · ")}\n适合路线：${C.route}\n${x}`;
           return w(
             "li",
             {
               class: `taxcard${E ? " on" : h ? " can" : " locked"}`,
               tabIndex: 0,
               role: M ? "button" : void 0,
+              "data-tip-touch": M ? void 0 : !0,
               "data-tip-title": C.name,
-              "data-tip": `${C.effect}\n税收系数：${Q9.map((z) => `${Oi[z]} ×${C.coef[z]}`).join(" · ")}\n适合：${C.route}\n${x}`,
+              "data-tip": tipBody,
               onClick: M ? () => l("taxswitch", C.id) : void 0,
               children: [
                 w("header", {
@@ -37906,6 +38147,7 @@ function Vp() {
                       children: w(NA, { node: oD[C.id] ?? Ae.scroll, size: 17, stroke: 2.1 }),
                     }),
                     w("b", { children: C.name }),
+                    qTipC(C.name, tipBody),
                     E
                       ? w("em", { children: "生效中" })
                       : h
@@ -37930,7 +38172,6 @@ function Vp() {
                     ),
                   ),
                 }),
-                w("small", { children: C.effect }),
               ],
             },
             C.id,
@@ -37960,6 +38201,7 @@ function Vp() {
             : `✓ 可以颁布：点一下${p ? `（今日议题，国库${agTag}）` : ""}`
           : `! 国内现在没有${Zr[d.scope]}，用不上`
       : `! 还没解锁：${L ? `学会${a(L.line)}线技能「${L.name}」` : "需要技能"}`;
+    const tipTitle = `${d.name} · ${Ke[d.tier]}`;
     const U = [
       d.effect,
       `颁布在：${Zr[d.scope]}${d.national ? `（全国政令，同时最多 ${Cc(e)} 条）` : ""}`,
@@ -37973,12 +38215,15 @@ function Vp() {
         children: w("button", {
           class: `dcard${x ? (z ? " live" : cdQ > 0 ? " cool" : F ? "" : " idle") : " locked"}`,
           style: `--tier:${Xe[d.tier]}`,
-          "data-tip-title": `${d.name} · ${Ke[d.tier]}`,
+          "data-tip-title": tipTitle,
           "data-tip": U,
           onClick: () => l(d.id),
           children: [
-            w(Zv, { id: d.id, size: 38 }),
-            w("b", { children: d.name }),
+            w(Zv, { id: d.id, size: 36 }),
+            w("span", {
+              style: "display:inline-flex;align-items:center;gap:3px;max-width:100%",
+              children: [w("b", { children: d.name }), qTipC(tipTitle, U)],
+            }),
             x
               ? cdQ > 0 && !z
                 ? w("i", { class: "dc-flag cool", children: `${cdQ}季` })
@@ -38005,6 +38250,9 @@ function Vp() {
           : k === "sci"
             ? Ae.sparkles
             : (oD[k] ?? Ae.flag);
+  const adminTip = `每次颁布政令消耗 ${o.cost} 点主公体力，每日不限次数，各政令独立按季度冷却。${o.block ? `\n⚠️ 当前状态：${o.block}` : "\n点击下方任意政令牌即可预览并颁布。"}`;
+  const zoneRuleTip =
+    "首都升至 Lv.3 自动解锁首座经济特区名额；学习政治线「改革特区 / 特区扩容」与野心线「特区星链联邦」可追加名额。特区内产业享受产出与税收加成。";
   return w(he, {
     children: [
       budgetOpen &&
@@ -38029,14 +38277,20 @@ function Vp() {
               renderTaxSection(),
               w(Qt, {
                 title: "专项预算",
-                extra: w("small", {
+                extra: w("span", {
                   class: t.austerity ? "warn" : pvM.net < 0 ? "down net-prev" : "up net-prev",
+                  style: "font-size:12px;font-weight:600",
+                  "data-tip-touch": !0,
+                  "data-tip-title": "季度财政净结余预览",
+                  "data-tip": t.austerity
+                    ? "当前主权债务触发紧缩保护，专项预算暂停拨付"
+                    : "悬停或切换预算档位可实时预览每季国库净结余变化",
                   children: t.austerity
-                    ? "⚠️ 债务紧缩停拨"
-                    : `预计每季净结余 ${pvM.net >= 0 ? "+" : ""}${fe(pvM.net)} 亿${hovB ? "（预览）" : ""}`,
+                    ? "⚠️ 紧缩停拨"
+                    : `净结余 ${pvM.net >= 0 ? "+" : ""}${fe(pvM.net)}亿${hovB ? "·预览" : ""}`,
                 }),
                 children: w("div", {
-                  class: "btrack-list v1-2line",
+                  class: "btrack-list",
                   onMouseLeave: () => setHovB(null),
                   children: [
                     {
@@ -38044,10 +38298,6 @@ function Vp() {
                       ico: Ae.sparkles,
                       title: "科研",
                       gears: RD_GEARS,
-                      sub: (gItem) =>
-                        gItem.id === 0
-                          ? "0% · 常态"
-                          : `−${Math.round(gItem.rate * 100)}% · +${Math.round(gItem.out * rdMult * 100)}%产`,
                       tip: (gItem) =>
                         gItem.id === 0
                           ? "不额外投入科研拨款（0% 税收占用）"
@@ -38058,10 +38308,6 @@ function Vp() {
                       ico: oD.consumer,
                       title: "民生",
                       gears: WEL_GEARS,
-                      sub: (gItem) =>
-                        gItem.id === 0
-                          ? "0% · 常态"
-                          : `−${Math.round(gItem.rate * 100)}% · +${gItem.liv}宜/+${Math.round((gItem.out || 0) * 100)}%`,
                       tip: (gItem) =>
                         gItem.id === 0
                           ? "维持基础民生（0% 税收占用）"
@@ -38072,12 +38318,6 @@ function Vp() {
                       ico: Ae.hammer,
                       title: "基建",
                       gears: INF_GEARS,
-                      sub: (gItem) =>
-                        gItem.id === 0
-                          ? "0% · 常态"
-                          : gItem.slots
-                            ? `−${Math.round(gItem.rate * 100)}% · +${gItem.slots}队/+${Math.round(gItem.spd * 100)}%`
-                            : `−${Math.round(gItem.rate * 100)}% · +${Math.round(gItem.spd * 100)}%速`,
                       tip: (gItem) =>
                         gItem.id === 0
                           ? "常规施工节奏（0% 税收占用）"
@@ -38086,7 +38326,8 @@ function Vp() {
                   ].map((tr) => {
                     const cur = e.settings[tr.key] ?? 0,
                       taxBase = t.taxIncome ?? t.revenue ?? 0,
-                      cost = cur > 0 && !t.austerity ? taxBase * tr.gears[cur].rate : 0;
+                      cost = cur > 0 && !t.austerity ? taxBase * tr.gears[cur].rate : 0,
+                      trackTip = tr.gears.map((gItem) => `【${gItem.name}】${tr.tip(gItem)}`).join("\n");
                     return w(
                       "div",
                       {
@@ -38097,13 +38338,17 @@ function Vp() {
                             children: [
                               w(NA, { node: tr.ico, size: 13, stroke: 2.1 }),
                               w("b", { children: tr.title }),
-                              cost > 0
-                                ? w("small", { children: `季拨 −${fe(cost)} 亿` })
-                                : w("small", { class: "muted", children: "未额外拨款" }),
+                              qTipC(`${tr.title}专项预算`, trackTip),
+                              cost > 0 &&
+                                w("span", {
+                                  class: "muted",
+                                  style: "margin-left:auto;font-size:11.5px;font-variant-numeric:tabular-nums",
+                                  children: `−${fe(cost)}亿/季`,
+                                }),
                             ],
                           }),
                           w("div", {
-                            class: "bt-seg two-line",
+                            class: "bt-seg",
                             children: tr.gears.map((gItem) =>
                               w(
                                 "button",
@@ -38117,10 +38362,7 @@ function Vp() {
                                   onClick: () => {
                                     ((e.settings[tr.key] = gItem.id), A.refresh());
                                   },
-                                  children: [
-                                    w("b", { children: gItem.name }),
-                                    w("small", { children: tr.sub(gItem) }),
-                                  ],
+                                  children: w("b", { children: gItem.name }),
                                 },
                                 gItem.id,
                               ),
@@ -38135,8 +38377,9 @@ function Vp() {
               }),
               w(Qt, {
                 title: "基本体制",
-                extra: w("small", {
+                extra: w("span", {
                   class: "muted",
+                  style: "font-size:12px",
                   children:
                     regCdLeftQ > 0
                       ? `稳定期 ${regCdLeftQ} 季`
@@ -38150,18 +38393,21 @@ function Vp() {
                     const on = rg.id === curRegId,
                       ul = isRegimeUnlocked(e, rg.id),
                       dir = rg.needDir ? INSIGHT_DIRS[rg.needDir] : null,
-                      curN = rg.needDir ? e.lord.insights[rg.needDir] || 0 : 0;
+                      curN = rg.needDir ? e.lord.insights[rg.needDir] || 0 : 0,
+                      rgTip = `${rg.brief ? rg.brief + "\n" : ""}增益：${rg.pros}${rg.cons ? `\n代价：${rg.cons}` : ""}\n${on ? "✓ 当前施行体制" : ul ? "点击改制，启用本制专属 6 位名臣池" : `解锁条件：巡察积累「${dir ? dir.name : ""}」${curN}/${rg.need}`}`;
                     return w(
                       "button",
                       {
                         class: `reg-card${on ? " on" : ul ? " can" : " locked"}`,
-                        disabled: on,
+                        "aria-current": on ? "true" : void 0,
                         "data-tip-title": rg.name,
-                        "data-tip": `${rg.pros}${rg.cons ? `\n代价：${rg.cons}` : ""}\n${on ? "当前施行体制" : ul ? "点击改制，启用本制专属 6 位名臣池" : `未解锁：巡察积累 ${dir.name} ${curN}/${rg.need}`}`,
-                        onClick: () =>
-                          typeof A.switchRegime == "function"
-                            ? A.switchRegime(rg.id)
-                            : A.act((st) => switchRegime(st, rg.id)),
+                        "data-tip": rgTip,
+                        onClick: on
+                          ? void 0
+                          : () =>
+                              typeof A.switchRegime == "function"
+                                ? A.switchRegime(rg.id)
+                                : A.act((st) => switchRegime(st, rg.id)),
                         children: [
                           w("div", {
                             class: "rg-hd",
@@ -38171,6 +38417,7 @@ function Vp() {
                                 children: w(NA, { node: regIcoNode(rg.ico), size: 14, stroke: 2.1 }),
                               }),
                               w("b", { children: rg.name }),
+                              qTipC(rg.name, rgTip),
                               on
                                 ? w("em", { children: "施行" })
                                 : ul
@@ -38178,14 +38425,14 @@ function Vp() {
                                   : w("span", { class: "rg-lock", children: `${curN}/${rg.need}` }),
                             ],
                           }),
-                          !ul && dir
-                            ? w("div", {
-                                class: "rg-bar",
-                                children: w("i", {
-                                  style: `width:${Math.min(100, Math.round((curN / rg.need) * 100))}%`,
-                                }),
-                              })
-                            : w("small", { class: "rg-sub", children: rg.brief }),
+                          !ul &&
+                            dir &&
+                            w("div", {
+                              class: "rg-bar",
+                              children: w("i", {
+                                style: `width:${Math.min(100, Math.round((curN / rg.need) * 100))}%`,
+                              }),
+                            }),
                         ],
                       },
                       rg.id,
@@ -38195,9 +38442,10 @@ function Vp() {
               }),
               w(Qt, {
                 title: "名臣政策",
-                extra: w("small", {
+                extra: w("span", {
                   class: "muted",
-                  children: `6 选 ${slotCap} · 已装 ${equipped.length}/${slotCap}`,
+                  style: "font-size:12px",
+                  children: `已装 ${equipped.length}/${slotCap}`,
                 }),
                 children: [
                   w("div", {
@@ -38208,21 +38456,28 @@ function Vp() {
                         children: Array.from({ length: slotCap }, (_, idx) => {
                           const cid = equipped[idx],
                             p = cid && POLICY_CARD_MAP[cid];
-                          return p
-                            ? w(
-                                "button",
-                                {
-                                  class: "pcs-chip on",
-                                  onClick: () =>
-                                    typeof A.togglePolicyCard == "function"
-                                      ? A.togglePolicyCard(cid)
-                                      : A.act((st) => togglePolicyCard(st, cid)),
-                                  title: "点击卸下",
-                                  children: [w("b", { children: p.name }), w("span", { children: "×" })],
-                                },
-                                idx,
-                              )
-                            : w("span", { class: "pcs-chip empty", children: `空槽 ${idx + 1}` }, idx);
+                          if (!p) {
+                            return w("span", { class: "pcs-chip empty", children: `空槽 ${idx + 1}` }, idx);
+                          }
+                          const eqTip = `收益：${p.pros}${p.cons ? `\n代价：${p.cons}` : "\n无负面代价"}\n点击卸下该名臣策论`;
+                          return w(
+                            "button",
+                            {
+                              class: "pcs-chip on",
+                              "data-tip-title": `${p.name}（${p.who}）`,
+                              "data-tip": eqTip,
+                              onClick: () =>
+                                typeof A.togglePolicyCard == "function"
+                                  ? A.togglePolicyCard(cid)
+                                  : A.act((st) => togglePolicyCard(st, cid)),
+                              children: [
+                                w("b", { children: p.name }),
+                                qTipC(`${p.name}（${p.who}）`, eqTip),
+                                w("span", { children: "×" }),
+                              ],
+                            },
+                            idx,
+                          );
                         }),
                       }),
                       equipped.length > 0 &&
@@ -38240,24 +38495,30 @@ function Vp() {
                   w("div", {
                     class: "pc-grid",
                     children: regCards.map((p) => {
-                      const on = equipped.includes(p.id);
+                      const on = equipped.includes(p.id),
+                        pcTitle = `${p.name}（${p.who}）`,
+                        pcTip = `名臣：${p.who}（${curReg.name}专属）\n收益：${p.pros}${p.cons ? `\n代价：${p.cons}` : "\n无负面代价"}\n点击${on ? "卸下" : "装入内阁政策槽"}`;
                       return w(
                         "button",
                         {
                           class: `pc-card${on ? " on" : ""}`,
-                          "data-tip-title": `${p.name}（${p.who}）`,
-                          "data-tip": `收益：${p.pros}${p.cons ? `\n代价：${p.cons}` : "\n无负面代价"}`,
+                          "data-tip-title": pcTitle,
+                          "data-tip": pcTip,
                           onClick: () =>
                             typeof A.togglePolicyCard == "function"
                               ? A.togglePolicyCard(p.id)
                               : A.act((st) => togglePolicyCard(st, p.id)),
-                          children: [
-                            w("div", {
-                              class: "lc-hd",
-                              children: [w("b", { children: p.name }), on && w("em", { children: "启用" })],
-                            }),
-                            w("small", { class: "pc-sub", children: p.pros.split(" · ")[0] }),
-                          ],
+                          children: w("div", {
+                            class: "lc-hd",
+                            children: [
+                              w(NA, { node: Ae.scroll, size: 13, stroke: 2.1 }),
+                              w("b", { children: p.name }),
+                              qTipC(pcTitle, pcTip),
+                              on
+                                ? w("em", { children: "卸下" })
+                                : w("span", { class: "rg-lock", children: "装配" }),
+                            ],
+                          }),
                         },
                         p.id,
                       );
@@ -38271,10 +38532,14 @@ function Vp() {
             children: [
               w("div", {
                 class: `pol-admin${o.block ? " off" : ""}`,
+                "data-tip-touch": !0,
+                "data-tip-title": "施政规则",
+                "data-tip": adminTip,
                 children: [
-                  w("span", { class: "pa-ico", children: w(NA, { node: Ae.stamp, size: 22 }) }),
+                  w("span", { class: "pa-ico", children: w(NA, { node: Ae.stamp, size: 18 }) }),
                   w("span", {
                     class: "pa-main",
+                    style: "flex-direction:row;align-items:center;gap:6px",
                     children: [
                       w("b", {
                         children: [
@@ -38285,15 +38550,12 @@ function Vp() {
                           }),
                         ],
                       }),
-                      w("small", { children: o.block ?? "点下方政令牌即可颁布" }),
+                      qTipC("施政规则", adminTip),
                     ],
                   }),
                   w("span", {
                     class: "pa-day unlimited",
-                    children: [
-                      w("b", { class: "pa-unlim", children: "不限次 · 按体力" }),
-                      w("small", { children: "按政令季度冷却" }),
-                    ],
+                    children: w("b", { class: "pa-unlim", children: o.block ? "体力不足" : "不限" }),
                   }),
                 ],
               }),
@@ -38317,52 +38579,80 @@ function Vp() {
                         }),
                       children: "换轨",
                     })
-                  : w("small", { class: "muted", children: `点选查阅立项书 · 已完成 ${e.stats.fypDone || 0} 轮` }),
+                  : w("span", { class: "muted", style: "font-size:12px", children: `已完成 ${e.stats.fypDone || 0} 轮` }),
                 children: curFyp
-                  ? w("div", {
-                      class: "fyp-active",
-                      children: [
-                        w("div", {
-                          class: "fa-hd",
-                          children: [
-                            w("span", {
-                              class: "tx-ico sm",
-                              children: w(NA, {
-                                node: fypIcoNode(curFyp.ico),
-                                size: 14,
-                                stroke: 2.1,
+                  ? (() => {
+                      const fypTip = `规划增益：${curFyp.pros}\n考核目标：${curFyp.kpiDesc}\n达标奖励：${curFyp.rewardDesc}`;
+                      return w("div", {
+                        class: "fyp-active",
+                        "data-tip-touch": !0,
+                        "data-tip-title": `《五年规划 · ${curFyp.name}》`,
+                        "data-tip": fypTip,
+                        children: [
+                          w("div", {
+                            class: "fa-hd",
+                            children: [
+                              w("span", {
+                                class: "tx-ico sm",
+                                children: w(NA, {
+                                  node: fypIcoNode(curFyp.ico),
+                                  size: 14,
+                                  stroke: 2.1,
+                                }),
                               }),
-                            }),
-                            w("b", { children: `第 ${e.fyp.num} 轮 · ${curFyp.name}` }),
-                            w("em", { children: `剩 ${fypLeft} 季` }),
-                          ],
-                        }),
-                        w(ei, {
-                          value: Math.round(fypProg * 100),
-                          max: 100,
-                          color: fypProg >= 0.8 ? "var(--gold)" : "var(--cyan)",
-                          label: `${Math.round(fypProg * 100)}%`,
-                        }),
-                        w("div", {
-                          class: "fa-meta",
-                          children: [
-                            w("p", { children: ["增益：", curFyp.pros] }),
-                            w("p", { children: ["目标：", curFyp.kpiDesc] }),
-                            w("p", { class: "rwd", children: ["奖励：", curFyp.rewardDesc] }),
-                          ],
-                        }),
-                      ],
-                    })
+                              w("b", { children: `第 ${e.fyp.num} 轮 · ${curFyp.name}` }),
+                              qTipC(`《五年规划 · ${curFyp.name}》`, fypTip),
+                              w("em", { children: `剩 ${fypLeft} 季` }),
+                            ],
+                          }),
+                          w(ei, {
+                            value: Math.round(fypProg * 100),
+                            max: 100,
+                            color: fypProg >= 0.8 ? "var(--gold)" : "var(--cyan)",
+                            label: `${Math.round(fypProg * 100)}%`,
+                          }),
+                          w("div", {
+                            class: "filter-row",
+                            style: "margin-top:6px;gap:6px",
+                            children: [
+                              w("span", {
+                                class: "pill",
+                                "data-tip-touch": !0,
+                                "data-tip-title": "规划期增益",
+                                "data-tip": curFyp.pros,
+                                children: "📈 增益",
+                              }),
+                              w("span", {
+                                class: "pill",
+                                "data-tip-touch": !0,
+                                "data-tip-title": "考核目标",
+                                "data-tip": curFyp.kpiDesc,
+                                children: `🎯 达标 ${Math.round(fypProg * 100)}%`,
+                              }),
+                              w("span", {
+                                class: "pill",
+                                "data-tip-touch": !0,
+                                "data-tip-title": "达标奖励",
+                                "data-tip": curFyp.rewardDesc,
+                                children: "🎁 奖励",
+                              }),
+                            ],
+                          }),
+                        ],
+                      });
+                    })()
                   : w("div", {
                       class: "fyp-grid-3",
-                      children: FIVE_YEAR_PLANS.map((p) =>
-                        w(
+                      children: FIVE_YEAR_PLANS.map((p) => {
+                        const pTitle = `《五年规划 · ${p.name}》`,
+                          pTip = `规划增益：${p.pros}\n考核目标：${p.kpiDesc}\n达标奖励：${p.rewardDesc}\n点击打开立项书预览当前基线与目标`;
+                        return w(
                           "button",
                           {
                             class: "fyp-tile",
                             onClick: () => A.openModal({ type: "fypPreview", planId: p.id }),
-                            "data-tip-title": `《五年规划 · ${p.name}》`,
-                            "data-tip": `规划增益：${p.pros}\n考核目标：${p.kpiDesc}\n达标奖励：${p.rewardDesc}\n点击打开立项书预览当前基线与目标`,
+                            "data-tip-title": pTitle,
+                            "data-tip": pTip,
                             children: [
                               w("span", {
                                 class: "tx-ico sm",
@@ -38372,171 +38662,176 @@ function Vp() {
                                   stroke: 2.1,
                                 }),
                               }),
-                              w("span", {
-                                class: "fyp-t-txt",
-                                children: [
-                                  w("b", { children: p.name }),
-                                  w("small", { children: p.brief }),
-                                ],
-                              }),
+                              w("b", { children: p.name }),
+                              qTipC(pTitle, pTip),
                             ],
                           },
                           p.id,
-                        ),
-                      ),
+                        );
+                      }),
                     }),
               }),
               w(Qt, {
                 title: "今日议题",
-                extra: w("small", { class: "muted", children: `每年刷新 · 国库${agTag}` }),
-                children: [
-                  !r.length &&
-                    w("p", { class: "hint", children: "本年没有可颁布的特惠议题，其余政令仍可随时颁布。" }),
-                  w("ul", {
-                    class: "agenda",
-                    children: r.map((C) => {
-                      const E = Cs[C.id];
-                      if (!E) return null;
-                      const h = la(e, E, t.gdp),
-                        d = i.get(C.id) ?? [],
-                        x = d.includes(C.tile) ? C.tile : d[0],
-                        M = E.national ? "全国" : x !== void 0 ? `${Ws(e.tiles[x])} #${x}` : "暂无适用地块";
-                      return w(
-                        "li",
-                        {
-                          children: w("button", {
-                            class: `ag-card${C.done ? " done" : ""}`,
-                            style: `--tier:${Xe[E.tier]}`,
-                            onClick: () => l(C.id),
-                            children: [
-                              w(Zv, { id: C.id, size: 42 }),
-                              w("b", { children: E.name }),
-                              w("small", { class: "ag-effect", children: E.effect }),
-                              w("small", { class: "ag-where", children: M }),
-                              C.done
-                                ? w("em", {
-                                    class: "ag-done",
-                                    children: [w(NA, { node: Ae.check, size: 12, stroke: 3 }), " 已颁布"],
-                                  })
-                                : w("span", {
-                                    class: "ag-price",
-                                    children: [
-                                      w("s", { children: SI(h) }),
-                                      w(Hn, { v: h * (1 - agCut) }),
-                                    ],
-                                  }),
-                              !C.done && w("i", { class: "ag-half", children: agTag }),
-                            ],
-                          }),
-                        },
-                        C.id,
-                      );
+                extra: w("span", { class: "muted", style: "font-size:12px", children: `国库${agTag}` }),
+                children: !r.length
+                  ? w("div", {
+                      class: "muted",
+                      style: "font-size:12px;padding:4px 2px",
+                      "data-tip-touch": !0,
+                      "data-tip-title": "今日议题",
+                      "data-tip": "每年刷新特惠政令议题；其余政令可在下方随时颁布。",
+                      children: "本年暂无特惠议题",
+                    })
+                  : w("ul", {
+                      class: "agenda",
+                      children: r.map((C) => {
+                        const E = Cs[C.id];
+                        if (!E) return null;
+                        const h = la(e, E, t.gdp),
+                          d = i.get(C.id) ?? [],
+                          x = d.includes(C.tile) ? C.tile : d[0],
+                          M = E.national ? "全国" : x !== void 0 ? `${Ws(e.tiles[x])} #${x}` : "暂无适用地块",
+                          agTitle = `${E.name} · 今日议题`,
+                          agTip = `${E.effect}\n适用目标：${M}\n国库开销：原价 ${fe(h)} 亿 → 议题特惠 ${fe(h * (1 - agCut))} 亿（${agTag}）`;
+                        return w(
+                          "li",
+                          {
+                            children: w("button", {
+                              class: `ag-card${C.done ? " done" : ""}`,
+                              style: `--tier:${Xe[E.tier]}`,
+                              "data-tip-title": agTitle,
+                              "data-tip": agTip,
+                              onClick: () => l(C.id),
+                              children: [
+                                w(Zv, { id: C.id, size: 36 }),
+                                w("span", {
+                                  style: "display:inline-flex;align-items:center;gap:3px;max-width:100%",
+                                  children: [w("b", { children: E.name }), qTipC(agTitle, agTip)],
+                                }),
+                                C.done
+                                  ? w("em", {
+                                      class: "ag-done",
+                                      children: [w(NA, { node: Ae.check, size: 12, stroke: 3 }), " 已颁布"],
+                                    })
+                                  : w("span", {
+                                      class: "ag-price",
+                                      children: [
+                                        w("s", { children: SI(h) }),
+                                        w(Hn, { v: h * (1 - agCut) }),
+                                      ],
+                                    }),
+                                !C.done && w("i", { class: "ag-half", children: agTag }),
+                              ],
+                            }),
+                          },
+                          C.id,
+                        );
+                      }),
                     }),
-                  }),
-                ],
               }),
               w(Qt, {
                 title: "经济特区",
-                extra: w("small", { class: "muted", children: `${e.zones.length}/${B}` }),
+                extra: w("span", {
+                  style: "display:inline-flex;align-items:center;gap:4px",
+                  children: [
+                    w("span", { class: "muted", style: "font-size:12px", children: `${e.zones.length}/${B}` }),
+                    qTipC("经济特区规则", zoneRuleTip),
+                  ],
+                }),
                 children: [
                   !e.zones.length &&
-                    w("p", {
-                      class: "hint",
-                      children:
-                        B > 0
-                          ? w(he, {
-                              children: [
-                                "尚未设立特区：可颁布",
-                                w("button", {
-                                  class: "link",
-                                  onClick: () => l("zone"),
-                                  children: "「设立特区」",
-                                }),
-                                "。",
-                              ],
-                            })
-                          : "首都升至 Lv.3 自动解锁首座经济特区名额（政治线「改革特区 / 特区扩容」与野心线「特区星链联邦」可追加名额）。",
+                    (B > 0
+                      ? w("button", {
+                          class: "btn small ghost",
+                          onClick: () => l("zone"),
+                          children: [w(NA, { node: Ae.zone, size: 14 }), " 设立首座特区"],
+                        })
+                      : w("div", {
+                          class: "muted",
+                          style: "display:inline-flex;align-items:center;gap:5px;font-size:12px",
+                          "data-tip-touch": !0,
+                          "data-tip-title": "经济特区未解锁",
+                          "data-tip": zoneRuleTip,
+                          children: [w(NA, { node: Ae.lock, size: 12 }), " 首都 Lv.3 解锁"],
+                        })),
+                  e.zones.length > 0 &&
+                    w("div", {
+                      class: "zone-chips",
+                      children: e.zones.map((C, E) => {
+                        const zCnt = C.tiles.filter((h) => e.tiles[h].unlocked).length;
+                        return w(
+                          "div",
+                          {
+                            class: "zone-chip-row",
+                            children: [
+                              w("button", {
+                                class: "zone-chip",
+                                "data-tip-title": `经济特区 ${E + 1}`,
+                                "data-tip": `中心地块 #${C.center} · 覆盖 ${zCnt} 块国土\n点击镜头定位至特区中心`,
+                                onClick: () => {
+                                  (A.select(C.center), A.openPanel(null));
+                                },
+                                children: [
+                                  w(NA, { node: Ae.zone, size: 14 }),
+                                  w("b", { children: `特区 ${E + 1} · #${C.center} (${zCnt}块)` }),
+                                ],
+                              }),
+                              w("button", {
+                                class: "btn tiny danger zone-unzone-btn",
+                                "data-tip-title": "撤销特区",
+                                "data-tip": "撤销该经济特区并返还特区名额",
+                                onClick: () => confirmUnzone(A, C.center),
+                                children: "撤销",
+                              }),
+                            ],
+                          },
+                          C.center ?? E,
+                        );
+                      }),
                     }),
-                  w("div", {
-                    class: "zone-chips",
-                    children: e.zones.map((C, E) =>
-                      w(
-                        "div",
-                        {
-                          class: "zone-chip-row",
-                          children: [
-                            w("button", {
-                              class: "zone-chip",
-                              onClick: () => {
-                                (A.select(C.center), A.openPanel(null));
-                              },
-                              children: [
-                                w(NA, { node: Ae.zone, size: 15 }),
-                                w("b", { children: ["特区 ", E + 1] }),
-                                w("small", {
-                                  children: [
-                                    "中心 #",
-                                    C.center,
-                                    " · ",
-                                    C.tiles.filter((h) => e.tiles[h].unlocked).length,
-                                    " 块",
-                                  ],
-                                }),
-                              ],
-                            }),
-                            w("button", {
-                              class: "btn tiny danger zone-unzone-btn",
-                              title: "撤销该经济特区并返还特区名额",
-                              onClick: () => confirmUnzone(A, C.center),
-                              children: "撤销特区",
-                            }),
-                          ],
-                        },
-                        C.center ?? E,
-                      ),
-                    ),
-                  }),
                 ],
               }),
               w(Qt, {
                 title: "正在生效",
-                extra: w("small", { class: "muted", children: `全国 ${s.length}/${Cc(e)}` }),
-                children: [
-                  !c.size && w("p", { class: "hint", children: "当前没有临时行政令在生效。" }),
-                  w("ul", {
-                    class: "live-list",
-                    children: [...c.values()].map((C, E) =>
-                      w(
-                        "li",
-                        {
-                          children: [
-                            C.decree
-                              ? w(Zv, { id: C.decree, size: 28 })
-                              : w("span", {
-                                  class: "dc-ico",
-                                  style: "--tier:#ffcf4a;width:28px;height:28px;border-radius:8px",
-                                  children: w(NA, { node: Ae.sparkles, size: 15 }),
-                                }),
-                            w("span", {
-                              children: [w("b", { children: C.name }), w("small", { children: C.where })],
-                            }),
-                            w("em", { children: C.left }),
-                          ],
-                        },
-                        E,
-                      ),
-                    ),
-                  }),
-                ],
+                extra: w("span", { class: "muted", style: "font-size:12px", children: `全国 ${s.length}/${Cc(e)}` }),
+                children: !c.size
+                  ? w("div", { class: "muted", style: "font-size:12px;padding:2px", children: "暂无生效政令" })
+                  : w("ul", {
+                      class: "live-list",
+                      children: [...c.values()].map((C, E) => {
+                        const lvTip = `${C.decree && Cs[C.decree] ? Cs[C.decree].effect + "\n" : ""}作用范围：${C.where} · ${C.left}`;
+                        return w(
+                          "li",
+                          {
+                            "data-tip-touch": !0,
+                            "data-tip-title": C.name,
+                            "data-tip": lvTip,
+                            children: [
+                              C.decree
+                                ? w(Zv, { id: C.decree, size: 26 })
+                                : w("span", {
+                                    class: "dc-ico",
+                                    style: "--tier:#ffcf4a;width:26px;height:26px;border-radius:8px",
+                                    children: w(NA, { node: Ae.sparkles, size: 14 }),
+                                  }),
+                              w("b", { children: `${C.name} · ${C.where}` }),
+                              w("em", { children: C.left }),
+                            ],
+                          },
+                          E,
+                        );
+                      }),
+                    }),
               }),
               w(Qt, {
                 title: "片区政令",
-                extra: w("small", { class: "muted", children: `${regDecrees.length} 项` }),
+                extra: w("span", { class: "muted", style: "font-size:12px", children: `${regDecrees.length} 项` }),
                 children: w("ul", { class: "dgrid", children: regDecrees.map(renderDecreeTile) }),
               }),
               w(Qt, {
                 title: "全国政令",
-                extra: w("small", { class: "muted", children: `${natDecrees.length} 项` }),
+                extra: w("span", { class: "muted", style: "font-size:12px", children: `${natDecrees.length} 项` }),
                 children: w("ul", { class: "dgrid", children: natDecrees.map(renderDecreeTile) }),
               }),
             ],
@@ -38661,18 +38956,17 @@ function Wp() {
           (t.creditRating === "AAA" || t.creditRating === "AA")),
     ),
     act3Done = Boolean(milestones.act3 || (t.unlocked >= 180 && lv5Wonders >= 4 && activeFic >= 8));
+  const chestTip = dq.bonusClaimed
+    ? "今日勤政宝箱已开启，现实自然日 0 点自动刷新"
+    : `完成当日全部 ${qs.length} 项日常委托，即可领取 ◇150 星钻 + 主公政治与魅力历练经验（现实自然日 0 点自动刷新）`;
+  const auraTip = `当前称号：${sum.rankName}\n成就点数：★${sum.pts} / ${sum.maxPts}（已达成 ${sum.done}/${sum.total} 项）\n成就光环：每积累 100★ 成就点，全国所有产业产出永久 +1%（当前 +${SA(sum.bonus, 0)}，上限 +15%）`;
   return w(he, {
     children: [
       cnt.total > 0 &&
         w("div", {
           class: "daily claim-all",
           children: [
-            w("span", {
-              children: [
-                w("b", { children: [cnt.total, " 项奖励可领"] }),
-                w("small", { children: ["合计 ◇", totalGems] }),
-              ],
-            }),
+            w("b", { children: `${cnt.total} 项可领 · ◇${totalGems.toLocaleString()}` }),
             w("button", { class: "btn small gold", onClick: claimAll, children: "全部领取" }),
           ],
         }),
@@ -38708,13 +39002,11 @@ function Wp() {
             children: [
               w("div", {
                 class: "daily",
+                "data-tip-touch": !0,
+                "data-tip-title": "每日签到",
+                "data-tip": `每日首次登录可免费领取 ◇${O.dailyGems} 星钻（现实自然日 0 点刷新）`,
                 children: [
-                  w("span", {
-                    children: [
-                      w("b", { children: "每日签到" }),
-                      w("small", { children: "每天登录即可领取星钻" }),
-                    ],
-                  }),
+                  w("b", { children: "📅 每日签到" }),
                   w("button", {
                     class: "btn small gold",
                     disabled: signDone,
@@ -38725,18 +39017,18 @@ function Wp() {
               }),
               w("div", {
                 class: `dq-chest${allQDone && !dq.bonusClaimed ? " ready" : ""}${dq.bonusClaimed ? " opened" : ""}`,
+                "data-tip-touch": !0,
+                "data-tip-title": "今日勤政宝箱",
+                "data-tip": chestTip,
                 children: [
                   w("div", {
                     class: "dqc-top",
                     children: [
                       w("span", {
+                        style: "display:inline-flex;align-items:center;gap:5px;flex-direction:row",
                         children: [
-                          w("b", { children: "今日勤政宝箱" }),
-                          w("small", {
-                            children: dq.bonusClaimed
-                              ? "今日宝箱已开启，明日 0 点刷新"
-                              : `完成全部 ${qs.length} 项委托领 ◇150 + 政治/魅力经验`,
-                          }),
+                          w("b", { children: `🎁 勤政宝箱 · ${doneQ}/${qs.length}` }),
+                          qTipC("今日勤政宝箱", chestTip),
                         ],
                       }),
                       w("button", {
@@ -38751,7 +39043,6 @@ function Wp() {
                     value: doneQ,
                     max: qs.length,
                     color: allQDone ? "var(--gold)" : "var(--cyan)",
-                    label: `今日进度 ${doneQ} / ${qs.length}`,
                   }),
                 ],
               }),
@@ -38759,29 +39050,31 @@ function Wp() {
                 class: "task-list dq-list",
                 children: qs.map((q) => {
                   const cl = dq.claimed.includes(q.id),
-                    rdy = !cl && q.prog >= q.target;
+                    rdy = !cl && q.prog >= q.target,
+                    qTip = `${q.desc}\n当前进度：${Math.min(q.prog, q.target)}/${q.target} · 奖励：◇${q.reward}\n（每日自然日 0 点自动刷新，视察目标随疆域动态生成）`;
                   return w(
                     "li",
                     {
                       class: `dq-item${rdy ? " done" : ""}${cl ? " claimed" : ""}`,
+                      "data-tip-touch": !0,
+                      "data-tip-title": q.name,
+                      "data-tip": qTip,
                       children: [
                         w("div", {
                           class: "dq-main",
+                          style: "display:flex;flex-direction:row;align-items:center;gap:6px;min-width:0",
                           children: [
+                            w(NA, { node: Ae[q.ico] ?? Ae.flag, size: 14, stroke: 2.1 }),
                             w("b", {
-                              style: "display:inline-flex;align-items:center;gap:5px",
-                              children: [
-                                w(NA, { node: Ae[q.ico] ?? Ae.flag, size: 13, stroke: 2.1 }),
-                                q.name,
-                              ],
+                              style: "overflow:hidden;text-overflow:ellipsis;white-space:nowrap",
+                              children: String(q.name || "").replace(/^亲临视察/, "视察"),
                             }),
-                            w("small", { class: "dq-desc", children: q.desc }),
-                            w(ei, {
-                              value: q.prog,
-                              max: q.target,
-                              color: cl ? "#6b7d94" : rdy ? "var(--green)" : "var(--cyan)",
-                              label: `${q.prog} / ${q.target}`,
+                            w("span", {
+                              class: "ach-pts",
+                              style: "flex-shrink:0",
+                              children: `${Math.min(q.prog, q.target)}/${q.target}`,
                             }),
+                            qTipC(q.name, qTip),
                           ],
                         }),
                         w("div", {
@@ -38817,10 +39110,6 @@ function Wp() {
                   );
                 }),
               }),
-              w("p", {
-                class: "fine",
-                children: "每日委托按现实自然日 0 点自动刷新，指定地块视察会随你的疆域动态派题。",
-              }),
             ],
           })
         : w(he, {
@@ -38831,7 +39120,16 @@ function Wp() {
                   w("div", {
                     class: "es-hd",
                     children: [
-                      w("b", { children: "🏛️ 盛世纪元碑" }),
+                      w("span", {
+                        style: "display:inline-flex;align-items:center;gap:5px",
+                        children: [
+                          w("b", { children: "🏛️ 盛世纪元碑" }),
+                          qTipC(
+                            "盛世纪元碑",
+                            "达成三幕盛世里程碑将触发纪元庆典画卷并永久铭刻于列朝国史馆；点击已点亮碑铭可重温画卷。",
+                          ),
+                        ],
+                      }),
                       w("button", {
                         class: "btn tiny",
                         onClick: () => A.openModal({ type: "legacyHall" }),
@@ -38860,50 +39158,51 @@ function Wp() {
                         done: act3Done,
                         tip: `180 格国土 (${t.unlocked}/180) · 4 座满级奇观 (${lv5Wonders}/4) · 8 种架空产业 (${activeFic}/8)`,
                       },
-                    ].map((acItem) =>
-                      w(
+                    ].map((acItem) => {
+                      const mTip = `${acItem.tip}\n${acItem.done ? "✓ 已达成，点击展阅纪元画卷" : "继续经营达成后将开启纪元盛典奖励"}`;
+                      return w(
                         "button",
                         {
                           class: `es-pill${acItem.done ? " done" : ""}`,
                           "data-tip-title": acItem.nm,
-                          "data-tip": `${acItem.tip}\n${acItem.done ? "✓ 已达成，点击展阅纪元画卷" : "继续经营达成后将开启纪元盛典奖励"}`,
+                          "data-tip": mTip,
                           onClick: () =>
                             acItem.done
                               ? A.openModal({ type: "eraMilestone", data: { actId: acItem.id, replay: !0 } })
                               : A.toast(`${acItem.nm}条件：${acItem.tip}`, "info"),
-                          children: [acItem.done ? "✦ " : "○ ", acItem.nm],
+                          children: [
+                            acItem.done ? "✦ " : "○ ",
+                            acItem.nm,
+                            " ",
+                            qTipC(acItem.nm, mTip),
+                          ],
                         },
                         acItem.id,
-                      ),
-                    ),
+                      );
+                    }),
                   }),
                 ],
               }),
               w("div", {
                 class: "ach-hero",
+                "data-tip-touch": !0,
+                "data-tip-title": "国家成就光环",
+                "data-tip": auraTip,
                 children: [
                   w("div", {
                     class: "ah-top",
                     children: [
                       w("div", {
+                        style: "display:inline-flex;align-items:center;gap:6px",
                         children: [
                           w("span", { class: "ah-rank", children: sum.rankName }),
-                          w("b", {
-                            children: [
-                              "★ ",
-                              sum.pts,
-                              " ",
-                              w("small", { children: ["/ ", sum.maxPts, " 成就点"] }),
-                            ],
-                          }),
+                          w("b", { children: `★${sum.pts}/${sum.maxPts}` }),
+                          qTipC("国家成就光环", auraTip),
                         ],
                       }),
                       w("div", {
                         class: "ah-aura",
-                        children: [
-                          w("small", { children: "成就光环" }),
-                          w("b", { children: ["+", SA(sum.bonus, 0), " 全国产出"] }),
-                        ],
+                        children: w("b", { children: `✨ 产出 +${SA(sum.bonus, 0)}` }),
                       }),
                     ],
                   }),
@@ -38911,7 +39210,7 @@ function Wp() {
                     value: sum.done,
                     max: sum.total,
                     color: "var(--gold)",
-                    label: `已达成 ${sum.done}/${sum.total} · 每 100★ 产出 +1%（上限+15%）`,
+                    label: `${sum.done}/${sum.total}`,
                   }),
                 ],
               }),
@@ -38934,31 +39233,37 @@ function Wp() {
                 children: achsFiltered.map((o) => {
                   const done = e.tasks.includes(o.id),
                     val = o.progress(e, t),
-                    rdy = !done && val >= o.target;
+                    rdy = !done && val >= o.target,
+                    progTxt = done ? "已达成" : `${fe(Math.min(val, o.target))}/${fe(o.target)}`,
+                    achTitle = `${o.name} · ${tierLbl[o.tier]}阶 (★${o.pts})`,
+                    achTip = `达成条件：${o.desc}\n当前进度：${progTxt}\n成就奖励：◇${o.reward} 星钻 · ★${o.pts} 成就点`;
                   return w(
                     "li",
                     {
                       class: `ach-item t${o.tier}${rdy ? " done" : ""}${done ? " claimed" : ""}`,
+                      "data-tip-touch": !0,
+                      "data-tip-title": achTitle,
+                      "data-tip": achTip,
                       children: [
                         w("div", {
                           class: "ach-main",
-                          children: [
-                            w("div", {
-                              class: "ach-hd",
-                              children: [
-                                w("em", { class: `ach-medal m${o.tier}`, children: tierLbl[o.tier] }),
-                                w("b", { children: o.name }),
-                                w("span", { class: "ach-pts", children: ["★", o.pts] }),
-                              ],
-                            }),
-                            o.desc !== o.name && w("small", { class: "dq-desc", children: o.desc }),
-                            w(ei, {
-                              value: done ? o.target : Math.min(val, o.target),
-                              max: o.target,
-                              color: done ? "#6b7d94" : rdy ? "var(--green)" : "var(--cyan)",
-                              label: done ? "已达成" : `${fe(Math.min(val, o.target))} / ${fe(o.target)}`,
-                            }),
-                          ],
+                          children: w("div", {
+                            class: "ach-hd",
+                            style: "flex-wrap:nowrap;min-width:0",
+                            children: [
+                              w("em", { class: `ach-medal m${o.tier}`, children: tierLbl[o.tier] }),
+                              w("b", {
+                                style: "overflow:hidden;text-overflow:ellipsis;white-space:nowrap",
+                                children: o.name,
+                              }),
+                              w("span", {
+                                class: "ach-pts",
+                                style: "flex-shrink:0",
+                                children: progTxt,
+                              }),
+                              qTipC(achTitle, achTip),
+                            ],
+                          }),
                         }),
                         w("button", {
                           class: `btn small${rdy ? " gold" : ""}`,
@@ -39053,13 +39358,16 @@ function qp() {
     ((CloudLadder.onlyReal = flag), CloudLadder.ver++, A.refresh());
   };
   const renderRow = (a, rk, idx) => {
-    const canInspect = !!a.real && !a.you;
+    const canInspect = !!a.real && !a.you,
+      rowTip = `GDP：${fe(a.gdp)} 亿/季${a.credit ? ` · 主权信用 ${a.credit}` : ""}${a.achPts ? ` · ★${a.achPts} 成就点` : ""}${canInspect ? "\n点击参观该玩家国家快照与产业结构" : ""}`;
     return w(
       "li",
       {
         class: `${a.you ? "you" : ""}${a.real ? " is-real" : ""}${canInspect ? " clickable" : ""}`,
         onClick: canInspect ? () => A.openModal({ type: "cloudInspect", entry: a }) : void 0,
-        title: canInspect ? "点击参观该玩家国家快照与产业结构" : void 0,
+        "data-tip-touch": canInspect ? void 0 : !0,
+        "data-tip-title": `#${rk} ${a.name}`,
+        "data-tip": rowTip,
         children: [
           w("span", { class: "rk", children: rk }),
           w("span", {
@@ -39077,7 +39385,8 @@ function qp() {
                   class: `cr-tag-xs cr-${a.credit === "AAA" ? "aaa" : a.credit === "AA" ? "aa" : a.credit === "A" ? "a" : "bad"}`,
                   children: a.credit,
                 }),
-              a.real && a.achPts > 0 && w("small", { class: "lb-pts", children: `★${a.achPts}` }),
+              a.real && a.achPts > 0 && w("em", { class: "lb-pts", children: `★${a.achPts}` }),
+              canInspect && qTipC(`#${rk} ${a.name}`, rowTip),
             ],
           }),
           w("b", { children: fe(a.gdp) }),
@@ -39086,6 +39395,9 @@ function qp() {
       idx,
     );
   };
+  const rankedRuleTip = `原点纯手打开荒、未启用传承数值增益且未领取沙盒补给的存档，由引擎实时重算核验，公平角逐全球排位与 75 产业龙头。${!myRanked ? "\n（当前本档属于沙盒展示赛道，切至沙盒展示榜可查看本档位置）" : ""}`;
+  const sandboxRuleTip = `陈列示范国、领取过沙盒星钻补给或开启传承增益的繁荣帝国，供全服玩家点击参观疆域规划与产业结构。${myRanked ? "\n（当前本档属于开荒排位赛道，切回开荒排位榜可查看本档名次）" : ""}`;
+  const inspectTip = "点击榜单中带有「真人 / 沙盒 / 导入」标签的国家行，即可打开国家快照参观其疆域布局与支柱产业。";
   return w(he, {
     children: [
       w("div", {
@@ -39099,17 +39411,18 @@ function qp() {
                 children: [
                   w("i", { class: `cb-dot${online ? " on" : ""}` }),
                   online
-                    ? `全球云端天梯 · 排位 ${rankedReals.length + (myRanked ? 1 : 0)} / 沙盒 ${sandboxReals.length + (myRanked ? 0 : 1)}`
-                    : "本地天梯模式",
+                    ? `云端天梯 · 排位 ${rankedReals.length + (myRanked ? 1 : 0)} / 沙盒 ${sandboxReals.length + (myRanked ? 0 : 1)}`
+                    : "本地天梯",
                 ],
               }),
               w("span", {
                 class: `lb-elig-badge ${myRanked ? "ranked" : "sandbox"}`,
+                "data-tip-touch": !0,
                 "data-tip-title": myRanked ? "当前存档：开荒排位资格" : "当前存档：沙盒展示赛道",
                 "data-tip": myRanked
-                  ? "本档从原点纯手打开荒且未领取过沙盒星钻补给，上传后直接参与【全球开荒排位榜】与 75 产业龙头争夺！"
-                  : "本档为示范帝国、启用过二周目传承增益或领取过沙盒补给，上传后归入【沙盒展示榜】供全服参观交流，不占排位榜名次。",
-                children: myRanked ? "🏆 本档：开荒排位" : "🏛️ 本档：沙盒展示",
+                  ? "本档从原点纯手打开荒且未领取过沙盒星钻补给，上传后直接参与【开荒排位榜】与 75 产业龙头争夺！"
+                  : "本档为示范帝国、启用过二周目传承增益或领取过沙盒补给，上传后归入【沙盒展示榜】供全服参观交流。",
+                children: myRanked ? "🏆 开荒排位" : "🏛️ 沙盒展示",
               }),
             ],
           }),
@@ -39118,19 +39431,23 @@ function qp() {
             children: [
               w("button", {
                 class: `lbt-btn${boardTab === "ranked" ? " on" : ""}`,
+                "data-tip-title": "🏆 开荒排位榜",
+                "data-tip": rankedRuleTip,
                 onClick: () => switchBoard("ranked"),
-                children: [
-                  w("b", { children: "🏆 全球开荒排位榜" }),
-                  w("small", { children: "原点手打 · 无补给公平竞技" }),
-                ],
+                children: w("b", {
+                  style: "display:inline-flex;align-items:center;gap:5px",
+                  children: ["🏆 开荒排位榜", qTipC("🏆 开荒排位榜", rankedRuleTip)],
+                }),
               }),
               w("button", {
                 class: `lbt-btn sandbox${boardTab === "sandbox" ? " on" : ""}`,
+                "data-tip-title": "🏛️ 沙盒展示榜",
+                "data-tip": sandboxRuleTip,
                 onClick: () => switchBoard("sandbox"),
-                children: [
-                  w("b", { children: "🏛️ 沙盒展示榜" }),
-                  w("small", { children: "示范国 / 补给档 / 传承帝国展览" }),
-                ],
+                children: w("b", {
+                  style: "display:inline-flex;align-items:center;gap:5px",
+                  children: ["🏛️ 沙盒展示榜", qTipC("🏛️ 沙盒展示榜", sandboxRuleTip)],
+                }),
               }),
             ],
           }),
@@ -39144,8 +39461,8 @@ function qp() {
                 children: CloudLadder.uploading
                   ? "上传中…"
                   : myRanked
-                    ? "上传至排位榜"
-                    : "上传至沙盒榜",
+                    ? "上传排位榜"
+                    : "上传沙盒榜",
               }),
               online &&
                 w("button", {
@@ -39156,6 +39473,8 @@ function qp() {
                 }),
               w("button", {
                 class: "btn small",
+                "data-tip-title": "导入对手存档 PK",
+                "data-tip": "导入好友导出的 .json 国家存档，在本机天梯同台比拼产值与龙头",
                 onClick: () => {
                   var el = fileRef.current;
                   el && el.click();
@@ -39189,53 +39508,56 @@ function qp() {
           }),
         ],
       }),
-      !meOnThisBoard &&
-        w("p", {
-          class: "hint",
-          children:
-            boardTab === "ranked"
-              ? "当前存档属于【🏛️ 沙盒展示】赛道，下方展示纯手打【全球开荒排位榜】名次；点上方切换【沙盒展示榜】可查看本档位置。"
-              : "当前存档属于【🏆 开荒排位】赛道，下方展示全服玩家上传的沙盒与完全体帝国布局。",
-        }),
       w("div", {
         class: "rank-hero",
         children: [
           w("div", {
             children: [
               w("span", {
-                children:
-                  boardTab === "sandbox"
-                    ? "沙盒展示榜排名"
-                    : onlyR
-                      ? "真人开荒 GDP 排名"
-                      : "全球开荒 GDP 总排名",
-              }),
-              w("strong", {
-                children: e.rank
-                  ? ["#", e.rank, w("small", { children: [" / ", e.total] })]
-                  : ["参观模式", w("small", { children: [` · 共 ${e.total} 国`] })],
-              }),
-              w("em", {
+                style: "display:inline-flex;align-items:center;gap:5px",
                 children: [
-                  e.rank && e.total > 1
-                    ? `超过 ${SA(1 - e.rank / e.total, 1)} 的参榜帝国`
-                    : boardTab === "sandbox"
-                      ? "可点击任意真人帝国参观产业规划"
-                      : "从原点纯手打上传即可争夺全球排位",
+                  boardTab === "sandbox"
+                    ? "沙盒榜排名"
+                    : onlyR
+                      ? "真人 GDP 排名"
+                      : "全球 GDP 排名",
+                  qTipC("榜单与排位规则", `${boardTab === "sandbox" ? sandboxRuleTip : rankedRuleTip}\n${inspectTip}`),
                 ],
               }),
+              w("strong", {
+                style: "white-space:nowrap",
+                children: e.rank
+                  ? [
+                      `#${e.rank}`,
+                      w("small", {
+                        style: "font-size:13px;font-weight:600;margin-left:6px;color:var(--muted)",
+                        children: `/ ${e.total}`,
+                      }),
+                    ]
+                  : [
+                      "参观",
+                      w("small", {
+                        style: "font-size:13px;font-weight:600;margin-left:8px;color:var(--muted)",
+                        children: `共 ${e.total} 国`,
+                      }),
+                    ],
+              }),
+              e.rank &&
+                e.total > 1 &&
+                w("em", {
+                  children: `超越 ${SA(1 - e.rank / e.total, 1)}`,
+                }),
             ],
           }),
           w("button", {
             class: `rh-lead${c.length ? " has" : ""}`,
-            "data-tip-title": "产值龙头",
+            "data-tip-title": "75 产业产值龙头",
             "data-tip":
-              "单产业当季产值最高的国家即为该产业龙头（国内同产业多块地合计计算）\n点一下查看 75 个产业龙头归属",
+              "单产业当季产值最高的国家即为该产业龙头（国内同产业多块地合计计算）\n点击查看全部 75 个产业龙头归属",
             onClick: () => s("lead"),
             children: [
-              w(NA, { node: Ae.crown, size: 20 }),
-              w("b", { children: c.length }),
-              w("small", { children: "个产业的龙头" }),
+              w(NA, { node: Ae.crown, size: 18 }),
+              w("b", { children: `${c.length} 龙头` }),
             ],
           }),
         ],
@@ -39249,7 +39571,7 @@ function qp() {
                 w("button", {
                   class: `pill${onlyR ? "" : " on"}`,
                   onClick: () => toggleReal(!1),
-                  children: "云端+AI混合榜",
+                  children: "混合榜",
                 }),
                 w("button", {
                   class: `pill${onlyR ? " on" : ""}`,
@@ -39281,7 +39603,7 @@ function qp() {
                     : onlyR
                       ? "真人开荒排位榜"
                       : "全球开荒前十",
-                extra: w("small", { class: "muted", children: "点真人国家可参观快照" }),
+                extra: qTipC("国家快照参观", inspectTip),
                 children: e.list.length
                   ? w("ol", {
                       class: "ladder",
@@ -39289,9 +39611,10 @@ function qp() {
                         .slice(0, boardTab === "sandbox" || onlyR ? 50 : 10)
                         .map((a, Q) => renderRow(a, Q + 1, Q)),
                     })
-                  : w("p", {
-                      class: "hint",
-                      children: "当前沙盒展示榜暂无上传存档。上传示范国或沙盒帝国即可在此展示布局！",
+                  : w("div", {
+                      class: "muted",
+                      style: "font-size:12px;padding:6px 2px",
+                      children: "暂无参榜存档",
                     }),
               }),
               !onlyR &&
@@ -39314,7 +39637,7 @@ function qp() {
                 children: c.length
                   ? w(he, {
                       children: [
-                        w("b", { children: ["你是 ", c.length, " 个产业的龙头"] }),
+                        w("b", { children: `👑 已夺 ${c.length} 项龙头` }),
                         w("span", {
                           class: "ls-chips",
                           children: c.map((a) =>
@@ -39333,34 +39656,28 @@ function qp() {
                       ],
                     })
                   : P && P.top[0]
-                    ? w(he, {
-                        children: [
-                          w("b", { children: "还没有拿下哪个产业的龙头" }),
-                          w("small", {
-                            children: [
-                              "离得最近的是「",
-                              HA[P.id].short,
-                              "」：你排第 ",
-                              P.you.rank,
-                              "，龙头的产值是你的 ",
-                              fe(P.top[0].value / Math.max(0.01, P.you.value)),
-                              " 倍。把同一个产业多建几处、升高等级、派匹配的人物，产值就上去了。",
-                            ],
-                          }),
-                        ],
-                      })
-                    : w(he, {
-                        children: [
-                          w("b", {
-                            children: meOnThisBoard ? "国内还没有运转的产业" : "当前正在浏览另一赛道的产业龙头",
-                          }),
-                          w("small", {
-                            children: meOnThisBoard
-                              ? "建成第一处产业，就能在它的产值榜上看到自己。"
-                              : "切回本档所属榜单即可查看你在各产业的实时产值名次。",
-                          }),
-                        ],
-                      }),
+                    ? (() => {
+                        const nearTip = `距离龙头最近：「${HA[P.id].name}」（当前排 #${P.you.rank}，榜首产值为你的 ${fe(P.top[0].value / Math.max(0.01, P.you.value))} 倍）。\n攻略：同产业多地块集群建设、升至满级并委派匹配专长人物，可快速登顶龙头。`;
+                        return w("span", {
+                          style: "display:inline-flex;align-items:center;gap:6px",
+                          children: [
+                            w("b", { children: `👑 0 龙头 · 最近：${HA[P.id].short} #${P.you.rank}` }),
+                            qTipC("冲击产业龙头", nearTip),
+                          ],
+                        });
+                      })()
+                    : (() => {
+                        const emptyLeadTip = meOnThisBoard
+                          ? "国内建成并运转任意产业后，即可参与对应产业的全球产值龙头排名。"
+                          : "当前正在浏览另一赛道的产业龙头；切回本档所属榜单可查看实时名次。";
+                        return w("span", {
+                          style: "display:inline-flex;align-items:center;gap:6px",
+                          children: [
+                            w("b", { children: meOnThisBoard ? "暂无运转产业" : "参观其他赛道龙头" }),
+                            qTipC("产业龙头说明", emptyLeadTip),
+                          ],
+                        });
+                      })(),
               }),
               w("div", {
                 class: "filter-row",
@@ -39378,7 +39695,9 @@ function qp() {
                     }),
                 ],
               }),
-              f && !g.length && w("p", { class: "hint", children: "国内还没有运转的产业。" }),
+              f &&
+                !g.length &&
+                w("div", { class: "muted", style: "font-size:12px;padding:4px 2px", children: "暂无运转产业" }),
               B.map((a) => {
                 const Q = a.list.filter((l) => !f || t[l.id].you.rank !== null);
                 if (!Q.length) return null;
@@ -39392,7 +39711,7 @@ function qp() {
                       w("h4", {
                         children: [
                           w("i", { children: a.name }),
-                          w("span", { children: D ? `你是其中 ${D} 个的龙头` : `${Q.length} 个产业` }),
+                          w("span", { children: D ? `👑 ${D}/${Q.length}` : `${Q.length} 项` }),
                         ],
                       }),
                       w("ul", {
@@ -39400,6 +39719,7 @@ function qp() {
                         children: Q.map((l) => {
                           const u = t[l.id],
                             C = u.top[0],
+                            lTitle = `${l.name} · 产值榜（亿/季）`,
                             E = [
                               ...u.top.map(
                                 (h, d) =>
@@ -39408,9 +39728,9 @@ function qp() {
                               u.you.rank === null
                                 ? "! 你尚未在此榜涉足该产业"
                                 : u.you.rank > u.top.length
-                                  ? `✓ 你排第 ${u.you.rank}，${fe(u.you.value)} 亿`
-                                  : "",
-                              `共 ${u.total} 个国家在做 · 点一下看这个产业`,
+                                  ? `✓ 你排第 ${u.you.rank}（${fe(u.you.value)} 亿/季）`
+                                  : `✓ 你排第 ${u.you.rank}（${fe(u.you.value)} 亿/季）`,
+                              `共 ${u.total} 个国家涉足 · 点击查看产业详情`,
                             ]
                               .filter(Boolean)
                               .join("\n");
@@ -39419,47 +39739,45 @@ function qp() {
                             {
                               children: w("button", {
                                 class: `lead-row${u.lead ? " me" : ""}${u.you.rank !== null ? " has" : ""}`,
-                                "data-tip-title": `${l.name} · 产值榜（亿/季）`,
+                                "data-tip-title": lTitle,
                                 "data-tip": E,
                                 onClick: () => A.openModal({ type: "industry", id: l.id }),
                                 children: [
-                                  w(vn, { industry: l.id, size: 30, dim: u.you.rank === null }),
+                                  w(vn, { industry: l.id, size: 24, dim: u.you.rank === null }),
                                   w("span", {
                                     class: "lr-main",
+                                    style: "flex-direction:row;align-items:center;gap:6px;min-width:0",
                                     children: [
                                       w("b", { children: l.short }),
-                                      w("small", {
-                                        children: [
-                                          w(NA, { node: Ae.crown, size: 11 }),
-                                          " ",
-                                          C ? C.name : "还没有国家在做",
-                                          C &&
-                                            C.real &&
-                                            !C.you &&
-                                            w("em", { class: "real-tag", children: "真人" }),
-                                        ],
-                                      }),
+                                      C &&
+                                        w("span", {
+                                          class: "muted",
+                                          style:
+                                            "display:inline-flex;align-items:center;gap:3px;font-size:11.5px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap",
+                                          children: [w(NA, { node: Ae.crown, size: 11 }), C.name],
+                                        }),
+                                      C &&
+                                        C.real &&
+                                        !C.you &&
+                                        w("em", { class: "real-tag", children: "真人" }),
                                     ],
                                   }),
-                                  w("span", {
+                                  w("b", {
                                     class: "lr-val",
-                                    children: [
-                                      w("b", { children: C ? fe(C.value) : "—" }),
-                                      w("small", { children: "亿/季" }),
-                                    ],
+                                    style: "font-variant-numeric:tabular-nums;white-space:nowrap",
+                                    children: C ? `${fe(C.value)}亿` : "—",
                                   }),
                                   w("span", {
                                     class: "lr-you",
-                                    children: u.lead
-                                      ? w("em", { children: "龙头" })
-                                      : u.you.rank !== null
-                                        ? w(he, {
-                                            children: [
-                                              w("b", { children: ["#", u.you.rank] }),
-                                              w("small", { children: [fe(u.you.value), " 亿"] }),
-                                            ],
-                                          })
-                                        : w("small", { children: "未涉足" }),
+                                    style: "display:inline-flex;flex-direction:row;align-items:center;gap:4px",
+                                    children: [
+                                      u.lead
+                                        ? w("em", { children: "龙头" })
+                                        : u.you.rank !== null
+                                          ? w("b", { children: `#${u.you.rank}` })
+                                          : w("span", { class: "muted", style: "font-size:11px", children: "—" }),
+                                      qTipC(lTitle, E),
+                                    ],
                                   }),
                                 ],
                               }),
@@ -39472,11 +39790,6 @@ function qp() {
                   },
                   a.key,
                 );
-              }),
-              w("p", {
-                class: "fine",
-                children:
-                  "全球开荒排位榜仅收录从原点纯手打且未领沙盒补给的存档，由引擎实时重算核验；示范国与补给档独立在沙盒展示榜陈列。",
               }),
             ],
           }),
@@ -39496,9 +39809,18 @@ function Zp() {
         title: `第 ${novStg} 幕`,
         desc: "",
       },
+    unlockedCnt = e.tiles.filter((f) => f.unlocked).length,
+    landCap = A.metrics.landCap,
+    rankedOk = isSaveRankedV1(e),
     s = (f) => {
       (f(), A.refresh());
     };
+  const qualTip =
+    "清爽省电：关闭后处理泛光，移动端流畅省电\n标准画质：开启奇观光效与实时阴影（桌面推荐）\n极致画质：开启环境光遮蔽、辉光与移轴景深";
+  const audioViewTip =
+    "音效：界面交互、建设竣工与政令颁布音效\n音乐：5 首国风与管弦交响背景乐随机轮播\n地貌：按山川平原地形错开六角地块立体海拔高度";
+  const newGameTip =
+    "从原点开始：纯手打开荒，可登【全球开荒排位榜】\n开启新纪元 (NG+)：携带列朝传承与开国元勋开启新周目\n示范帝国 / 沙盒补给：体验中后期宏大布局或免费领星钻，归入【沙盒展示榜】";
   return w(he, {
     children: [
       w(Qt, {
@@ -39515,39 +39837,56 @@ function Zp() {
               }),
             ],
           }),
-          w("p", {
-            class: "fine",
+          w("div", {
+            class: "filter-row",
+            style: "margin-top:8px;gap:6px",
             children: [
-              "世界种子 ",
-              e.seed,
-              " · ",
-              e.tiles.filter((f) => f.unlocked).length,
-              "/",
-              A.metrics.landCap,
-              " 块国土 · ",
-              Ng(e.quarter),
-              " · 1× 实时（60秒/季） · ",
-              isSaveRankedV1(e) ? "🏆 开荒排位资格" : "🏛️ 沙盒展示赛道",
+              w("span", {
+                class: "pill",
+                "data-tip-touch": !0,
+                "data-tip-title": "世界种子与纪元",
+                "data-tip": `山河随机种子：#${e.seed}\n当前纪元：${Ng(e.quarter)}（实时 60 秒/季）`,
+                children: `🌱 #${e.seed}`,
+              }),
+              w("span", {
+                class: "pill",
+                "data-tip-touch": !0,
+                "data-tip-title": "疆域规模",
+                "data-tip": `已开拓国土 ${unlockedCnt} 块 / 当前治理上限 ${landCap} 块（满疆域 217 块）`,
+                children: `🗺️ ${unlockedCnt}/${landCap}`,
+              }),
+              w("span", {
+                class: "pill",
+                "data-tip-touch": !0,
+                "data-tip-title": rankedOk ? "开荒排位资格" : "沙盒展示赛道",
+                "data-tip": rankedOk
+                  ? "本档从原点纯手打开荒且未领沙盒补给，上传可角逐【全球开荒排位榜】"
+                  : "本档归入全球天梯【沙盒展示榜】供参观交流",
+                children: rankedOk ? "🏆 开荒排位" : "🏛️ 沙盒展示",
+              }),
             ],
           }),
         ],
       }),
       e.noviceMode &&
         w(Qt, {
-          title: "新手渐进引导",
-          extra: w("small", { class: "gold", children: `第 ${novStg}/4 幕` }),
+          title: "新手引导",
           children: w("div", {
             class: "novice-settings-card",
+            style: "display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap",
             children: [
-              w("div", {
-                class: "nsc-hd",
+              w("span", {
+                style: "display:inline-flex;align-items:center;gap:6px",
                 children: [
-                  w("b", { children: `🌱 当前阶段：${novInfo.title}` }),
+                  w("b", { children: `🌱 新手引导 · 第 ${novStg} 幕` }),
+                  qTipC(
+                    `新手渐进引导 · ${novInfo.title}`,
+                    `${novInfo.desc || "随发展阶段逐步解锁高级治国面板，避免开局信息过载。"}\n共 4 幕，熟悉玩法可随时一键展开全部功能。`,
+                  ),
                 ],
               }),
-              novInfo.desc && w("p", { class: "drc-desc", children: novInfo.desc }),
               w("button", {
-                class: "btn gold nsc-exit-btn",
+                class: "btn small gold nsc-exit-btn",
                 onClick: () =>
                   typeof A.exitNoviceMode == "function"
                     ? A.exitNoviceMode()
@@ -39556,7 +39895,7 @@ function Zp() {
                         st.noviceCompleted = !0;
                         return qe("已展开全部治国系统");
                       }),
-                children: "我是老手 · 立即展开全部功能",
+                children: "立即展开全部功能",
               }),
             ],
           }),
@@ -39564,71 +39903,85 @@ function Zp() {
       !A.webglFailed &&
         w(Qt, {
           title: "3D 画质",
+          extra: qTipC("3D 画质说明", qualTip),
           children: w("div", {
             class: "seg",
             children: [
               w("button", {
                 class: e.settings.quality === "low" ? "on" : "",
+                "data-tip-title": "清爽省电",
+                "data-tip": "关闭泛光后处理，移动端推荐，流畅省电",
                 onClick: () =>
                   s(() => {
                     ((e.settings.quality = "low"), (e.settings.qualityUserSet = !0));
                   }),
-                children: [w("b", { children: "清爽省电" }), w("small", { children: "移动端推荐·无泛光" })],
+                children: w("b", { children: "⚡ 清爽省电" }),
               }),
               w("button", {
                 class: e.settings.quality === "mid" ? "on" : "",
+                "data-tip-title": "标准画质",
+                "data-tip": "开启奇观光效与实时阴影，桌面端推荐",
                 onClick: () =>
                   s(() => {
                     ((e.settings.quality = "mid"), (e.settings.qualityUserSet = !0));
                   }),
-                children: [w("b", { children: "标准中画质" }), w("small", { children: "桌面推荐·奇观光效与阴影" })],
+                children: w("b", { children: "✨ 标准画质" }),
               }),
               w("button", {
                 class: e.settings.quality === "high" ? "on" : "",
+                "data-tip-title": "极致画质",
+                "data-tip": "开启环境光遮蔽、辉光泛光与移轴景深",
                 onClick: () =>
                   s(() => {
                     ((e.settings.quality = "high"), (e.settings.qualityUserSet = !0));
                   }),
-                children: [w("b", { children: "极致高画质" }), w("small", { children: "环境光遮蔽·泛光·移轴" })],
+                children: w("b", { children: "💎 极致画质" }),
               }),
             ],
           }),
         }),
       w(Qt, {
         title: "声音与视图",
+        extra: qTipC("声音与视图说明", audioViewTip),
         children: w("div", {
           class: "seg",
           children: [
             w("button", {
               class: e.settings.sound !== !1 ? "on" : "",
+              "data-tip-title": "交互音效",
+              "data-tip": "界面交互、建设竣工与政令颁布音效",
               onClick: () => s(() => (e.settings.sound = e.settings.sound === !1)),
-              children: [
-                w("b", { children: "音效" }),
-                w("small", { children: e.settings.sound !== !1 ? "已开启" : "已关闭" }),
-              ],
+              children: w("b", { children: `🔊 音效 · ${e.settings.sound !== !1 ? "已开" : "已关"}` }),
             }),
             w("button", {
               class: e.settings.music !== !1 ? "on" : "",
+              "data-tip-title": "背景音乐",
+              "data-tip": "内置 5 首交响与国风背景音乐随机轮播",
               onClick: () => s(() => (e.settings.music = e.settings.music === !1)),
-              children: [
-                w("b", { children: "背景音乐" }),
-                w("small", { children: e.settings.music !== !1 ? "已开启 · 5 首随机播放" : "已关闭" }),
-              ],
+              children: w("b", { children: `🎵 音乐 · ${e.settings.music !== !1 ? "已开" : "已关"}` }),
             }),
             !A.webglFailed &&
               w("button", {
                 class: e.settings.relief ? "on" : "",
+                "data-tip-title": "立体地貌视图",
+                "data-tip": "开启后按山脉、丘陵、平原地形高低错开六角地块海拔",
                 onClick: () => s(() => (e.settings.relief = !e.settings.relief)),
-                children: [
-                  w("b", { children: "地貌视图" }),
-                  w("small", { children: e.settings.relief ? "已开启" : "按地形错开高低" }),
-                ],
+                children: w("b", { children: `🏔️ 地貌 · ${e.settings.relief ? "已开" : "已关"}` }),
               }),
           ],
         }),
       }),
       w(Qt, {
         title: "存档与国史馆",
+        extra: hasNgPlus
+          ? w("span", {
+              class: "pill",
+              "data-tip-touch": !0,
+              "data-tip-title": "列朝传承遗产",
+              "data-tip": `累计荣登史册：${leg.totalClears || 0} 朝 · 可支配国运点：${leg.points || 0} 点`,
+              children: `✦ 国运 ${leg.points || 0}`,
+            })
+          : null,
         children: [
           w("div", {
             class: "actions wrap",
@@ -39682,17 +40035,28 @@ function Zp() {
               }),
             ],
           }),
-          A.saveFailed && w("p", { class: "hint warn", children: "浏览器存储不可用，请定期导出存档。" }),
+          A.saveFailed &&
+            w("span", {
+              class: "pill warn",
+              style: "margin-top:6px;display:inline-flex",
+              "data-tip-touch": !0,
+              "data-tip-title": "本地存储受限",
+              "data-tip": "当前浏览器本地存储不可用，请定期点击「导出存档」保存备份。",
+              children: "⚠️ 存储受限 · 请定期导出",
+            }),
         ],
       }),
       w(Qt, {
         title: "开启新局与沙盒补给",
+        extra: qTipC("模式与天梯资格说明", newGameTip),
         children: w("div", {
           class: "actions wrap",
           children: [
             hasNgPlus &&
               w("button", {
                 class: "btn gold",
+                "data-tip-title": "文明传承 · 新纪元 (NG+)",
+                "data-tip": `当前拥有 ${leg.points || 0} 点国运点，可携带图鉴遗产与开国元勋开启新周目`,
                 onClick: () =>
                   A.openModal({
                     type: "confirm",
@@ -39708,6 +40072,8 @@ function Zp() {
               }),
             w("button", {
               class: "btn gold",
+              "data-tip-title": "完全体示范帝国",
+              "data-tip": "217 块满疆域、全 75 产业体系、8 座满级奇观（归入沙盒展示榜）",
               onClick: () =>
                 A.openModal({
                   type: "confirm",
@@ -39723,6 +40089,8 @@ function Zp() {
             }),
             w("button", {
               class: "btn",
+              "data-tip-title": "起步示范国家",
+              "data-tip": "中盘产业链与现代治理刚起步的示范档（归入沙盒展示榜）",
               onClick: () =>
                 A.openModal({
                   type: "confirm",
@@ -39738,6 +40106,8 @@ function Zp() {
             }),
             w("button", {
               class: "btn danger",
+              "data-tip-title": "从原点重新开始",
+              "data-tip": "生成全新 217 块随机山河世界，纯手打可登【全球开荒排位榜】",
               onClick: () =>
                 A.openModal({
                   type: "confirm",
@@ -39762,9 +40132,16 @@ function Zp() {
           ],
         }),
       }),
-      w("p", {
-        class: "fine about",
-        children: [Ds.name, ` ${Ds.version || "1.1"} 正式版 · 实时战略演进 · 纯单机无内购`],
+      w("div", {
+        style: "display:flex;justify-content:center;padding:4px 0 2px",
+        children: w("span", {
+          class: "pill muted",
+          style: "font-size:11px;opacity:.75",
+          "data-tip-touch": !0,
+          "data-tip-title": Ds.name,
+          "data-tip": `${Ds.name} v${Ds.version || "1.1"} 正式版 · 实时战略演进 · 纯单机无内购`,
+          children: `v${Ds.version || "1.1"}`,
+        }),
       }),
     ],
   });
@@ -48188,15 +48565,28 @@ button.ptag:hover:not(:disabled) {
 }
 .act-left {
   display: flex;
+  flex-wrap: nowrap;
+  justify-content: center;
   align-items: center;
   gap: 2px;
   height: 6px;
+  width: 100%;
 }
 .act-left i {
-  width: 5px;
-  height: 5px;
+  flex: none;
+  width: 4.5px;
+  height: 4.5px;
   border-radius: 50%;
   background: #ffffff29;
+}
+.act-left.dense,
+.act-left:has(i:nth-child(7)) {
+  gap: 1.5px;
+}
+.act-left.dense i,
+.act-left:has(i:nth-child(7)) i {
+  width: 4px;
+  height: 4px;
 }
 .act-left i.on {
   background: var(--ac);
@@ -53812,7 +54202,7 @@ button.dcard {
   align-items: center;
   justify-content: flex-start;
   gap: 3px;
-  min-height: 76px;
+  min-height: 66px;
   padding: 7px 3px 6px;
 }
 .lac-quota {
@@ -53820,39 +54210,51 @@ button.dcard {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 3px;
+  gap: 2px;
   margin-top: auto;
 }
 .lac-pips {
-  display: inline-flex;
-  flex-wrap: wrap;
+  display: flex;
+  flex-wrap: nowrap;
   justify-content: center;
+  align-items: center;
   gap: 2px;
-  max-width: 62px;
+  max-width: none;
+  height: 6px;
+  width: 100%;
 }
 .lac-pips i {
-  width: 5px;
-  height: 5px;
-  border-radius: 99px;
-  background: rgba(160, 200, 240, 0.22);
+  flex: none;
+  width: 4.5px;
+  height: 4.5px;
+  border-radius: 50%;
+  background: rgba(160, 200, 240, 0.24);
+}
+.lac-pips.dense,
+.lac-pips:has(i:nth-child(7)) {
+  gap: 1.5px;
+}
+.lac-pips.dense i,
+.lac-pips:has(i:nth-child(7)) i {
+  width: 3.8px;
+  height: 3.8px;
 }
 .lac-pips i.on {
   background: var(--cyan);
   box-shadow: 0 0 5px rgba(88, 225, 255, 0.7);
 }
 .lac-sub {
-  font: 600 9.5px/1.2 var(--mono);
+  font: 700 9.5px/1.15 var(--mono);
   color: #9cb0c5;
   text-align: center;
-  white-space: normal;
-  word-break: keep-all;
+  white-space: nowrap;
 }
 .lac-quota.unlim .lac-sub {
   color: #9cecff;
 }
-.lac-quota.unlim .lac-sub.sub2 {
-  font-size: 9px;
-  color: #8b9db2;
+.act-survey .lac-sub,
+.act-survey .lac-quota.unlim .lac-sub {
+  color: rgba(42, 26, 0, 0.82);
 }
 .pa-day.unlimited {
   align-items: flex-end;
@@ -53879,6 +54281,9 @@ button.dcard {
   margin: 10px 0 8px;
 }
 .lord-subtabs button {
+  align-items: center;
+  justify-content: center;
+  text-align: center;
   padding: 6px 6px;
   font-size: 11.5px;
 }
@@ -53950,15 +54355,15 @@ button.dcard {
   color: var(--muted);
 }
 
-/* 4. 6-Tier Branching Skill Tree */
+/* 4. 6-Tier Branching Skill Tree (Compact Single-Row Nodes) */
 .sk-tree.v11-branch-tree {
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 7px;
 }
 .sk-tier-block {
-  padding: 8px 9px 9px;
-  border-radius: 11px;
+  padding: 6px 8px 7px;
+  border-radius: 10px;
   border: 1px solid rgba(160, 200, 240, 0.14);
   background: rgba(8, 13, 21, 0.72);
 }
@@ -53979,24 +54384,20 @@ button.dcard {
   align-items: center;
   justify-content: space-between;
   gap: 6px;
-  margin-bottom: 7px;
+  margin-bottom: 5px;
 }
 .sk-tier-hd .sth-title {
-  font: 700 11.5px/1.2 var(--sans);
+  font: 700 11px/1.2 var(--sans);
   color: #dce8f5;
 }
 .sk-tier-block.is-capstone .sk-tier-hd .sth-title {
   color: #ffe082;
 }
-.sk-tier-hd > small {
-  font-size: 10.5px;
-  color: #8498ae;
-}
 .sk-tier-row {
   position: relative;
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 8px;
+  gap: 7px;
 }
 .sk-tier-row.fork-row {
   gap: 18px;
@@ -54007,9 +54408,9 @@ button.dcard {
   top: 50%;
   transform: translate(-50%, -50%);
   z-index: 3;
-  padding: 1px 4.5px;
+  padding: 1px 4px;
   border-radius: 6px;
-  font: 700 9px/1.35 var(--mono);
+  font: 700 8.5px/1.3 var(--mono);
   color: #ffe28a;
   background: #121822;
   border: 1px solid rgba(255, 207, 74, 0.48);
@@ -54020,13 +54421,13 @@ button.dcard {
 .sk-card {
   position: relative;
   display: flex;
-  flex-direction: column;
-  align-items: stretch;
+  flex-direction: row;
+  align-items: center;
   justify-content: flex-start;
   gap: 5px;
-  min-height: 70px;
-  padding: 8px 8px 9px;
-  border-radius: 9px;
+  min-height: 38px;
+  padding: 7px 8px;
+  border-radius: 8px;
   border: 1px solid rgba(160, 200, 240, 0.16);
   background: rgba(11, 18, 28, 0.85);
   color: #c8d6e5;
@@ -54038,6 +54439,7 @@ button.dcard {
     box-shadow 0.14s ease;
 }
 .skc-hd {
+  flex: 1;
   display: flex;
   align-items: center;
   gap: 5px;
@@ -54055,6 +54457,8 @@ button.dcard {
   color: #9cb2c9;
   background: rgba(255, 255, 255, 0.08);
 }
+.sk-card > b,
+.sk-card .skc-name,
 .skc-hd > b {
   flex: 1;
   min-width: 0;
@@ -54067,21 +54471,16 @@ button.dcard {
 }
 .skc-tag {
   flex: none;
-  padding: 1px 5px;
+  display: inline-grid;
+  place-items: center;
+  min-width: 18px;
+  height: 17px;
+  padding: 0 4px;
   border-radius: 5px;
-  font: 700 9.5px/1.35 var(--mono);
+  font: 700 9.5px/1 var(--mono);
   font-style: normal;
   color: #8b9fb5;
   background: rgba(255, 255, 255, 0.06);
-}
-.skc-desc {
-  font-size: 11px;
-  line-height: 1.38;
-  color: #94a8be;
-  display: -webkit-box;
-  -webkit-line-clamp: 3;
-  -webkit-box-orient: vertical;
-  overflow: hidden;
 }
 
 .sk-card.available {
@@ -54110,15 +54509,14 @@ button.dcard {
   color: #261900;
   background: var(--gold);
 }
+.sk-card.learned > b,
+.sk-card.learned .skc-name,
 .sk-card.learned .skc-hd > b {
   color: #fff2c6;
 }
 .sk-card.learned .skc-tag {
   color: #261900;
   background: linear-gradient(180deg, #ffe494, #e5ac2e);
-}
-.sk-card.learned .skc-desc {
-  color: #d6e4f2;
 }
 .sk-card.capstone {
   border-width: 1.5px;
@@ -54151,42 +54549,52 @@ button.dcard {
   outline: 2px solid var(--gold);
 }
 
-/* 5. Wardrobe 15-Skin Grid */
+/* 5. Wardrobe Compact Single-Row List */
 .wardrobe-hero {
   display: flex;
   flex-direction: column;
   gap: 6px;
-  margin-bottom: 10px;
-  padding: 9px 11px;
+  margin-bottom: 8px;
+  padding: 8px 10px;
   border-radius: 10px;
   border: 1px solid rgba(255, 207, 74, 0.34);
   background: linear-gradient(160deg, rgba(42, 32, 12, 0.42), rgba(10, 16, 24, 0.88));
 }
 .wardrobe-hero .wh-top {
   display: flex;
-  align-items: baseline;
+  align-items: center;
   justify-content: space-between;
   gap: 8px;
 }
 .wardrobe-hero .wh-top b {
-  font-size: 13px;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 12.5px;
   color: #ffe8a3;
 }
-.wardrobe-hero .wh-top small {
-  font-size: 11px;
-  color: #a6b7ca;
+.wardrobe-hero .wh-cnt {
+  padding: 1px 7px;
+  border-radius: 99px;
+  font: 700 10.5px/1.4 var(--mono);
+  font-style: normal;
+  color: #ffe8a3;
+  background: rgba(255, 207, 74, 0.16);
+  border: 1px solid rgba(255, 207, 74, 0.36);
 }
 .wardrobe-grid {
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 8px;
+  grid-template-columns: 1fr;
+  gap: 5px;
 }
 .wardrobe-card {
   display: flex;
-  flex-direction: column;
-  gap: 6px;
-  padding: 9px 10px;
-  border-radius: 10px;
+  flex-direction: row;
+  align-items: center;
+  gap: 7px;
+  min-height: 38px;
+  padding: 6px 10px;
+  border-radius: 8px;
   border: 1px solid rgba(160, 200, 240, 0.16);
   background: rgba(9, 15, 24, 0.82);
   transition: border-color 0.14s ease, background 0.14s ease;
@@ -54203,20 +54611,35 @@ button.dcard {
   opacity: 0.6;
   border-style: dashed;
 }
-.wardrobe-card .wc-hd {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 6px;
+.wardrobe-card .wc-dot {
+  flex: none;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: rgba(140, 175, 210, 0.32);
 }
-.wardrobe-card .wc-hd b {
+.wardrobe-card .wc-dot.open {
+  background: var(--cyan);
+  box-shadow: 0 0 6px rgba(88, 225, 255, 0.6);
+}
+.wardrobe-card .wc-dot.on {
+  background: var(--gold);
+  box-shadow: 0 0 6px rgba(255, 207, 74, 0.75);
+}
+.wardrobe-card > b {
+  flex: 1;
+  min-width: 0;
   font-size: 12.5px;
   color: #eef5fc;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
-.wardrobe-card.wearing .wc-hd b {
+.wardrobe-card.wearing > b {
   color: #fff1c2;
 }
-.wardrobe-card .wc-hd em {
+.wardrobe-card .wc-lv {
+  flex: none;
   padding: 1px 6px;
   border-radius: 99px;
   font: 700 10px/1.35 var(--mono);
@@ -54224,26 +54647,26 @@ button.dcard {
   color: #9cb2c8;
   background: rgba(255, 255, 255, 0.07);
 }
-.wardrobe-card.wearing .wc-hd em {
+.wardrobe-card.wearing .wc-lv {
   color: #2b1d00;
   background: var(--gold);
 }
-.wardrobe-card .wc-desc {
-  flex: 1;
-  font-size: 11px;
-  line-height: 1.38;
-  color: #93a7bd;
-}
 .wardrobe-card .btn {
-  width: 100%;
+  flex: none;
+  width: auto;
+  min-width: 48px;
+  padding: 3px 9px;
+  font-size: 11.5px;
   justify-content: center;
 }
 .wardrobe-card .wc-lock {
-  display: block;
-  padding: 4px 6px;
-  border-radius: 7px;
-  text-align: center;
-  font: 600 10.5px/1.3 var(--mono);
+  flex: none;
+  display: inline-grid;
+  place-items: center;
+  min-width: 48px;
+  padding: 3px 8px;
+  border-radius: 6px;
+  font: 600 11px/1.2 var(--mono);
   color: #8b9db2;
   background: rgba(255, 255, 255, 0.05);
 }
@@ -54310,11 +54733,12 @@ button.dcard {
   margin-bottom: 10px;
 }
 .auto-deploy-modal .ad-mode-tabs button {
-  flex-direction: column;
-  align-items: flex-start;
-  gap: 3px;
-  padding: 9px 12px;
-  text-align: left;
+  flex-direction: row;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 8px 10px;
+  text-align: center;
 }
 .auto-deploy-modal .ad-mode-tabs button small {
   font-size: 11px;
@@ -54410,6 +54834,487 @@ button.dcard {
   color: #93a8be;
 }
 
+/* 7. Shared Inline '?' Tooltip Badge & Compact Icon+Title+Value Panel Polish */
+.q-tip {
+  display: inline-grid;
+  place-items: center;
+  width: 15px;
+  height: 15px;
+  padding: 0;
+  border-radius: 50%;
+  font: 700 10px/1 var(--mono);
+  font-style: normal;
+  color: #8eb2d4;
+  background: rgba(140, 185, 230, 0.14);
+  border: 1px solid rgba(140, 185, 230, 0.28);
+  cursor: help;
+  flex: none;
+  vertical-align: middle;
+  user-select: none;
+  transition:
+    color 0.12s ease,
+    background 0.12s ease,
+    border-color 0.12s ease,
+    box-shadow 0.12s ease;
+}
+.q-tip:hover,
+.q-tip:focus-visible {
+  color: #eaf8ff;
+  background: rgba(88, 225, 255, 0.24);
+  border-color: var(--cyan);
+  box-shadow: 0 0 8px rgba(88, 225, 255, 0.35);
+}
+.tip-pop {
+  max-width: 312px;
+  white-space: pre-line;
+}
+
+/* Economy & Wonders Compact Rows */
+.eh-unit {
+  margin-left: 3px;
+  font-size: 13px;
+  font-weight: 400;
+  color: var(--muted);
+}
+.founding-banner .fb-hd b {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+.founding-banner .fb-pills {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 4px;
+}
+.founding-banner .fb-pills span {
+  padding: 2px 4px;
+  text-align: center;
+  font-size: 10.5px;
+}
+.ld-lbl {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  min-width: 0;
+}
+.econ-chip-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 8px;
+}
+.debt-rescue-card .drc-hd b {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+.debt-rescue-card .drc-hd em {
+  margin-left: auto;
+}
+.util-card h5 {
+  margin: 0 0 4px;
+}
+.util-card .uc-pill {
+  margin-left: auto;
+  margin-top: 0;
+  display: inline-block;
+  padding: 1px 6px;
+  border-radius: 99px;
+  font: 700 10px/1.35 var(--mono);
+  font-style: normal;
+}
+.util-card .uc-pill.ok {
+  color: #8fe0ad;
+  background: rgba(109, 255, 168, 0.12);
+}
+.util-card .uc-pill.warn {
+  color: #ffb0b8;
+  background: rgba(255, 93, 108, 0.2);
+}
+.util-card .uc-cap {
+  font-size: 12px;
+  font-weight: 400;
+  color: var(--muted);
+}
+.rb-lhs {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  min-width: 0;
+}
+.rb-lhs .rb-nm {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.rb-lhs .rb-lv {
+  padding: 1px 5px;
+  border-radius: 5px;
+  font: 700 10px/1.3 var(--mono);
+  font-style: normal;
+  color: var(--muted);
+  background: rgba(255, 255, 255, 0.06);
+}
+.log li {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+}
+.log li .log-q {
+  flex: none;
+  font: 600 10.5px var(--mono);
+  color: var(--muted);
+}
+.sp-meta {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font: 600 11px var(--mono);
+  color: var(--muted);
+}
+.sp-empty-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 6px 9px;
+  border-radius: 7px;
+  border: 1px dashed rgba(160, 200, 240, 0.18);
+  background: rgba(8, 13, 20, 0.55);
+  font-size: 12px;
+}
+.toggle-row.compact {
+  align-items: center;
+  gap: 8px;
+  padding: 7px 10px;
+}
+.toggle-row.compact input {
+  margin-top: 0;
+}
+.toggle-row.compact > b {
+  font-size: 12.5px;
+  color: #e6eff8;
+}
+.toggle-row.compact .tr-state {
+  margin-left: auto;
+  padding: 1px 7px;
+  border-radius: 99px;
+  font: 700 10px/1.4 var(--mono);
+  font-style: normal;
+  color: var(--muted);
+  background: rgba(255, 255, 255, 0.06);
+}
+.toggle-row.compact .tr-state.on {
+  color: #062816;
+  background: var(--green);
+}
+
+/* Industry Atlas Single-Row Cards & Summary */
+.ind-summary.compact {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 7px;
+  padding: 9px 11px;
+}
+.ind-sum-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.ind-sum-pills {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+.is-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px 8px;
+  border-radius: 99px;
+  font-size: 11.5px;
+  color: #cfe0f2;
+  background: rgba(255, 255, 255, 0.07);
+  border: 1px solid rgba(160, 200, 240, 0.18);
+}
+.is-pill b {
+  font-family: var(--mono);
+  color: #bff4ff;
+}
+.is-pill.ready b {
+  color: var(--green);
+}
+.is-pill.fic {
+  color: #e3c8ff;
+  border-color: rgba(196, 155, 255, 0.36);
+  background: rgba(196, 155, 255, 0.12);
+}
+.is-pill.fic.off {
+  opacity: 0.65;
+}
+.ind-group h4 .ig-cnt {
+  margin-left: auto;
+  font: 600 11px var(--mono);
+  color: var(--muted);
+  letter-spacing: 0;
+}
+.ind-cards {
+  gap: 4px;
+}
+.ind-card.single-row,
+.ind-row,
+.ind-list li {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  padding: 7px 10px;
+  min-height: 40px;
+}
+.ind-card.single-row .ic-main {
+  flex-direction: row;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+}
+.ind-card.single-row .ic-main b {
+  font-size: 13px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.fic.exo {
+  color: #ffe28a;
+  border-color: rgba(255, 207, 74, 0.45);
+  background: rgba(255, 207, 74, 0.14);
+}
+.ic-warn-tag {
+  flex: none;
+  padding: 0 5px;
+  border-radius: 4px;
+  font: 700 10px/1.4 var(--mono);
+  font-style: normal;
+  color: #ffb0b8;
+  background: rgba(255, 93, 108, 0.2);
+  border: 1px solid rgba(255, 93, 108, 0.4);
+}
+.ind-card.single-row .ic-side {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  flex: none;
+}
+.ind-card.single-row .ic-side .ic-cnt {
+  font: 600 13px var(--mono);
+  color: var(--c);
+  white-space: nowrap;
+}
+.ind-card.single-row.warn .ic-side .ic-cnt {
+  color: var(--red);
+}
+
+/* Roster Compact Cards & Recruit Bar */
+.recruit-bar.compact {
+  padding: 8px 11px;
+  align-items: center;
+}
+.recruit-bar.compact .rb-gems {
+  flex-direction: row;
+  align-items: center;
+  font-size: 15px;
+}
+.card-tile {
+  gap: 4px;
+  padding: 9px 5px 8px;
+}
+.card-tile .ct-where {
+  display: inline-block;
+  max-width: 100%;
+  padding: 1px 6px;
+  border-radius: 99px;
+  font-size: 10px;
+  line-height: 1.35;
+  color: var(--muted);
+  background: rgba(255, 255, 255, 0.06);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.card-tile .ct-where.stationed {
+  color: #bfefff;
+  background: rgba(88, 225, 255, 0.13);
+  border: 1px solid rgba(88, 225, 255, 0.28);
+}
+
+/* Lord Header Location Chip & Compact Trait Rows */
+.lc-who-top {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.lc-who-top > b {
+  font-size: 15.5px;
+  color: #ffe9a8;
+}
+.lc-loc-chip {
+  margin-left: auto;
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  padding: 2px 8px;
+  border-radius: 99px;
+  border: 1px solid rgba(255, 207, 74, 0.36);
+  background: rgba(12, 18, 28, 0.72);
+  color: #ffe9a8;
+  font-size: 11px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+.lc-loc-chip:hover {
+  border-color: var(--gold);
+  background: rgba(255, 207, 74, 0.18);
+}
+.trait-list.compact {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+.trait-list.compact li.trait-row {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 7px;
+  min-height: 36px;
+  padding: 6px 10px;
+  border-radius: 8px;
+}
+.trait-row .tr-ico {
+  flex: none;
+  font-size: 13px;
+  line-height: 1;
+}
+.trait-row > b {
+  flex: 1;
+  min-width: 0;
+  font-size: 12.5px;
+  color: #eef5fc;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.trait-row.hidden-on > b {
+  color: #ffe89e;
+}
+.trait-row .tr-pill {
+  flex: none;
+  padding: 1px 7px;
+  border-radius: 99px;
+  font: 700 10px/1.35 var(--mono);
+  font-style: normal;
+}
+.trait-row .tr-pill.on {
+  color: #062816;
+  background: var(--green);
+}
+.trait-row .tr-pill.gold {
+  color: #281a00;
+  background: var(--gold);
+}
+.trait-row .tr-pill.muted {
+  color: var(--muted);
+  background: rgba(255, 255, 255, 0.06);
+}
+.trait-list.compact li.tr-empty {
+  text-align: center;
+  padding: 10px;
+}
+
+/* Shared Compact Polish for Governance, Quests/Achievements & Ladder Panels */
+.lbt-btn {
+  flex-direction: row;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  min-height: 36px;
+  padding: 7px 10px;
+  text-align: center;
+}
+.fyp-tile {
+  flex-direction: row;
+  align-items: center;
+  gap: 6px;
+  min-height: 36px;
+  padding: 7px 9px;
+}
+.fyp-tile .fyp-t-txt {
+  flex: 1;
+  flex-direction: row;
+  align-items: center;
+  gap: 5px;
+  min-width: 0;
+}
+.fyp-tile b {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.fyp-tile > .q-tip {
+  margin-left: auto;
+}
+.ag-card {
+  gap: 5px;
+  padding: 10px 6px 8px;
+}
+.ag-card > b {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  max-width: 100%;
+  font-size: 12.5px;
+}
+.ag-card > .q-tip {
+  position: absolute;
+  top: 6px;
+  left: 6px;
+}
+.dq-item,
+.ach-item {
+  align-items: center !important;
+  gap: 8px;
+  padding: 7px 10px;
+}
+.dq-main,
+.ach-main {
+  gap: 4px;
+}
+.dq-main > b {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+.dq-item .dq-acts,
+.ach-item .dq-acts,
+.dq-acts {
+  flex-direction: row !important;
+  align-items: center !important;
+  gap: 5px;
+}
+.reg-card {
+  padding: 8px 8px;
+}
+.reg-card .rg-hd {
+  gap: 4px;
+  flex-wrap: nowrap;
+}
+.reg-card .rg-hd > b {
+  white-space: nowrap;
+  font-size: 12px;
+}
+
 @media (max-width: 760px) {
   .lc-acts.v11-acts {
     grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -54423,8 +55328,6 @@ button.dcard {
     gap: 5px;
   }
 }
-
-
 </style>
   </head>
   <body>
