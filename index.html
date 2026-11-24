@@ -8553,6 +8553,10 @@ function i7(A, e) {
   if (t.public) {
     const f = it[t.public],
       refund = demolishRefund(A, t);
+    if (t.card) {
+      A.cards[t.card] && (A.cards[t.card].tile = null);
+      t.card = null;
+    }
     return (
       freeWonderTri(A, t),
       (A.treasury += refund),
@@ -8568,7 +8572,12 @@ function i7(A, e) {
   }
   if (!t.industry) return UA("没有可拆除的设施");
   const n = HA[t.industry],
-    refund = demolishRefund(A, t);
+    refund = demolishRefund(A, t),
+    hadCard = t.card ? se[t.card] : null;
+  if (t.card) {
+    A.cards[t.card] && (A.cards[t.card].tile = null);
+    t.card = null;
+  }
   return (
     (A.treasury += refund),
     (t.industry = null),
@@ -8579,8 +8588,12 @@ function i7(A, e) {
     (t.financePeriodTotal = 0),
     (t.exclusive = !1),
     (t.paused = 0),
-    pe(A, `拆除「${n.name}」，退回 ${fe(refund, 1)}亿。`, "warn"),
-    qe(`拆除「${n.name}」，退回 ${fe(refund, 1)}亿`, { refund })
+    pe(
+      A,
+      `拆除「${n.name}」，退回 ${fe(refund, 1)}亿${hadCard ? `（${rn(hadCard)}已撤回待命）` : ""}。`,
+      "warn",
+    ),
+    qe(`拆除「${n.name}」，退回 ${fe(refund, 1)}亿${hadCard ? " · 人物已撤回" : ""}`, { refund })
   );
 }
 function Vv(A, e) {
@@ -8664,21 +8677,17 @@ function Zi(A, e, t) {
     s = A.tiles[t];
   if (!n) return UA("尚未拥有这位人物");
   if (!s || !s.unlocked) return UA("只能派驻到已开拓的土地");
-  if (s.wonderHost != null) return UA("奇观附属用地不可单独派驻，请派驻至奇观主体");
+  if (s.wonderHost != null || s.public) return UA("市政设施与国家奇观无需派驻人物");
+  if (s.build) return UA("工程尚在施工中，落成后再派驻人物");
+  if (!s.capital && !s.industry) return UA("只能派驻到首都或已建成的产业地块");
   if (s.card === e) return UA("已经在这里了");
-  if ((n.tile !== null && (A.tiles[n.tile].card = null), s.card)) {
+  if ((n.tile !== null && A.tiles[n.tile] && (A.tiles[n.tile].card = null), s.card)) {
     const r = A.cards[s.card];
     r && (r.tile = null);
   }
   ((s.card = e), (n.tile = t), n.deployedOnce || ((n.deployedOnce = !0), yt(A, "cha", 15)));
   const f = se[e],
-    o = s.capital
-      ? "首都"
-      : s.industry
-        ? `「${HA[s.industry].short}」`
-        : s.public
-          ? `「${it[s.public].name}」`
-          : "空地";
+    o = s.capital ? "首都" : `「${HA[s.industry].short}」`;
   return (pe(A, `${rn(f)} 派驻到${o}。`, "card"), qe());
 }
 function v7(A, e) {
@@ -26864,7 +26873,9 @@ function lQ(A) {
     if (f.capital) {
       ((f.industry = null), (f.public = null), (f.wonderHost = null), (f.wonderTri = null));
     } else if (f.public) {
-      ((f.industry = null), (f.wonderHost = null));
+      ((f.industry = null), (f.wonderHost = null), (f.card = null));
+    } else if (!f.industry || f.build) {
+      f.card = null;
     }
   }
   for (const f of e.tiles) {
@@ -30048,7 +30059,7 @@ function If(A, e, t, n = {}) {
         },
         {
           q: "人物如何快速升级？",
-          a: `派驻运转地块每季自动获经验（行业匹配 ×${O.expMatchMult}，停产或空地仅 ${SA(O.expIdleMult)}），技术线「科教转化」、名臣政策卡与主公「指点」均可大幅提速。`,
+          a: `派驻首都或运转产业每季自动获经验（行业匹配 ×${O.expMatchMult}，停产产业仅 ${SA(O.expIdleMult)}），技术线「科教转化」、名臣政策卡与主公「指点」均可大幅提速。`,
         },
         hg(),
         {
@@ -33356,15 +33367,25 @@ function zp({ id: A }) {
           t.tiles
             .filter(
               (Q) =>
-                Q.unlocked && Q.wonderHost == null && Q.industry && n.match.includes(Q.industry) && Q.card !== A,
+                Q.unlocked &&
+                !Q.build &&
+                Q.industry &&
+                n.match.includes(Q.industry) &&
+                Q.card !== A,
             )
             .map((Q) => Q.id),
         ),
         a = new Set(
-          t.tiles.filter((Q) => Q.unlocked && Q.wonderHost == null && Q.card !== A).map((Q) => Q.id),
+          t.tiles
+            .filter((Q) => Q.unlocked && (Q.capital || (Q.industry && !Q.build)) && Q.card !== A)
+            .map((Q) => Q.id),
         );
+      if (!a.size) {
+        e.toast("当前没有可派驻的已建成产业或首都岗位，请先建设产业", "warn");
+        return;
+      }
       (e.startPlacement({ kind: "deploy", card: A, tiles: a }),
-        e.toast(B.size ? `绿色地块可派驻；${B.size} 处行业匹配` : "点击要派驻的地块", "info"));
+        e.toast(B.size ? `绿色地块可派驻（首都或已建成产业）；${B.size} 处行业匹配` : "点击首都或已建成的产业地块进行派驻", "info"));
     };
   return w(Cn, {
     cls: "card-modal",
@@ -37892,7 +37913,7 @@ function xi(A, e) {
               },
               {
                 q: "搬迁与拆除有什么区别？",
-                a: `搬迁保留当前等级与驻守人物（费用 = 造价 × ${O.relocateCost} × 等级，停产重装 1 季）；拆除退还累计实付净投入的 50%（未还清融资先扣剩余本金），等级归零，人物与本地资源保留。`,
+                a: `搬迁保留当前等级与驻守人物（费用 = 造价 × ${O.relocateCost} × 等级，停产重装 1 季）；拆除退还累计实付净投入的 50%（未还清融资先扣剩余本金），等级归零，驻守人物自动撤回待命，本地资源保留。`,
               },
               f,
               o,
@@ -38213,7 +38234,7 @@ function _p() {
           help: xi(e, n),
           lord: v,
         }),
-        w("div", { class: "slots", children: [w(u9, { tile: n }), w(xg, { tile: n })] }),
+        w("div", { class: "slots", children: [w(u9, { tile: n })] }),
         w("div", {
           class: "actions wrap",
           children: [
@@ -39215,7 +39236,7 @@ function nL({ tile: A }) {
                   e.openModal({
                     type: "confirm",
                     title: `拆除「${f.name}」？`,
-                    body: "回收累计实付净投入的 50%（若有未还清融资分期将先扣除剩余本金），地块等级重置为 Lv.1。人物与资源留在原地；依赖它的下游产业可能停产。想换位置可用“搬迁”保留等级。",
+                    body: "回收累计实付净投入的 50%（若有未还清融资分期将先扣除剩余本金），地块等级重置为 Lv.1。原驻守人物自动撤回人才库待命，本地资源保留；依赖它的下游产业可能停产。想换位置可用“搬迁”保留等级。",
                     okText: "确认拆除",
                     danger: !0,
                     onOk: () => e.act((v) => i7(v, A.id)),
