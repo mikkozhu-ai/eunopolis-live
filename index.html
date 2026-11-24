@@ -12828,8 +12828,59 @@ function S4(A, e, t = Date.now()) {
       prio: 79,
     });
   if (featOpen("policy")) {
+    const slotCapAdv = typeof getPolicySlotCap == "function" ? getPolicySlotCap(A) : 1,
+      eqCntAdv = Array.isArray(A.policyCards) ? A.policyCards.length : 0,
+      emptySlotsAdv = Math.max(0, slotCapAdv - eqCntAdv);
+    if (emptySlotsAdv > 0) {
+      s({
+        id: "pol-card-empty",
+        text: `内阁尚有 ${emptySlotsAdv} 个「名臣政策」空槽（免体力零开销），装配即享全国加成`,
+        cta: "去装配",
+        kind: "gold",
+        action: { type: "panel", panel: "policy", govTab: "cabinet" },
+        prio: 82,
+      });
+    }
+    if (!A.fyp && (e.built >= 1 || e.unlocked >= 2)) {
+      s({
+        id: "fyp-empty",
+        text: "《五年规划》尚未立项：零开销开启 20 季国策增益，达标赢数季 GDP 与星钻",
+        cta: "去立项",
+        kind: "gold",
+        action: { type: "panel", panel: "policy", govTab: "cabinet" },
+        prio: 81,
+      });
+    }
+    const curRegAdv = typeof ensureRegime == "function" ? ensureRegime(A) : A.regime || "balanced",
+      regLockAdv = Math.max(0, Math.max(A.regimeCdQ || 0, A.regimeLockUntilQ || 0) - (A.quarter || 0)),
+      readyRegsAdv =
+        curRegAdv === "balanced" && regLockAdv <= 0 && typeof REGIMES < "u"
+          ? REGIMES.filter((rg) => rg.id !== "balanced" && isRegimeUnlocked(A, rg.id))
+          : [];
+    if (readyRegsAdv.length > 0) {
+      s({
+        id: "regime-ready",
+        text: `民情洞察已满！可改制为「${readyRegsAdv[0].name}」等现代国体并解锁专属名臣池`,
+        cta: "去改制",
+        kind: "gold",
+        action: { type: "panel", panel: "policy", govTab: "cabinet" },
+        prio: 75,
+      });
+    }
     const l = Tt(A, "govern", t),
-      u = d0(A).filter((h) => !h.done && decreeCdQuarters(A, h.id) <= 0);
+      zoneMaxAdv = be(A).mods.zoneMax || 0,
+      freeZonesAdv = Math.max(0, zoneMaxAdv - (A.zones ? A.zones.length : 0));
+    if (freeZonesAdv > 0 && !l.block && decreeCdQuarters(A, "zone") <= 0) {
+      s({
+        id: "zone-avail",
+        text: `尚有 ${freeZonesAdv} 个「经济特区」名额未设立，圈定 7 格享产出 +${SA(O.zoneOutput)} 加成`,
+        cta: "设特区",
+        kind: "info",
+        action: { type: "panel", panel: "policy", govTab: "fiscal" },
+        prio: 69,
+      });
+    }
+    const u = d0(A).filter((h) => !h.done && decreeCdQuarters(A, h.id) <= 0);
     if (!l.block && u.length && e.unlocked > 1) {
       const h = u
           .filter((d) => Cs[d.id])
@@ -12838,10 +12889,10 @@ function S4(A, e, t = Date.now()) {
         discPct = Math.round(Math.min(0.85, O.agendaDiscount + (be(A).mods.agendaExtraCut || 0)) * 100);
       s({
         id: "agenda",
-        text: `本年议题 ${h}国库费用减免 ${discPct}%，可前往施政颁布`,
-        cta: "去施政",
+        text: `本年议题 ${h}国库费用减免 ${discPct}%，可前往颁布`,
+        cta: "去颁布",
         kind: "info",
-        action: { type: "panel", panel: "policy" },
+        action: { type: "panel", panel: "policy", govTab: "decrees" },
         prio: 42,
       });
     }
@@ -29287,7 +29338,7 @@ class fp {
       this.toast(n.block, "warn");
       return;
     }
-    if (e === "govern") ((this.modal = null), (this.panel = "policy"), this.emit());
+    if (e === "govern") ((this._govTab = "decrees"), (this.modal = null), (this.panel = "policy"), this.emit());
     else if (e === "supervise")
       t.tiles.some((s) => s.build)
         ? this.openModal({ type: "supervise" })
@@ -32010,7 +32061,7 @@ function FypCelebrateModal({ data }) {
           w("button", {
             class: "btn gold",
             onClick: () => {
-              ie._govTab = "decrees";
+              ie._govTab = "cabinet";
               A.openModal(null);
               A.panel = "policy";
               A.emit();
@@ -34845,7 +34896,10 @@ function Xp() {
                       w("button", {
                         class: "link",
                         style: "font-size:11px;margin-left:2px",
-                        onClick: () => A.openPanel("policy"),
+                        onClick: () => {
+                          ie._govTab = "fiscal";
+                          A.openPanel("policy");
+                        },
                         children: "调拨 →",
                       }),
                     ],
@@ -36522,12 +36576,18 @@ function Vp() {
     t = A.metrics,
     n = Date.now(),
     budgetOpen = isFeatOpenSafe(e, "budget"),
+    normGovTab = (v0) => (v0 === "regime" ? "cabinet" : v0 === "fiscal" || v0 === "decrees" ? v0 : "cabinet"),
     [tab, setTab] = gt(() => {
-      const initT = ie._govTab || (budgetOpen ? "regime" : "decrees");
+      const rawT = ie._govTab;
       ie._govTab = null;
-      return initT;
-    }),
-    effTab = budgetOpen ? tab : "decrees",
+      return rawT ? normGovTab(rawT) : budgetOpen ? "cabinet" : "decrees";
+    });
+  if (ie._govTab) {
+    const nextT = normGovTab(ie._govTab);
+    ie._govTab = null;
+    if (nextT !== tab) setTab(nextT);
+  }
+  const effTab = budgetOpen ? tab : "decrees",
     [hovB, setHovB] = gt(null);
   const s = ha(e),
     f = e.buffs.filter(
@@ -36602,6 +36662,57 @@ function Vp() {
     [hovB, A.version],
   );
   const dualTaxOn = be(e).rules.has("dualTax");
+
+  const emptyPolSlots = Math.max(0, slotCap - equipped.length),
+    fypNeed = !curFyp,
+    readyModernRegs =
+      curRegId === "balanced" && regCdLeftQ <= 0 && regCd <= 0
+        ? REGIMES.filter((rg) => rg.id !== "balanced" && isRegimeUnlocked(e, rg.id))
+        : [],
+    freeZones = Math.max(0, B - e.zones.length),
+    zoneCdQ =
+      typeof decreeCdQuarters == "function"
+        ? decreeCdQuarters(e, "zone")
+        : Math.max(0, Math.ceil(i0(e, "zone", n) / (O.onlineQuarterMs || 6e4))),
+    zoneReady = freeZones > 0 && !o.block && zoneCdQ <= 0,
+    availAgenda = r.filter((ag) => {
+      const dc = Cs[ag.id];
+      if (!dc || ag.done || !_i(e, dc)) return !1;
+      const cd =
+        typeof decreeCdQuarters == "function"
+          ? decreeCdQuarters(e, ag.id)
+          : Math.max(0, Math.ceil(i0(e, ag.id, n) / (O.onlineQuarterMs || 6e4)));
+      return cd <= 0;
+    }),
+    cabAlerts = (fypNeed ? 1 : 0) + emptyPolSlots + (readyModernRegs.length > 0 ? 1 : 0),
+    fisAlerts = zoneReady ? freeZones : 0,
+    decAlerts = !o.block ? availAgenda.length : 0;
+
+  const focusSec = (targetTab, domId) => {
+    setTab(targetTab);
+    if (domId && typeof document < "u") {
+      setTimeout(() => {
+        const el = document.getElementById(domId);
+        el && el.scrollIntoView && el.scrollIntoView({ behavior: "smooth", block: "nearest" });
+      }, 24);
+    }
+  };
+
+  const regIcoNode = (k) => (k === "sci" ? Ae.sparkles : (oD[k] ?? Ae.scroll));
+  const fypIcoNode = (k) =>
+    k === "crown"
+      ? Ae.crown
+      : k === "coins"
+        ? Ae.coins
+        : k === "zone"
+          ? Ae.zone
+          : k === "sci"
+            ? Ae.sparkles
+            : (oD[k] ?? Ae.flag);
+  const adminTip = `每次颁布政令消耗 ${o.cost} 点主公体力，每日不限次数，各政令独立按季度冷却。${o.block ? `\n⚠️ 当前状态：${o.block}` : "\n点击下方任意政令牌即可预览并颁布。"}`;
+  const zoneRuleTip =
+    "首都升至 Lv.3 自动解锁首座经济特区名额；学习政治线「改革特区 / 特区扩容」与野心线「特区星链联邦」可追加名额。特区内 7 格产业享受减税 33%、产出 +10%、人口 +20% 加成。";
+
   const renderTaxSection = () =>
     w(Qt, {
       title: "税制结构",
@@ -36613,7 +36724,11 @@ function Vp() {
             "data-tip": "已习得双轨复合税制，可同时保持两套税制叠加生效",
             children: "双轨生效",
           })
-        : null,
+        : w("span", {
+            class: "muted",
+            style: "font-size:12px",
+            children: `当前 ${e.taxes.map((tid) => (V9.find((z) => z.id === tid) || {}).name || tid).join(" + ")}`,
+          }),
       children: w("ul", {
         class: "tax-grid",
         children: V9.map((C) => {
@@ -36647,7 +36762,6 @@ function Vp() {
                       children: w(NA, { node: oD[C.id] ?? Ae.scroll, size: 17, stroke: 2.1 }),
                     }),
                     w("b", { children: C.name }),
-                    qTipC(C.name, tipBody),
                     E
                       ? w("em", { children: "生效中" })
                       : h
@@ -36679,6 +36793,7 @@ function Vp() {
         }),
       }),
     });
+
   const renderDecreeTile = (d) => {
     var m;
     const x = _i(e, d),
@@ -36722,7 +36837,7 @@ function Vp() {
             w(Zv, { id: d.id, size: 36 }),
             w("span", {
               style: "display:inline-flex;align-items:center;gap:3px;max-width:100%",
-              children: [w("b", { children: d.name }), qTipC(tipTitle, U)],
+              children: w("b", { children: d.name }),
             }),
             x
               ? cdQ > 0 && !z
@@ -36739,249 +36854,385 @@ function Vp() {
       d.id,
     );
   };
-  const regIcoNode = (k) => (k === "sci" ? Ae.sparkles : (oD[k] ?? Ae.scroll));
-  const fypIcoNode = (k) =>
-    k === "crown"
-      ? Ae.crown
-      : k === "coins"
-        ? Ae.coins
-        : k === "zone"
-          ? Ae.zone
-          : k === "sci"
-            ? Ae.sparkles
-            : (oD[k] ?? Ae.flag);
-  const adminTip = `每次颁布政令消耗 ${o.cost} 点主公体力，每日不限次数，各政令独立按季度冷却。${o.block ? `\n⚠️ 当前状态：${o.block}` : "\n点击下方任意政令牌即可预览并颁布。"}`;
-  const zoneRuleTip =
-    "首都升至 Lv.3 自动解锁首座经济特区名额；学习政治线「改革特区 / 特区扩容」与野心线「特区星链联邦」可追加名额。特区内产业享受产出与税收加成。";
+
+  const renderRegCard = (rg) => {
+    const on = rg.id === curRegId,
+      ul = isRegimeUnlocked(e, rg.id),
+      dir = rg.needDir ? INSIGHT_DIRS[rg.needDir] : null,
+      curN = rg.needDir ? e.lord.insights[rg.needDir] || 0 : 0,
+      rgTip = `${rg.brief ? rg.brief + "\n" : ""}增益：${rg.pros}${rg.cons ? `\n代价：${rg.cons}` : "\n无负面代价"}\n${on ? "✓ 当前施行国体" : ul ? "点击改制，启用本国体专属 6 位名臣池" : `解锁条件：主公调研或完成五年规划积累「${dir ? dir.name : ""}」${curN}/${rg.need}`}`;
+    return w(
+      "button",
+      {
+        class: `reg-card${on ? " on" : ul ? " can" : " locked"}`,
+        "aria-current": on ? "true" : void 0,
+        "data-tip-title": rg.name,
+        "data-tip": rgTip,
+        onClick: on
+          ? void 0
+          : () =>
+              typeof A.switchRegime == "function"
+                ? A.switchRegime(rg.id)
+                : A.act((st) => switchRegime(st, rg.id)),
+        children: [
+          w("div", {
+            class: "rg-hd",
+            children: [
+              w("span", {
+                class: "tx-ico sm",
+                children: w(NA, { node: regIcoNode(rg.ico), size: 14, stroke: 2.1 }),
+              }),
+              w("b", { children: rg.name }),
+              on
+                ? w("em", { children: "施行中" })
+                : ul
+                  ? w("em", { class: "rg-can-pill", children: "可改制" })
+                  : w("span", { class: "rg-lock", children: `${dir ? dir.icon : ""}${curN}/${rg.need}` }),
+            ],
+          }),
+          !ul &&
+            dir &&
+            w("div", {
+              class: "rg-bar",
+              children: w("i", {
+                style: `width:${Math.min(100, Math.round((curN / rg.need) * 100))}%`,
+              }),
+            }),
+        ],
+      },
+      rg.id,
+    );
+  };
+
   return w(he, {
     children: [
+      w("div", {
+        class: "gov-hero",
+        children: [
+          w("div", {
+            class: "gh-head",
+            children: [
+              w("div", {
+                class: "gh-emblem",
+                "data-tip-touch": !0,
+                "data-tip-title": "中枢内阁 · 治国总览",
+                "data-tip":
+                  "汇集国家五年规划、30 位历史名臣策论、5 大国体、税制预算、经济特区与季度行政大令。名臣政策与五年规划均免体力零开销，是提升全国产出与税收乘区的核心引擎。",
+                children: w(_e, { name: "policy", size: 22 }),
+              }),
+              w("div", {
+                class: "gh-meta",
+                children: [
+                  w("div", {
+                    class: "gh-meta-top",
+                    children: [
+                      w("b", {
+                        class: "gh-title",
+                        children: [
+                          "中枢内阁",
+                          w("em", {
+                            class: "gh-reg-pill",
+                            "data-tip-touch": !0,
+                            "data-tip-title": `现行国体 · ${curReg.name}`,
+                            "data-tip": `${curReg.brief ? curReg.brief + "\n" : ""}增益：${curReg.pros}${curReg.cons ? `\n代价：${curReg.cons}` : "\n无负面代价"}`,
+                            children: curReg.name,
+                          }),
+                        ],
+                      }),
+                      w("span", {
+                        class: `gh-net-pill${t.net < 0 ? " neg" : ""}`,
+                        "data-tip-touch": !0,
+                        "data-tip-title": "季度财政净结余",
+                        "data-tip": `每季净结余 ${t.net >= 0 ? "+" : ""}${fe(t.net)} 亿（税收 ${fe(t.taxIncome ?? 0)} 亿 − 维护/治理/预算/利息）`,
+                        children: `结余 ${t.net >= 0 ? "+" : ""}${fe(t.net)}亿`,
+                      }),
+                    ],
+                  }),
+                  w("div", {
+                    class: "gh-insights-row",
+                    children: ["fiscal", "industry", "welfare", "sci"].map((dk) => {
+                      const dInfo = INSIGHT_DIRS[dk],
+                        val = (e.lord.insights && e.lord.insights[dk]) || 0,
+                        targetRg = REGIMES.find((rg) => rg.needDir === dk),
+                        ready = val >= 24;
+                      return w(
+                        "span",
+                        {
+                          class: `gh-ins-chip${ready ? " ready" : ""}`,
+                          "data-tip-touch": !0,
+                          "data-tip-title": `${dInfo.icon} ${dInfo.name}（${val}/24）`,
+                          "data-tip": `主公走格子调研或完成五年规划可积累${dInfo.name}。\n满 24 点解锁现代国体「${targetRg ? targetRg.name : ""}」及专属 6 位名臣池。`,
+                          children: [dInfo.icon, dInfo.short, w("b", { children: `${val}/24` })],
+                        },
+                        dk,
+                      );
+                    }),
+                  }),
+                ],
+              }),
+            ],
+          }),
+          w("div", {
+            class: "gh-acts",
+            children: [
+              w("button", {
+                class: `gh-act${fypNeed ? " featured-plan" : effTab === "cabinet" ? " active-tab" : ""}`,
+                "data-tip-title": curFyp ? `五年规划 · ${curFyp.name}` : "五年规划（待签发）",
+                "data-tip": curFyp
+                  ? `第 ${e.fyp.num} 轮《${curFyp.name}》进行中：达标 ${Math.round(fypProg * 100)}%，剩余 ${fypLeft} 季\n增益：${curFyp.pros}\n奖励：${curFyp.rewardDesc}`
+                  : "立项完全免费且零体力消耗！立即开启 20 季全国乘区增益，达标再领数季 GDP、星钻与民情洞察。",
+                onClick: () => focusSec("cabinet", "gov-sec-fyp"),
+                children: [
+                  w("span", { class: "gha-ico", children: w(NA, { node: Ae.flag, size: 15, stroke: 2.2 }) }),
+                  w("b", { children: "五年规划" }),
+                  w("span", {
+                    class: "gha-sub",
+                    children: curFyp ? `${Math.round(fypProg * 100)}% · ${fypLeft}季` : "免费立项",
+                  }),
+                  fypNeed
+                    ? w("em", { class: "gha-corner", children: "可立项" })
+                    : fypProg >= 1
+                      ? w("em", { class: "gha-corner", children: "已达标" })
+                      : null,
+                ],
+              }),
+              w("button", {
+                class: `gh-act${emptyPolSlots > 0 ? " needs-attention" : ""}`,
+                "data-tip-title": `名臣政策槽（${equipped.length}/${slotCap}）`,
+                "data-tip":
+                  emptyPolSlots > 0
+                    ? `尚有 ${emptyPolSlots} 个政策空槽未装配！装配名臣策论零体力零国库消耗，立即提供全国常驻乘区加成。`
+                    : `已装满 ${equipped.length}/${slotCap} 个名臣策论（首都 Lv.3 / Lv.5 解锁更多槽位），可随时点击更换。`,
+                onClick: () => focusSec("cabinet", "gov-sec-minister"),
+                children: [
+                  w("span", { class: "gha-ico", children: w(NA, { node: Ae.scroll, size: 15, stroke: 2.2 }) }),
+                  w("b", { children: "名臣政策" }),
+                  w("span", { class: "gha-sub", children: `已装 ${equipped.length}/${slotCap}` }),
+                  emptyPolSlots > 0 && w("em", { class: "gha-corner", children: `空槽 ${emptyPolSlots}` }),
+                ],
+              }),
+              w("button", {
+                class: `gh-act${zoneReady ? " needs-attention" : effTab === "fiscal" ? " active-tab" : ""}`,
+                "data-tip-title": "税制预算与经济特区",
+                "data-tip": `切换税制结构、调拨科研/民生/基建三轨预算，并规划 7 格经济特区（当前特区 ${e.zones.length}/${B}）。`,
+                onClick: () => setTab("fiscal"),
+                children: [
+                  w("span", { class: "gha-ico", children: w(NA, { node: Ae.coins, size: 15, stroke: 2.2 }) }),
+                  w("b", { children: "财税特区" }),
+                  w("span", {
+                    class: "gha-sub",
+                    children: B > 0 ? `特区 ${e.zones.length}/${B}` : `${e.taxes.length}轨税制`,
+                  }),
+                  zoneReady
+                    ? w("em", { class: "gha-corner", children: `特区+${freeZones}` })
+                    : t.austerity
+                      ? w("em", { class: "gha-corner", children: "紧缩" })
+                      : null,
+                ],
+              }),
+              w("button", {
+                class: `gh-act${decAlerts > 0 ? " needs-attention" : effTab === "decrees" ? " active-tab" : ""}`,
+                "data-tip-title": "季度行政政令与今日议题",
+                "data-tip": `消耗 ${o.cost} 点体力颁布片区或全国政令；本年特惠议题享国库${agTag}优惠。`,
+                onClick: () => setTab("decrees"),
+                children: [
+                  w("span", { class: "gha-ico", children: w(NA, { node: Ae.stamp, size: 15, stroke: 2.2 }) }),
+                  w("b", { children: "行政政令" }),
+                  w("span", { class: "gha-sub", children: `生效 ${s.length}/${Cc(e)}` }),
+                  decAlerts > 0 && w("em", { class: "gha-corner", children: `${agTag}${decAlerts}` }),
+                ],
+              }),
+            ],
+          }),
+        ],
+      }),
       budgetOpen &&
         w("div", {
-          class: "filter-row gov-tabs-row",
+          class: "seg tabs gov-subtabs",
           children: [
             w("button", {
-              class: `pill${effTab === "regime" ? " on" : ""}`,
-              onClick: () => setTab("regime"),
-              children: "体制与财政",
+              class: effTab === "cabinet" ? "on" : "",
+              onClick: () => setTab("cabinet"),
+              children: [
+                "📜 国策内阁",
+                cabAlerts > 0 && w("em", { class: "gst-dot", children: cabAlerts }),
+              ],
             }),
             w("button", {
-              class: `pill${effTab === "decrees" ? " on" : ""}`,
+              class: effTab === "fiscal" ? "on" : "",
+              onClick: () => setTab("fiscal"),
+              children: [
+                "⚖️ 财税特区",
+                fisAlerts > 0 && w("em", { class: "gst-dot", children: fisAlerts }),
+              ],
+            }),
+            w("button", {
+              class: effTab === "decrees" ? "on" : "",
               onClick: () => setTab("decrees"),
-              children: "五年规划与大令",
+              children: [
+                "💮 行政政令",
+                decAlerts > 0 && w("em", { class: "gst-dot", children: decAlerts }),
+              ],
             }),
           ],
         }),
-      effTab === "regime"
+      effTab === "cabinet"
         ? w(he, {
             children: [
-              renderTaxSection(),
-              w(Qt, {
-                title: "专项预算",
-                extra: w("span", {
-                  class: t.austerity ? "warn" : pvM.net < 0 ? "down net-prev" : "up net-prev",
-                  style: "font-size:12px;font-weight:600",
-                  "data-tip-touch": !0,
-                  "data-tip-title": "季度财政净结余预览",
-                  "data-tip": t.austerity
-                    ? "当前主权债务触发紧缩保护，专项预算暂停拨付"
-                    : "悬停或切换预算档位可实时预览每季国库净结余变化",
-                  children: t.austerity
-                    ? "⚠️ 紧缩停拨"
-                    : `净结余 ${pvM.net >= 0 ? "+" : ""}${fe(pvM.net)}亿${hovB ? "·预览" : ""}`,
-                }),
-                children: w("div", {
-                  class: "btrack-list",
-                  onMouseLeave: () => setHovB(null),
-                  children: [
-                    {
-                      key: "rdGear",
-                      ico: Ae.sparkles,
-                      title: "科研",
-                      gears: RD_GEARS,
-                      tip: (gItem) =>
-                        gItem.id === 0
-                          ? "不额外投入科研拨款（0% 税收占用）"
-                          : `占当季税收 ${Math.round(gItem.rate * 100)}% · 全国产出 +${SA(gItem.out * rdMult)} · 人物历练 +${SA(gItem.exp)}`,
-                    },
-                    {
-                      key: "welGear",
-                      ico: oD.consumer,
-                      title: "民生",
-                      gears: WEL_GEARS,
-                      tip: (gItem) =>
-                        gItem.id === 0
-                          ? "维持基础民生（0% 税收占用）"
-                          : `占当季税收 ${Math.round(gItem.rate * 100)}% · 宜居与上限 +${gItem.liv} · 人口 +${SA(gItem.pop)} · 人力资本产出 +${SA(gItem.out || 0)}${gItem.socCut ? ` · 社保减免 −${SA(gItem.socCut)}` : ""}`,
-                    },
-                    {
-                      key: "infGear",
-                      ico: Ae.hammer,
-                      title: "基建",
-                      gears: INF_GEARS,
-                      tip: (gItem) =>
-                        gItem.id === 0
-                          ? "常规施工节奏（0% 税收占用）"
-                          : `占当季税收 ${Math.round(gItem.rate * 100)}% · 施工速度 +${SA(gItem.spd)}${gItem.slots ? ` · 施工队 +${gItem.slots}` : ""}`,
-                    },
-                  ].map((tr) => {
-                    const cur = e.settings[tr.key] ?? 0,
-                      taxBase = t.taxIncome ?? t.revenue ?? 0,
-                      cost = cur > 0 && !t.austerity ? taxBase * tr.gears[cur].rate : 0,
-                      trackTip = tr.gears.map((gItem) => `【${gItem.name}】${tr.tip(gItem)}`).join("\n");
-                    return w(
-                      "div",
-                      {
-                        class: "btrack-row v1",
-                        children: [
-                          w("div", {
-                            class: "bt-lbl",
-                            "data-tip-touch": !0,
-                            "data-tip-title": `${tr.title}专项预算`,
-                            "data-tip": trackTip,
-                            children: [
-                              w(NA, { node: tr.ico, size: 13, stroke: 2.1 }),
-                              w("b", { children: tr.title }),
-                              cost > 0 &&
-                                w("span", {
-                                  class: "muted",
-                                  style: "margin-left:auto;font-size:11.5px;font-variant-numeric:tabular-nums",
-                                  children: `−${fe(cost)}亿/季`,
-                                }),
-                            ],
-                          }),
-                          w("div", {
-                            class: "bt-seg",
-                            children: tr.gears.map((gItem) =>
-                              w(
-                                "button",
-                                {
-                                  class: cur === gItem.id ? "on" : "",
-                                  "data-tip-title": `${tr.title}预算 · ${gItem.name}`,
-                                  "data-tip": tr.tip(gItem),
-                                  onMouseEnter: () => setHovB({ k: tr.key, v: gItem.id }),
-                                  onFocus: () => setHovB({ k: tr.key, v: gItem.id }),
-                                  onBlur: () => setHovB(null),
-                                  onClick: () => {
-                                    ((e.settings[tr.key] = gItem.id), A.refresh());
-                                  },
-                                  children: w("b", { children: gItem.name }),
-                                },
-                                gItem.id,
-                              ),
-                            ),
-                          }),
-                        ],
-                      },
-                      tr.key,
-                    );
-                  }),
-                }),
-              }),
-              w(Qt, {
-                title: "基本体制",
-                extra: w("span", {
-                  class: "muted",
-                  style: "font-size:12px",
-                  children:
-                    regCdLeftQ > 0
-                      ? `稳定期 ${regCdLeftQ} 季`
-                      : regCd > 0
-                        ? `冷却 ${Vc(regCd)}`
-                        : curReg.name,
-                }),
-                children: w("div", {
-                  class: "reg-grid",
-                  children: REGIMES.map((rg) => {
-                    const on = rg.id === curRegId,
-                      ul = isRegimeUnlocked(e, rg.id),
-                      dir = rg.needDir ? INSIGHT_DIRS[rg.needDir] : null,
-                      curN = rg.needDir ? e.lord.insights[rg.needDir] || 0 : 0,
-                      rgTip = `${rg.brief ? rg.brief + "\n" : ""}增益：${rg.pros}${rg.cons ? `\n代价：${rg.cons}` : ""}\n${on ? "✓ 当前施行体制" : ul ? "点击改制，启用本制专属 6 位名臣池" : `解锁条件：巡察积累「${dir ? dir.name : ""}」${curN}/${rg.need}`}`;
-                    return w(
-                      "button",
-                      {
-                        class: `reg-card${on ? " on" : ul ? " can" : " locked"}`,
-                        "aria-current": on ? "true" : void 0,
-                        "data-tip-title": rg.name,
-                        "data-tip": rgTip,
-                        onClick: on
-                          ? void 0
-                          : () =>
-                              typeof A.switchRegime == "function"
-                                ? A.switchRegime(rg.id)
-                                : A.act((st) => switchRegime(st, rg.id)),
-                        children: [
-                          w("div", {
-                            class: "rg-hd",
-                            children: [
-                              w("span", {
-                                class: "tx-ico sm",
-                                children: w(NA, { node: regIcoNode(rg.ico), size: 14, stroke: 2.1 }),
+              w("div", {
+                id: "gov-sec-fyp",
+                children: w(Qt, {
+                  title: "五年规划",
+                  extra: curFyp
+                    ? w("button", {
+                        class: "btn tiny ghost",
+                        onClick: () =>
+                          A.openModal({
+                            type: "confirm",
+                            title: "提前终止当前五年规划？",
+                            body: `当前「${curFyp.name}」进度 ${Math.round(fypProg * 100)}%，终止后将放弃本次达标奖励并可立即签发新规划。`,
+                            okText: "终止并换轨",
+                            onOk: () =>
+                              A.act((st) => {
+                                st.fyp = null;
+                                return qe("已终止当前五年规划，可重新签发");
                               }),
-                              w("b", { children: rg.name }),
-                              qTipC(rg.name, rgTip),
-                              on
-                                ? w("em", { children: "施行" })
-                                : ul
-                                  ? null
-                                  : w("span", { class: "rg-lock", children: `${curN}/${rg.need}` }),
-                            ],
                           }),
-                          !ul &&
-                            dir &&
+                        children: "换轨",
+                      })
+                    : w("span", {
+                        class: "pill gold-pulse",
+                        "data-tip-touch": !0,
+                        "data-tip-title": "五年规划立项说明",
+                        "data-tip": `签发规划零国库零体力开销，立即激活 20 季全国增益；达标更奖数季 GDP 与星钻（累计已完成 ${e.stats.fypDone || 0} 轮）。`,
+                        children: e.stats.fypDone ? `✦ 待立项 · 已成${e.stats.fypDone}轮` : "✦ 免费立项 · 20季增益",
+                      }),
+                  children: curFyp
+                    ? (() => {
+                        const fypTip = `规划增益：${curFyp.pros}\n考核目标：${curFyp.kpiDesc}\n达标奖励：${curFyp.rewardDesc}`;
+                        return w("div", {
+                          class: "fyp-active",
+                          "data-tip-touch": !0,
+                          "data-tip-title": `《五年规划 · ${curFyp.name}》`,
+                          "data-tip": fypTip,
+                          children: [
                             w("div", {
-                              class: "rg-bar",
-                              children: w("i", {
-                                style: `width:${Math.min(100, Math.round((curN / rg.need) * 100))}%`,
-                              }),
+                              class: "fa-hd",
+                              children: [
+                                w("span", {
+                                  class: "tx-ico sm",
+                                  children: w(NA, {
+                                    node: fypIcoNode(curFyp.ico),
+                                    size: 14,
+                                    stroke: 2.1,
+                                  }),
+                                }),
+                                w("b", { children: `第 ${e.fyp.num} 轮 · ${curFyp.name}` }),
+                                w("em", { children: `剩 ${fypLeft} 季` }),
+                              ],
                             }),
-                        ],
-                      },
-                      rg.id,
-                    );
-                  }),
-                }),
-              }),
-              w(Qt, {
-                title: "名臣政策",
-                extra: w("span", {
-                  class: "muted",
-                  style: "font-size:12px",
-                  children: `已装 ${equipped.length}/${slotCap}`,
-                }),
-                children: [
-                  w("div", {
-                    class: "pc-slot-bar",
-                    children: [
-                      w("div", {
-                        class: "pcs-chips",
-                        children: Array.from({ length: slotCap }, (_, idx) => {
-                          const cid = equipped[idx],
-                            p = cid && POLICY_CARD_MAP[cid];
-                          if (!p) {
-                            return w("span", { class: "pcs-chip empty", children: `空槽 ${idx + 1}` }, idx);
-                          }
-                          const eqTip = `收益：${p.pros}${p.cons ? `\n代价：${p.cons}` : "\n无负面代价"}\n点击卸下该名臣策论`;
+                            w(ei, {
+                              value: Math.round(fypProg * 100),
+                              max: 100,
+                              color: fypProg >= 0.8 ? "var(--gold)" : "var(--cyan)",
+                              label: `${Math.round(fypProg * 100)}%`,
+                            }),
+                            w("div", {
+                              class: "filter-row",
+                              style: "margin-top:6px;gap:6px",
+                              children: [
+                                w("span", {
+                                  class: "pill",
+                                  "data-tip-touch": !0,
+                                  "data-tip-title": "规划期常驻增益",
+                                  "data-tip": curFyp.pros,
+                                  children: `📈 ${curFyp.brief}`,
+                                }),
+                                w("span", {
+                                  class: "pill",
+                                  "data-tip-touch": !0,
+                                  "data-tip-title": "达标考核目标",
+                                  "data-tip": curFyp.kpiDesc,
+                                  children: `🎯 进度 ${Math.round(fypProg * 100)}%`,
+                                }),
+                                w("span", {
+                                  class: "pill",
+                                  "data-tip-touch": !0,
+                                  "data-tip-title": "期满达标奖励",
+                                  "data-tip": curFyp.rewardDesc,
+                                  children: `🎁 ◇${curFyp.gems}`,
+                                }),
+                              ],
+                            }),
+                          ],
+                        });
+                      })()
+                    : w("div", {
+                        class: "fyp-list-v11",
+                        children: FIVE_YEAR_PLANS.map((p) => {
+                          const pTitle = `《五年规划 · ${p.name}》`,
+                            pTip = `规划增益：${p.pros}\n考核目标：${p.kpiDesc}\n达标奖励：${p.rewardDesc}\n点击预览当前考核基线并免费签发`;
                           return w(
                             "button",
                             {
-                              class: "pcs-chip on",
-                              "data-tip-title": `${p.name}（${p.who}）`,
-                              "data-tip": eqTip,
-                              onClick: () =>
-                                typeof A.togglePolicyCard == "function"
-                                  ? A.togglePolicyCard(cid)
-                                  : A.act((st) => togglePolicyCard(st, cid)),
+                              class: "fyp-row-v11",
+                              onClick: () => A.openModal({ type: "fypPreview", planId: p.id }),
+                              "data-tip-title": pTitle,
+                              "data-tip": pTip,
                               children: [
-                                w("b", { children: p.name }),
-                                qTipC(`${p.name}（${p.who}）`, eqTip),
-                                w("span", { children: "×" }),
+                                w("span", {
+                                  class: "fr-ico",
+                                  children: w(NA, {
+                                    node: fypIcoNode(p.ico),
+                                    size: 15,
+                                    stroke: 2.1,
+                                  }),
+                                }),
+                                w("span", {
+                                  class: "fr-main",
+                                  children: [
+                                    w("b", { children: p.name }),
+                                    w("span", { class: "fr-tag", children: p.brief }),
+                                  ],
+                                }),
+                                w("span", {
+                                  class: "fr-side",
+                                  children: [
+                                    w("span", {
+                                      class: "fr-gem",
+                                      children: [w(NA, { node: Ae.gem, size: 11 }), p.gems],
+                                    }),
+                                    w("em", { class: "fr-cta", children: "立项 ▸" }),
+                                  ],
+                                }),
                               ],
                             },
-                            idx,
+                            p.id,
                           );
                         }),
                       }),
+                }),
+              }),
+              w("div", {
+                id: "gov-sec-minister",
+                children: w(Qt, {
+                  title: "名臣政策",
+                  extra: w("span", {
+                    style: "display:inline-flex;align-items:center;gap:6px",
+                    children: [
+                      emptyPolSlots > 0
+                        ? w("span", {
+                            class: "pill gold-pulse",
+                            "data-tip-touch": !0,
+                            "data-tip-title": "名臣政策空槽提醒",
+                            "data-tip": "点击下方任意名臣策论即可免费装入内阁，不耗体力与国库，随时可换。",
+                            children: `✦ 空槽 ${emptyPolSlots} · 点卡装配`,
+                          })
+                        : w("span", {
+                            class: "muted",
+                            style: "font-size:12px",
+                            children: `已满 ${equipped.length}/${slotCap}`,
+                          }),
                       equipped.length > 0 &&
                         w("button", {
                           class: "btn tiny ghost",
@@ -36994,351 +37245,439 @@ function Vp() {
                         }),
                     ],
                   }),
-                  w("div", {
-                    class: "pc-grid",
-                    children: regCards.map((p) => {
-                      const on = equipped.includes(p.id),
-                        pcTitle = `${p.name}（${p.who}）`,
-                        pcTip = `名臣：${p.who}（${curReg.name}专属）\n收益：${p.pros}${p.cons ? `\n代价：${p.cons}` : "\n无负面代价"}\n点击${on ? "卸下" : "装入内阁政策槽"}`;
-                      return w(
-                        "button",
-                        {
-                          class: `pc-card${on ? " on" : ""}`,
-                          "data-tip-title": pcTitle,
-                          "data-tip": pcTip,
-                          onClick: () =>
-                            typeof A.togglePolicyCard == "function"
-                              ? A.togglePolicyCard(p.id)
-                              : A.act((st) => togglePolicyCard(st, p.id)),
-                          children: w("div", {
-                            class: "lc-hd",
-                            children: [
-                              w(NA, { node: Ae.scroll, size: 13, stroke: 2.1 }),
-                              w("b", { children: p.name }),
-                              qTipC(pcTitle, pcTip),
-                              on
-                                ? w("em", { children: "卸下" })
-                                : w("span", { class: "rg-lock", children: "装配" }),
-                            ],
-                          }),
-                        },
-                        p.id,
-                      );
-                    }),
-                  }),
-                ],
-              }),
-            ],
-          })
-        : w(he, {
-            children: [
-              w("div", {
-                class: `pol-admin${o.block ? " off" : ""}`,
-                "data-tip-touch": !0,
-                "data-tip-title": "施政规则",
-                "data-tip": adminTip,
-                children: [
-                  w("span", { class: "pa-ico", children: w(NA, { node: Ae.stamp, size: 18 }) }),
-                  w("span", {
-                    class: "pa-main",
-                    style: "flex-direction:row;align-items:center;gap:6px",
-                    children: [
-                      w("b", {
-                        children: [
-                          "施政",
-                          w("i", {
-                            class: "pa-cost",
-                            children: [w(NA, { node: Ae.zap, size: 11, stroke: 2.6 }), o.cost],
-                          }),
-                        ],
-                      }),
-                      qTipC("施政规则", adminTip),
-                    ],
-                  }),
-                  w("span", {
-                    class: "pa-day unlimited",
-                    children: w("b", { class: "pa-unlim", children: o.block ? "体力不足" : "不限" }),
-                  }),
-                ],
-              }),
-              !budgetOpen && renderTaxSection(),
-              w(Qt, {
-                title: "五年规划",
-                extra: curFyp
-                  ? w("button", {
-                      class: "btn tiny ghost",
-                      onClick: () =>
-                        A.openModal({
-                          type: "confirm",
-                          title: "提前终止当前五年规划？",
-                          body: `当前「${curFyp.name}」进度 ${Math.round(fypProg * 100)}%，终止后将放弃本次达标奖励并可立即签发新规划。`,
-                          okText: "终止并换轨",
-                          onOk: () =>
-                            A.act((st) => {
-                              st.fyp = null;
-                              return qe("已终止当前五年规划，可重新签发");
-                            }),
-                        }),
-                      children: "换轨",
-                    })
-                  : w("span", { class: "muted", style: "font-size:12px", children: `已完成 ${e.stats.fypDone || 0} 轮` }),
-                children: curFyp
-                  ? (() => {
-                      const fypTip = `规划增益：${curFyp.pros}\n考核目标：${curFyp.kpiDesc}\n达标奖励：${curFyp.rewardDesc}`;
-                      return w("div", {
-                        class: "fyp-active",
-                        "data-tip-touch": !0,
-                        "data-tip-title": `《五年规划 · ${curFyp.name}》`,
-                        "data-tip": fypTip,
-                        children: [
-                          w("div", {
-                            class: "fa-hd",
-                            children: [
-                              w("span", {
-                                class: "tx-ico sm",
-                                children: w(NA, {
-                                  node: fypIcoNode(curFyp.ico),
-                                  size: 14,
-                                  stroke: 2.1,
-                                }),
-                              }),
-                              w("b", { children: `第 ${e.fyp.num} 轮 · ${curFyp.name}` }),
-                              qTipC(`《五年规划 · ${curFyp.name}》`, fypTip),
-                              w("em", { children: `剩 ${fypLeft} 季` }),
-                            ],
-                          }),
-                          w(ei, {
-                            value: Math.round(fypProg * 100),
-                            max: 100,
-                            color: fypProg >= 0.8 ? "var(--gold)" : "var(--cyan)",
-                            label: `${Math.round(fypProg * 100)}%`,
-                          }),
-                          w("div", {
-                            class: "filter-row",
-                            style: "margin-top:6px;gap:6px",
-                            children: [
-                              w("span", {
-                                class: "pill",
-                                "data-tip-touch": !0,
-                                "data-tip-title": "规划期增益",
-                                "data-tip": curFyp.pros,
-                                children: "📈 增益",
-                              }),
-                              w("span", {
-                                class: "pill",
-                                "data-tip-touch": !0,
-                                "data-tip-title": "考核目标",
-                                "data-tip": curFyp.kpiDesc,
-                                children: `🎯 达标 ${Math.round(fypProg * 100)}%`,
-                              }),
-                              w("span", {
-                                class: "pill",
-                                "data-tip-touch": !0,
-                                "data-tip-title": "达标奖励",
-                                "data-tip": curFyp.rewardDesc,
-                                children: "🎁 奖励",
-                              }),
-                            ],
-                          }),
-                        ],
-                      });
-                    })()
-                  : w("div", {
-                      class: "fyp-grid-3",
-                      children: FIVE_YEAR_PLANS.map((p) => {
-                        const pTitle = `《五年规划 · ${p.name}》`,
-                          pTip = `规划增益：${p.pros}\n考核目标：${p.kpiDesc}\n达标奖励：${p.rewardDesc}\n点击打开立项书预览当前基线与目标`;
+                  children: [
+                    w("div", {
+                      class: `pc-slot-bar v11${emptyPolSlots > 0 ? " has-empty" : ""}`,
+                      children: [0, 1, 2].map((idx) => {
+                        const unlockLv = idx === 0 ? 1 : idx === 1 ? 3 : 5;
+                        if (idx >= slotCap) {
+                          return w(
+                            "span",
+                            {
+                              class: "pcs-slot-v11 locked",
+                              "data-tip-touch": !0,
+                              "data-tip-title": `第 ${idx + 1} 内阁槽未解锁`,
+                              "data-tip": `将首都升至 Lv.${unlockLv} 即可永久解锁第 ${idx + 1} 个名臣政策槽位。`,
+                              children: [w(NA, { node: Ae.lock, size: 11 }), ` 首都 Lv.${unlockLv}`],
+                            },
+                            idx,
+                          );
+                        }
+                        const cid = equipped[idx],
+                          p = cid && POLICY_CARD_MAP[cid];
+                        if (!p) {
+                          return w(
+                            "span",
+                            {
+                              class: "pcs-slot-v11 empty",
+                              "data-tip-touch": !0,
+                              "data-tip-title": `内阁第 ${idx + 1} 槽空闲`,
+                              "data-tip": "点击下方任意名臣策论即可免费装配，立即生效全国乘区加成。",
+                              children: `✦ 空槽 ${idx + 1}`,
+                            },
+                            idx,
+                          );
+                        }
+                        const eqTip = `名臣：${p.who}\n收益：${p.pros}${p.cons ? `\n代价：${p.cons}` : "\n无负面代价"}\n点击卸下该策论`;
                         return w(
                           "button",
                           {
-                            class: "fyp-tile",
-                            onClick: () => A.openModal({ type: "fypPreview", planId: p.id }),
-                            "data-tip-title": pTitle,
-                            "data-tip": pTip,
+                            class: "pcs-slot-v11 on",
+                            "data-tip-title": `${p.name}（${p.who}）`,
+                            "data-tip": eqTip,
+                            onClick: () =>
+                              typeof A.togglePolicyCard == "function"
+                                ? A.togglePolicyCard(cid)
+                                : A.act((st) => togglePolicyCard(st, cid)),
+                            children: [w("b", { children: p.name }), w("span", { children: "×" })],
+                          },
+                          idx,
+                        );
+                      }),
+                    }),
+                    w("div", {
+                      class: "pc-grid v11",
+                      children: regCards.map((p) => {
+                        const on = equipped.includes(p.id),
+                          pcTitle = `${p.name} · ${p.who}`,
+                          pcTip = `名臣：${p.who}（${curReg.name}专属）\n收益：${p.pros}${p.cons ? `\n代价：${p.cons}` : "\n无负面代价"}\n${on ? "点击卸下此策论" : emptyPolSlots > 0 ? "点击免费装入内阁政策槽" : "当前槽位已满，请先点击上方槽位卸下再装"}`;
+                        return w(
+                          "button",
+                          {
+                            class: `pc-card v11${on ? " on" : ""}`,
+                            "data-tip-title": pcTitle,
+                            "data-tip": pcTip,
+                            onClick: () =>
+                              typeof A.togglePolicyCard == "function"
+                                ? A.togglePolicyCard(p.id)
+                                : A.act((st) => togglePolicyCard(st, p.id)),
                             children: [
-                              w("span", {
-                                class: "tx-ico sm",
-                                children: w(NA, {
-                                  node: fypIcoNode(p.ico),
-                                  size: 14,
-                                  stroke: 2.1,
-                                }),
+                              w("div", {
+                                class: "pcc-top",
+                                children: [
+                                  w(NA, { node: Ae.scroll, size: 13, stroke: 2.1 }),
+                                  w("b", { children: p.name }),
+                                ],
                               }),
-                              w("b", { children: p.name }),
-                              qTipC(pTitle, pTip),
+                              w("div", {
+                                class: "pcc-bot",
+                                children: [
+                                  w("span", { class: "pcc-who", children: p.who }),
+                                  w("em", {
+                                    class: `pcc-act${!on && emptyPolSlots <= 0 ? " full" : ""}`,
+                                    children: on ? "生效中" : emptyPolSlots > 0 ? "+装配" : "满槽",
+                                  }),
+                                ],
+                              }),
                             ],
                           },
                           p.id,
                         );
                       }),
                     }),
-              }),
-              w(Qt, {
-                title: "今日议题",
-                extra: w("span", { class: "muted", style: "font-size:12px", children: `国库${agTag}` }),
-                children: !r.length
-                  ? w("div", {
-                      class: "muted",
-                      style: "font-size:12px;padding:4px 2px",
-                      "data-tip-touch": !0,
-                      "data-tip-title": "今日议题",
-                      "data-tip": "每年刷新特惠政令议题；其余政令可在下方随时颁布。",
-                      children: "本年暂无特惠议题",
-                    })
-                  : w("ul", {
-                      class: "agenda",
-                      children: r.map((C) => {
-                        const E = Cs[C.id];
-                        if (!E) return null;
-                        const h = la(e, E, t.gdp),
-                          d = i.get(C.id) ?? [],
-                          x = d.includes(C.tile) ? C.tile : d[0],
-                          M = E.national ? "全国" : x !== void 0 ? `${Ws(e.tiles[x])} #${x}` : "暂无适用地块",
-                          agTitle = `${E.name} · 今日议题`,
-                          agTip = `${E.effect}\n适用目标：${M}\n国库开销：原价 ${fe(h)} 亿 → 议题特惠 ${fe(h * (1 - agCut))} 亿（${agTag}）`;
-                        return w(
-                          "li",
-                          {
-                            children: w("button", {
-                              class: `ag-card${C.done ? " done" : ""}`,
-                              style: `--tier:${Xe[E.tier]}`,
-                              "data-tip-title": agTitle,
-                              "data-tip": agTip,
-                              onClick: () => l(C.id),
-                              children: [
-                                w(Zv, { id: C.id, size: 36 }),
-                                w("span", {
-                                  style: "display:inline-flex;align-items:center;gap:3px;max-width:100%",
-                                  children: [w("b", { children: E.name }), qTipC(agTitle, agTip)],
-                                }),
-                                C.done
-                                  ? w("em", {
-                                      class: "ag-done",
-                                      children: [w(NA, { node: Ae.check, size: 12, stroke: 3 }), " 已颁布"],
-                                    })
-                                  : w("span", {
-                                      class: "ag-price",
-                                      children: [
-                                        w("s", { children: SI(h) }),
-                                        w(Hn, { v: h * (1 - agCut) }),
-                                      ],
-                                    }),
-                                !C.done && w("i", { class: "ag-half", children: agTag }),
-                              ],
-                            }),
-                          },
-                          C.id,
-                        );
-                      }),
-                    }),
-              }),
-              w(Qt, {
-                title: "经济特区",
-                extra: w("span", {
-                  class: "muted",
-                  style: "font-size:12px",
-                  "data-tip-touch": !0,
-                  "data-tip-title": "经济特区规则",
-                  "data-tip": zoneRuleTip,
-                  children: `${e.zones.length}/${B}`,
+                  ],
                 }),
-                children: [
-                  !e.zones.length &&
-                    (B > 0
-                      ? w("button", {
-                          class: "btn small ghost",
-                          onClick: () => l("zone"),
-                          children: [w(NA, { node: Ae.zone, size: 14 }), " 设立首座特区"],
-                        })
-                      : w("div", {
-                          class: "muted",
-                          style: "display:inline-flex;align-items:center;gap:5px;font-size:12px",
-                          "data-tip-touch": !0,
-                          "data-tip-title": "经济特区未解锁",
-                          "data-tip": zoneRuleTip,
-                          children: [w(NA, { node: Ae.lock, size: 12 }), " 首都 Lv.3 解锁"],
-                        })),
-                  e.zones.length > 0 &&
+              }),
+              w(Qt, {
+                title: "基本国体",
+                extra:
+                  regCdLeftQ > 0
+                    ? w("span", { class: "muted", style: "font-size:12px", children: `稳定期 ${regCdLeftQ} 季` })
+                    : regCd > 0
+                      ? w("span", { class: "muted", style: "font-size:12px", children: `冷却 ${Vc(regCd)}` })
+                      : readyModernRegs.length > 0
+                        ? w("span", { class: "pill gold-pulse", children: "✦ 可改现代国体" })
+                        : w("span", { class: "muted", style: "font-size:12px", children: `${curReg.name} · 6名臣池` }),
+                children: w("div", {
+                  class: "reg-layout-v11",
+                  children: [
+                    renderRegCard(REGIMES[0]),
                     w("div", {
-                      class: "zone-chips",
-                      children: e.zones.map((C, E) => {
-                        const zCnt = C.tiles.filter((h) => e.tiles[h].unlocked).length;
-                        return w(
-                          "div",
-                          {
-                            class: "zone-chip-row",
-                            children: [
-                              w("button", {
-                                class: "zone-chip",
-                                "data-tip-title": `经济特区 ${E + 1}`,
-                                "data-tip": `中心地块 #${C.center} · 覆盖 ${zCnt} 块国土\n点击镜头定位至特区中心`,
-                                onClick: () => {
-                                  (A.select(C.center), A.openPanel(null));
-                                },
-                                children: [
-                                  w(NA, { node: Ae.zone, size: 14 }),
-                                  w("b", { children: `特区 ${E + 1} · #${C.center} (${zCnt}块)` }),
-                                ],
-                              }),
-                              w("button", {
-                                class: "btn tiny danger zone-unzone-btn",
-                                "data-tip-title": "撤销特区",
-                                "data-tip": "撤销该经济特区并返还特区名额",
-                                onClick: () => confirmUnzone(A, C.center),
-                                children: "撤销",
-                              }),
-                            ],
-                          },
-                          C.center ?? E,
-                        );
-                      }),
+                      class: "reg-modern-grid",
+                      children: REGIMES.slice(1).map(renderRegCard),
                     }),
-                ],
-              }),
-              w(Qt, {
-                title: "正在生效",
-                extra: w("span", { class: "muted", style: "font-size:12px", children: `全国 ${s.length}/${Cc(e)}` }),
-                children: !c.size
-                  ? w("div", { class: "muted", style: "font-size:12px;padding:2px", children: "暂无生效政令" })
-                  : w("ul", {
-                      class: "live-list",
-                      children: [...c.values()].map((C, E) => {
-                        const lvTip = `${C.decree && Cs[C.decree] ? Cs[C.decree].effect + "\n" : ""}作用范围：${C.where} · ${C.left}`;
-                        return w(
-                          "li",
-                          {
-                            "data-tip-touch": !0,
-                            "data-tip-title": C.name,
-                            "data-tip": lvTip,
-                            children: [
-                              C.decree
-                                ? w(Zv, { id: C.decree, size: 26 })
-                                : w("span", {
-                                    class: "dc-ico",
-                                    style: "--tier:#ffcf4a;width:26px;height:26px;border-radius:8px",
-                                    children: w(NA, { node: Ae.sparkles, size: 14 }),
-                                  }),
-                              w("b", { children: `${C.name} · ${C.where}` }),
-                              w("em", { children: C.left }),
-                            ],
-                          },
-                          E,
-                        );
-                      }),
-                    }),
-              }),
-              w(Qt, {
-                title: "片区政令",
-                extra: w("span", { class: "muted", style: "font-size:12px", children: `${regDecrees.length} 项` }),
-                children: w("ul", { class: "dgrid", children: regDecrees.map(renderDecreeTile) }),
-              }),
-              w(Qt, {
-                title: "全国政令",
-                extra: w("span", { class: "muted", style: "font-size:12px", children: `${natDecrees.length} 项` }),
-                children: w("ul", { class: "dgrid", children: natDecrees.map(renderDecreeTile) }),
+                  ],
+                }),
               }),
             ],
-          }),
+          })
+        : effTab === "fiscal"
+          ? w(he, {
+              children: [
+                renderTaxSection(),
+                w(Qt, {
+                  title: "专项预算",
+                  extra: w("span", {
+                    class: t.austerity ? "warn" : pvM.net < 0 ? "down net-prev" : "up net-prev",
+                    style: "font-size:12px;font-weight:600",
+                    "data-tip-touch": !0,
+                    "data-tip-title": "季度财政净结余预览",
+                    "data-tip": t.austerity
+                      ? "当前主权债务触发紧缩保护，专项预算暂停拨付"
+                      : "悬停或切换预算档位可实时预览每季国库净结余变化",
+                    children: t.austerity
+                      ? "⚠️ 紧缩停拨"
+                      : `净结余 ${pvM.net >= 0 ? "+" : ""}${fe(pvM.net)}亿${hovB ? "·预览" : ""}`,
+                  }),
+                  children: w("div", {
+                    class: "btrack-list",
+                    onMouseLeave: () => setHovB(null),
+                    children: [
+                      {
+                        key: "rdGear",
+                        ico: Ae.sparkles,
+                        title: "科研",
+                        gears: RD_GEARS,
+                        tip: (gItem) =>
+                          gItem.id === 0
+                            ? "不额外投入科研拨款（0% 税收占用）"
+                            : `占当季税收 ${Math.round(gItem.rate * 100)}% · 全国产出 +${SA(gItem.out * rdMult)} · 人物历练 +${SA(gItem.exp)}`,
+                      },
+                      {
+                        key: "welGear",
+                        ico: oD.consumer,
+                        title: "民生",
+                        gears: WEL_GEARS,
+                        tip: (gItem) =>
+                          gItem.id === 0
+                            ? "维持基础民生（0% 税收占用）"
+                            : `占当季税收 ${Math.round(gItem.rate * 100)}% · 宜居与上限 +${gItem.liv} · 人口 +${SA(gItem.pop)} · 人力资本产出 +${SA(gItem.out || 0)}${gItem.socCut ? ` · 社保减免 −${SA(gItem.socCut)}` : ""}`,
+                      },
+                      {
+                        key: "infGear",
+                        ico: Ae.hammer,
+                        title: "基建",
+                        gears: INF_GEARS,
+                        tip: (gItem) =>
+                          gItem.id === 0
+                            ? "常规施工节奏（0% 税收占用）"
+                            : `占当季税收 ${Math.round(gItem.rate * 100)}% · 施工速度 +${SA(gItem.spd)}${gItem.slots ? ` · 施工队 +${gItem.slots}` : ""}`,
+                      },
+                    ].map((tr) => {
+                      const cur = e.settings[tr.key] ?? 0,
+                        taxBase = t.taxIncome ?? t.revenue ?? 0,
+                        cost = cur > 0 && !t.austerity ? taxBase * tr.gears[cur].rate : 0,
+                        trackTip = tr.gears.map((gItem) => `【${gItem.name}】${tr.tip(gItem)}`).join("\n");
+                      return w(
+                        "div",
+                        {
+                          class: "btrack-row v1",
+                          children: [
+                            w("div", {
+                              class: "bt-lbl",
+                              "data-tip-touch": !0,
+                              "data-tip-title": `${tr.title}专项预算`,
+                              "data-tip": trackTip,
+                              children: [
+                                w(NA, { node: tr.ico, size: 13, stroke: 2.1 }),
+                                w("b", { children: tr.title }),
+                                cost > 0 &&
+                                  w("span", {
+                                    class: "muted",
+                                    style: "margin-left:auto;font-size:11.5px;font-variant-numeric:tabular-nums",
+                                    children: `−${fe(cost)}亿/季`,
+                                  }),
+                              ],
+                            }),
+                            w("div", {
+                              class: "bt-seg",
+                              children: tr.gears.map((gItem) =>
+                                w(
+                                  "button",
+                                  {
+                                    class: cur === gItem.id ? "on" : "",
+                                    "data-tip-title": `${tr.title}预算 · ${gItem.name}`,
+                                    "data-tip": tr.tip(gItem),
+                                    onMouseEnter: () => setHovB({ k: tr.key, v: gItem.id }),
+                                    onFocus: () => setHovB({ k: tr.key, v: gItem.id }),
+                                    onBlur: () => setHovB(null),
+                                    onClick: () => {
+                                      ((e.settings[tr.key] = gItem.id), A.refresh());
+                                    },
+                                    children: w("b", { children: gItem.name }),
+                                  },
+                                  gItem.id,
+                                ),
+                              ),
+                            }),
+                          ],
+                        },
+                        tr.key,
+                      );
+                    }),
+                  }),
+                }),
+                w(Qt, {
+                  title: "经济特区",
+                  extra: zoneReady
+                    ? w("span", {
+                        class: "pill gold-pulse",
+                        "data-tip-touch": !0,
+                        "data-tip-title": "经济特区名额空闲",
+                        "data-tip": zoneRuleTip,
+                        children: `✦ 空余 ${freeZones} 座`,
+                      })
+                    : w("span", {
+                        class: "muted",
+                        style: "font-size:12px",
+                        "data-tip-touch": !0,
+                        "data-tip-title": "经济特区规则",
+                        "data-tip": zoneRuleTip,
+                        children: `${e.zones.length}/${B}`,
+                      }),
+                  children: [
+                    B <= 0 &&
+                      w("div", {
+                        class: "muted",
+                        style: "display:inline-flex;align-items:center;gap:5px;font-size:12px",
+                        "data-tip-touch": !0,
+                        "data-tip-title": "经济特区未解锁",
+                        "data-tip": zoneRuleTip,
+                        children: [w(NA, { node: Ae.lock, size: 12 }), " 首都 Lv.3 解锁首座特区"],
+                      }),
+                    e.zones.length > 0 &&
+                      w("div", {
+                        class: "zone-chips",
+                        children: e.zones.map((C, E) => {
+                          const zCnt = C.tiles.filter((h) => e.tiles[h].unlocked).length;
+                          return w(
+                            "div",
+                            {
+                              class: "zone-chip-row",
+                              children: [
+                                w("button", {
+                                  class: "zone-chip",
+                                  "data-tip-title": `经济特区 ${E + 1}`,
+                                  "data-tip": `中心地块 #${C.center} · 覆盖 ${zCnt} 块国土\n减税 33% · 产出 +10% · 人口 +20%\n点击镜头定位至特区中心`,
+                                  onClick: () => {
+                                    (A.select(C.center), A.openPanel(null));
+                                  },
+                                  children: [
+                                    w(NA, { node: Ae.zone, size: 14 }),
+                                    w("b", { children: `特区 ${E + 1} · #${C.center} (${zCnt}块)` }),
+                                  ],
+                                }),
+                                w("button", {
+                                  class: "btn tiny danger zone-unzone-btn",
+                                  "data-tip-title": "撤销特区",
+                                  "data-tip": "撤销该经济特区并返还特区名额",
+                                  onClick: () => confirmUnzone(A, C.center),
+                                  children: "撤销",
+                                }),
+                              ],
+                            },
+                            C.center ?? E,
+                          );
+                        }),
+                      }),
+                    freeZones > 0 &&
+                      w("button", {
+                        class: `btn small ${zoneReady ? "gold" : "ghost"}`,
+                        style: e.zones.length > 0 ? "margin-top:8px" : "",
+                        "data-tip-title": "设立经济特区",
+                        "data-tip": zoneRuleTip,
+                        onClick: () => l("zone"),
+                        children: [
+                          w(NA, { node: Ae.zone, size: 14 }),
+                          e.zones.length > 0 ? ` + 增设经济特区（余 ${freeZones}）` : " + 设立首座特区",
+                        ],
+                      }),
+                  ],
+                }),
+              ],
+            })
+          : w(he, {
+              children: [
+                w("div", {
+                  class: `pol-admin${o.block ? " off" : ""}`,
+                  "data-tip-touch": !0,
+                  "data-tip-title": "行政政令规则",
+                  "data-tip": adminTip,
+                  children: [
+                    w("span", { class: "pa-ico", children: w(NA, { node: Ae.stamp, size: 18 }) }),
+                    w("span", {
+                      class: "pa-main",
+                      style: "flex-direction:row;align-items:center;gap:6px",
+                      children: w("b", {
+                        children: [
+                          "颁布政令",
+                          w("i", {
+                            class: "pa-cost",
+                            children: [w(NA, { node: Ae.zap, size: 11, stroke: 2.6 }), o.cost],
+                          }),
+                        ],
+                      }),
+                    }),
+                    w("span", {
+                      class: "pa-day unlimited",
+                      children: w("b", { class: "pa-unlim", children: o.block ? "体力不足" : "次数不限" }),
+                    }),
+                  ],
+                }),
+                !budgetOpen && renderTaxSection(),
+                w(Qt, {
+                  title: "今日议题",
+                  extra: w("span", { class: "muted", style: "font-size:12px", children: `国库${agTag}` }),
+                  children: !r.length
+                    ? w("div", {
+                        class: "muted",
+                        style: "font-size:12px;padding:4px 2px",
+                        "data-tip-touch": !0,
+                        "data-tip-title": "今日议题",
+                        "data-tip": "每年刷新特惠政令议题；其余政令可在下方随时颁布。",
+                        children: "本年暂无特惠议题",
+                      })
+                    : w("ul", {
+                        class: "agenda",
+                        children: r.map((C) => {
+                          const E = Cs[C.id];
+                          if (!E) return null;
+                          const h = la(e, E, t.gdp),
+                            d = i.get(C.id) ?? [],
+                            x = d.includes(C.tile) ? C.tile : d[0],
+                            M = E.national ? "全国" : x !== void 0 ? `${Ws(e.tiles[x])} #${x}` : "暂无适用地块",
+                            agTitle = `${E.name} · 今日议题`,
+                            agTip = `${E.effect}\n适用目标：${M}\n国库开销：原价 ${fe(h)} 亿 → 议题特惠 ${fe(h * (1 - agCut))} 亿（${agTag}）`;
+                          return w(
+                            "li",
+                            {
+                              children: w("button", {
+                                class: `ag-card${C.done ? " done" : ""}`,
+                                style: `--tier:${Xe[E.tier]}`,
+                                "data-tip-title": agTitle,
+                                "data-tip": agTip,
+                                onClick: () => l(C.id),
+                                children: [
+                                  w(Zv, { id: C.id, size: 36 }),
+                                  w("span", {
+                                    style: "display:inline-flex;align-items:center;gap:3px;max-width:100%",
+                                    children: w("b", { children: E.name }),
+                                  }),
+                                  C.done
+                                    ? w("em", {
+                                        class: "ag-done",
+                                        children: [w(NA, { node: Ae.check, size: 12, stroke: 3 }), " 已颁布"],
+                                      })
+                                    : w("span", {
+                                        class: "ag-price",
+                                        children: [
+                                          w("s", { children: SI(h) }),
+                                          w(Hn, { v: h * (1 - agCut) }),
+                                        ],
+                                      }),
+                                  !C.done && w("i", { class: "ag-half", children: agTag }),
+                                ],
+                              }),
+                            },
+                            C.id,
+                          );
+                        }),
+                      }),
+                }),
+                w(Qt, {
+                  title: "正在生效",
+                  extra: w("span", { class: "muted", style: "font-size:12px", children: `全国 ${s.length}/${Cc(e)}` }),
+                  children: !c.size
+                    ? w("div", { class: "muted", style: "font-size:12px;padding:2px", children: "暂无生效政令" })
+                    : w("ul", {
+                        class: "live-list",
+                        children: [...c.values()].map((C, E) => {
+                          const lvTip = `${C.decree && Cs[C.decree] ? Cs[C.decree].effect + "\n" : ""}作用范围：${C.where} · ${C.left}`;
+                          return w(
+                            "li",
+                            {
+                              "data-tip-touch": !0,
+                              "data-tip-title": C.name,
+                              "data-tip": lvTip,
+                              children: [
+                                C.decree
+                                  ? w(Zv, { id: C.decree, size: 26 })
+                                  : w("span", {
+                                      class: "dc-ico",
+                                      style: "--tier:#ffcf4a;width:26px;height:26px;border-radius:8px",
+                                      children: w(NA, { node: Ae.sparkles, size: 14 }),
+                                    }),
+                                w("b", { children: `${C.name} · ${C.where}` }),
+                                w("em", { children: C.left }),
+                              ],
+                            },
+                            E,
+                          );
+                        }),
+                      }),
+                }),
+                w(Qt, {
+                  title: "片区政令",
+                  extra: w("span", { class: "muted", style: "font-size:12px", children: `${regDecrees.length} 项` }),
+                  children: w("ul", { class: "dgrid", children: regDecrees.map(renderDecreeTile) }),
+                }),
+                w(Qt, {
+                  title: "全国政令",
+                  extra: w("span", { class: "muted", style: "font-size:12px", children: `${natDecrees.length} 项` }),
+                  children: w("ul", { class: "dgrid", children: natDecrees.map(renderDecreeTile) }),
+                }),
+              ],
+            }),
     ],
   });
 }
@@ -38377,7 +38716,7 @@ function xi(A, e) {
         },
         {
           q: "治国与施政在哪里操作？",
-          a: `点左侧「施政」面板或左下角「施政」按钮：可在「体制与财政」调配税制、三轨专项预算、5 大国体与 30 张历史名臣政策卡；在「五年规划与大令」签发五年规划、管理经济特区或颁布片区/全国政令。`,
+          a: `点左侧「施政」面板或左下角「施政」按钮：在「国策内阁」免费签发五年规划、装配 30 位历史名臣政策并切换 5 大国体；在「财税特区」调配税制、三轨预算与设立 7 格经济特区；在「行政政令」颁布今日特惠议题与片区/全国政令。`,
         },
       ]
     : e.public
@@ -40545,8 +40884,8 @@ const rL = [
     icon: "policy",
     label: "施政",
     color: "#b79cff",
-    title: "治国与施政",
-    tip: "税制、三轨预算、5 大国体、30 名臣卡、五年规划、特区与季度行政大令",
+    title: "中枢内阁 · 施政",
+    tip: "国策内阁（五年规划、30 名臣政策、5 大国体）、财税特区与季度行政政令",
   },
   {
     id: "tasks",
@@ -40576,10 +40915,38 @@ const rL = [
 function vL() {
   const A = Pe(),
     e = A.state,
-    t = totalClaimableTasks(e, A.metrics).total,
+    m = A.metrics,
+    t = totalClaimableTasks(e, m).total,
     n = Object.values(e.cards).filter((o) => Boolean(cardBtMode(e, o))).length,
     s = z7(e),
     f = {};
+  const slotCapNav = typeof getPolicySlotCap == "function" ? getPolicySlotCap(e) : 1,
+    emptyPolNav = Math.max(0, slotCapNav - (e.policyCards ? e.policyCards.length : 0)),
+    fypIdleNav = !e.fyp ? 1 : 0,
+    curRegNav = typeof ensureRegime == "function" ? ensureRegime(e) : e.regime || "balanced",
+    regLockNav = Math.max(0, Math.max(e.regimeCdQ || 0, e.regimeLockUntilQ || 0) - (e.quarter || 0)),
+    regReadyNav =
+      curRegNav === "balanced" &&
+      regLockNav <= 0 &&
+      typeof REGIMES < "u" &&
+      REGIMES.some((rg) => rg.id !== "balanced" && isRegimeUnlocked(e, rg.id))
+        ? 1
+        : 0,
+    govStam = Tt(e, "govern"),
+    freeZoneNav = Math.max(0, (be(e).mods.zoneMax || 0) - (e.zones ? e.zones.length : 0)),
+    zoneReadyNav =
+      freeZoneNav > 0 &&
+      !govStam.block &&
+      (typeof decreeCdQuarters == "function" ? decreeCdQuarters(e, "zone") <= 0 : 1)
+        ? 1
+        : 0,
+    govCnt = emptyPolNav + fypIdleNav + regReadyNav + zoneReadyNav,
+    govLines = [];
+  emptyPolNav > 0 && govLines.push(`✓ 内阁有 ${emptyPolNav} 个名臣政策空槽待装配`);
+  fypIdleNav > 0 && govLines.push("✓ 《五年规划》可免费立项");
+  regReadyNav > 0 && govLines.push("✓ 民情洞察已满，可改制现代国体");
+  zoneReadyNav > 0 && govLines.push(`✓ 有 ${freeZoneNav} 座经济特区名额可设立`);
+  govCnt > 0 && (f.policy = { n: govCnt, text: govLines.join("\n") });
   return (
     t > 0 && (f.tasks = { n: t, text: `✓ ${t} 项奖励可以领取` }),
     n > 0 && (f.cards = { n, text: `✓ ${n} 位人物可突破（含星钻猎头）` }),
@@ -40618,9 +40985,10 @@ ${r.text}`
 function C9(A) {
   const e = A.action;
   if (e.type === "tile") ((ie.panel = null), ie.select(e.tile));
-  else if (e.type === "panel")
+  else if (e.type === "panel") {
+    if (e.govTab) ie._govTab = e.govTab;
     e.panel === "recruit" ? ie.openModal({ type: "recruit" }) : ((ie.panel = null), ie.openPanel(e.panel));
-  else if (e.type === "event") ie.openModal({ type: "event" });
+  } else if (e.type === "event") ie.openModal({ type: "event" });
   else if (e.type === "roll") ie.roll();
   else if (e.type === "breakthrough") {
     const cObj = ie.state.cards[e.card],
@@ -54025,6 +54393,499 @@ button.dcard {
     grid-template-columns: 1fr;
   }
 }
+
+/* =========================================================
+   Unified Governance & Policy Panel (中枢内阁 · 施政一体化设计)
+   Matches Lord (.lordcard), Talent (.talent-hero) & Industry (.ind-summary)
+   ========================================================= */
+.gov-hero {
+  display: flex;
+  flex-direction: column;
+  gap: 9px;
+  padding: 11px 12px 12px;
+  border-radius: var(--radius);
+  background:
+    linear-gradient(155deg, rgba(183, 156, 255, 0.16), rgba(255, 207, 74, 0.1) 56%, rgba(8, 13, 22, 0.88)),
+    #080d14b3;
+  border: 1px solid rgba(183, 156, 255, 0.38);
+  box-shadow:
+    0 10px 26px rgba(0, 0, 0, 0.28),
+    inset 0 1px rgba(255, 255, 255, 0.08);
+}
+.gh-head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.gh-emblem {
+  width: 42px;
+  height: 42px;
+  border-radius: 12px;
+  display: grid;
+  place-items: center;
+  flex: none;
+  color: #e4d4ff;
+  background: linear-gradient(145deg, rgba(183, 156, 255, 0.24), rgba(255, 207, 74, 0.14) 68%, rgba(10, 16, 26, 0.92));
+  border: 1.5px solid rgba(183, 156, 255, 0.55);
+  box-shadow:
+    0 4px 12px rgba(0, 0, 0, 0.32),
+    inset 0 1px rgba(255, 255, 255, 0.16);
+}
+.gh-meta {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+.gh-meta-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px;
+}
+.gh-title {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 15px;
+  color: #f1e8ff;
+  min-width: 0;
+}
+.gh-reg-pill {
+  font: 700 10.5px/1.25 system-ui, sans-serif;
+  font-style: normal;
+  color: #ffe7a3;
+  padding: 2px 7px;
+  border-radius: 99px;
+  background: rgba(255, 207, 74, 0.14);
+  border: 1px solid rgba(255, 207, 74, 0.36);
+  white-space: nowrap;
+}
+.gh-net-pill {
+  font: 700 11px/1.25 var(--mono);
+  padding: 2px 8px;
+  border-radius: 99px;
+  background: rgba(10, 18, 28, 0.78);
+  border: 1px solid rgba(109, 255, 168, 0.32);
+  color: var(--green);
+  white-space: nowrap;
+}
+.gh-net-pill.neg {
+  color: #ff9ca6;
+  border-color: rgba(255, 93, 108, 0.42);
+  background: rgba(52, 14, 20, 0.55);
+}
+.gh-insights-row {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 4px;
+}
+.gh-ins-chip {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 3px;
+  padding: 2px 4px;
+  border-radius: 7px;
+  font-size: 10px;
+  color: #b9cde2;
+  background: rgba(8, 14, 24, 0.68);
+  border: 1px solid rgba(160, 200, 240, 0.15);
+  white-space: nowrap;
+}
+.gh-ins-chip b {
+  font-family: var(--mono);
+  font-size: 10.5px;
+  color: #e6f2ff;
+}
+.gh-ins-chip.ready {
+  color: #ffe8a1;
+  border-color: rgba(255, 207, 74, 0.45);
+  background: rgba(255, 207, 74, 0.12);
+}
+.gh-ins-chip.ready b {
+  color: var(--gold);
+}
+
+/* 4-Slot Interactive Deck inside .gov-hero */
+.gh-acts {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 6px;
+}
+.gh-act {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 3px;
+  padding: 8px 4px 7px;
+  border-radius: 10px;
+  background: rgba(10, 17, 27, 0.78);
+  border: 1px solid rgba(160, 200, 240, 0.2);
+  color: #e6f0fa;
+  text-align: center;
+  transition:
+    transform 0.08s ease,
+    border-color 0.14s ease,
+    background 0.14s ease,
+    box-shadow 0.14s ease;
+}
+.gh-act:hover {
+  transform: translateY(-1px);
+  border-color: rgba(183, 156, 255, 0.65);
+  background: rgba(20, 30, 46, 0.92);
+}
+.gh-act.active-tab {
+  border-color: var(--cyan);
+  background: rgba(88, 225, 255, 0.1);
+}
+.gh-act .gha-ico {
+  width: 27px;
+  height: 27px;
+  border-radius: 8px;
+  display: grid;
+  place-items: center;
+  background: rgba(255, 255, 255, 0.06);
+  color: #cbb5ff;
+}
+.gh-act > b {
+  font-size: 11.5px;
+  line-height: 1.2;
+  white-space: nowrap;
+}
+.gh-act .gha-sub {
+  font: 700 9.5px/1.2 var(--mono);
+  color: #96abc2;
+  white-space: nowrap;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.gh-act .gha-corner {
+  position: absolute;
+  top: -5px;
+  right: -3px;
+  padding: 1px 4.5px;
+  border-radius: 99px;
+  font: 700 9px/1.25 system-ui, sans-serif;
+  font-style: normal;
+  background: var(--gold);
+  color: #241500;
+  border: 1px solid #fff0b8;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.45);
+  white-space: nowrap;
+}
+.gh-act.needs-attention {
+  border-color: rgba(255, 207, 74, 0.62);
+  background: linear-gradient(180deg, rgba(255, 207, 74, 0.18), rgba(12, 19, 30, 0.88));
+  box-shadow: 0 0 12px rgba(255, 207, 74, 0.15);
+}
+.gh-act.needs-attention .gha-ico {
+  color: var(--gold);
+  background: rgba(255, 207, 74, 0.16);
+}
+.gh-act.needs-attention .gha-sub {
+  color: #ffe38e;
+}
+.gh-act.featured-plan {
+  color: #271700;
+  background: linear-gradient(180deg, #ffe28c, #e5a92a);
+  border-color: rgba(255, 232, 163, 0.85);
+  box-shadow:
+    0 5px 14px rgba(255, 207, 74, 0.26),
+    inset 0 1px rgba(255, 255, 255, 0.65);
+}
+.gh-act.featured-plan .gha-ico {
+  background: rgba(38, 22, 0, 0.14);
+  color: #271700;
+}
+.gh-act.featured-plan > b {
+  color: #231400;
+}
+.gh-act.featured-plan .gha-sub {
+  color: rgba(35, 20, 0, 0.84);
+}
+.gh-act.featured-plan .gha-corner {
+  background: #231400;
+  color: #ffe38e;
+  border-color: rgba(255, 214, 102, 0.7);
+}
+
+/* 3-Column Governance Subtabs */
+.gov-subtabs {
+  margin: 10px 0 8px;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+.gov-subtabs button {
+  position: relative;
+  flex-direction: row;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  padding: 7px 6px;
+  text-align: center;
+  font-size: 11.5px;
+}
+.gov-subtabs .gst-dot {
+  display: inline-grid;
+  place-items: center;
+  min-width: 15px;
+  height: 15px;
+  padding: 0 4px;
+  border-radius: 99px;
+  font: 700 9.5px/1 var(--mono);
+  font-style: normal;
+  background: var(--gold);
+  color: #241500;
+}
+
+/* Compact Single-Row Five-Year Plan Picker (.fyp-list-v11) */
+.fyp-list-v11 {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+.fyp-row-v11 {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  padding: 7px 9px;
+  border-radius: 10px;
+  background: rgba(9, 16, 26, 0.82);
+  border: 1px solid rgba(160, 200, 240, 0.16);
+  color: #e9f2fb;
+  text-align: left;
+  transition:
+    transform 0.08s ease,
+    border-color 0.14s ease,
+    background 0.14s ease;
+}
+.fyp-row-v11:hover {
+  transform: translateY(-1px);
+  border-color: var(--gold);
+  background: linear-gradient(90deg, rgba(255, 207, 74, 0.12), rgba(14, 24, 38, 0.92));
+}
+.fyp-row-v11 .fr-ico {
+  width: 26px;
+  height: 26px;
+  border-radius: 8px;
+  display: grid;
+  place-items: center;
+  flex: none;
+  color: #ffe394;
+  background: rgba(255, 207, 74, 0.14);
+  border: 1px solid rgba(255, 207, 74, 0.32);
+}
+.fyp-row-v11 .fr-main {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+.fyp-row-v11 .fr-main b {
+  font-size: 12.5px;
+  color: #f4f8fd;
+  white-space: nowrap;
+}
+.fyp-row-v11 .fr-tag {
+  font-size: 10px;
+  color: #a8c0d8;
+  padding: 1px 5px;
+  border-radius: 99px;
+  background: rgba(255, 255, 255, 0.05);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.fyp-row-v11 .fr-side {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  flex: none;
+}
+.fyp-row-v11 .fr-gem {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  font: 700 10.5px var(--mono);
+  color: #d6baff;
+}
+.fyp-row-v11 .fr-cta {
+  padding: 2px 6px;
+  border-radius: 99px;
+  font: 700 10px/1.3 system-ui, sans-serif;
+  font-style: normal;
+  color: #241500;
+  background: var(--gold);
+}
+
+/* 3-Slot Visual Cabinet Bar & Sculpted Minister Cards */
+.pc-slot-bar.v11 {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 6px;
+  padding: 7px 8px;
+  border-radius: 11px;
+  background: rgba(8, 14, 24, 0.82);
+  border: 1px solid rgba(160, 200, 240, 0.18);
+  margin-bottom: 8px;
+}
+.pc-slot-bar.v11.has-empty {
+  border-color: rgba(255, 207, 74, 0.48);
+  box-shadow: 0 0 14px rgba(255, 207, 74, 0.12);
+}
+.pcs-slot-v11 {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 4px;
+  padding: 5px 7px;
+  border-radius: 8px;
+  font-size: 11px;
+  min-width: 0;
+}
+.pcs-slot-v11 b {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 11px;
+}
+.pcs-slot-v11.on {
+  background: linear-gradient(135deg, rgba(255, 207, 74, 0.2), rgba(20, 30, 44, 0.9));
+  border: 1px solid #ffcf4a;
+  color: #ffeaa6;
+  cursor: pointer;
+}
+.pcs-slot-v11.on:hover {
+  border-color: #ff7b86;
+  color: #ffd6da;
+}
+.pcs-slot-v11.empty {
+  justify-content: center;
+  border: 1px dashed rgba(255, 207, 74, 0.52);
+  background: rgba(255, 207, 74, 0.07);
+  color: #ffe28a;
+  font-weight: 600;
+}
+.pcs-slot-v11.locked {
+  justify-content: center;
+  border: 1px dashed rgba(160, 200, 240, 0.16);
+  background: rgba(255, 255, 255, 0.02);
+  color: #778ca3;
+  font-size: 10.5px;
+}
+.pc-grid.v11 {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 6px;
+}
+.pc-card.v11 {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  padding: 8px 9px;
+  border-radius: 11px;
+  background: rgba(9, 16, 26, 0.82);
+  border: 1px solid rgba(160, 200, 240, 0.16);
+  text-align: left;
+  transition:
+    transform 0.08s ease,
+    border-color 0.14s ease,
+    background 0.14s ease;
+}
+.pc-card.v11:hover {
+  transform: translateY(-1px);
+  border-color: rgba(88, 225, 255, 0.55);
+  background: rgba(16, 28, 44, 0.92);
+}
+.pc-card.v11.on {
+  border-color: #ffcf4a;
+  background: linear-gradient(145deg, rgba(72, 50, 12, 0.52), rgba(10, 18, 30, 0.9));
+  box-shadow: 0 0 12px rgba(255, 207, 74, 0.16);
+}
+.pc-card.v11 .pcc-top {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  min-width: 0;
+}
+.pc-card.v11 .pcc-top b {
+  flex: 1;
+  min-width: 0;
+  font-size: 12px;
+  color: #f0f6fc;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.pc-card.v11 .pcc-bot {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 4px;
+}
+.pc-card.v11 .pcc-who {
+  font-size: 10.5px;
+  color: #8fa6bf;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.pc-card.v11 .pcc-act {
+  flex: none;
+  padding: 1px 6px;
+  border-radius: 99px;
+  font: 700 9.5px/1.35 system-ui, sans-serif;
+  font-style: normal;
+  color: #a4f0ff;
+  background: rgba(88, 225, 255, 0.14);
+  border: 1px solid rgba(88, 225, 255, 0.32);
+}
+.pc-card.v11.on .pcc-act {
+  color: #241500;
+  background: #ffcf4a;
+  border-color: #ffe89e;
+}
+.pc-card.v11 .pcc-act.full {
+  color: #8195ab;
+  background: rgba(255, 255, 255, 0.06);
+  border-color: rgba(160, 200, 240, 0.14);
+}
+
+/* 1 + 2x2 Symmetric Regime Layout (.reg-layout-v11) */
+.reg-layout-v11 {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.reg-modern-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 6px;
+}
+.reg-card.can {
+  border-color: rgba(88, 225, 255, 0.45);
+  background: linear-gradient(145deg, rgba(88, 225, 255, 0.1), rgba(9, 16, 26, 0.86));
+}
+.reg-card .rg-can-pill {
+  font: 700 9.5px/1.3 system-ui, sans-serif;
+  font-style: normal;
+  padding: 1px 6px;
+  border-radius: 99px;
+  color: #052530;
+  background: var(--cyan);
+}
+.pill.gold-pulse {
+  color: #241500;
+  background: var(--gold);
+  border-color: #ffe89e;
+  font-weight: 700;
+}
+
 
 </style>
   </head>
