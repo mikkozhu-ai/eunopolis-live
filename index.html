@@ -6240,44 +6240,10 @@ function isSkinUnlocked(A, skinId) {
 function unlockedWardrobeSkins(A) {
   return WARDROBE_SKINS.filter((sk) => isSkinUnlocked(A, sk.id));
 }
-const NOVICE_STAGE_INFO = {
-  1: {
-    stage: 1,
-    title: "第一幕 · 拓荒通电",
-    desc: "聚焦开拓首批领土、保障水电供给并连成第一条供需产业链，将首都升至 Lv.2。",
-    unlocks: ["地图开拓与勘探", "水电与 0~1 级基础产业", "每日委托与成就"],
-  },
-  2: {
-    stage: 2,
-    title: "第二幕 · 招贤兴市",
-    desc: "首都已具雏形！现已开放名士招募派驻、主公巡察专精与城市市政公共设施。",
-    unlocks: ["人才招募、突破与智能调派", "主公巡察行动与五维专精树", "市政公共设施与二级产业"],
-  },
-  3: {
-    stage: 3,
-    title: "第三幕 · 经世宏调",
-    desc: "步入区域强国！现已开放治国施政大令、五年规划、四大税制、经济特区与全球贸易天梯。",
-    unlocks: ["行政政令与五年规划", "四大税制切换与经济特区", "国际外贸与全球云端天梯"],
-  },
-  4: {
-    stage: 4,
-    title: "第四幕 · 盛世奇点",
-    desc: "全系统圆满揭幕！三轨财政预算、五大国体变法、三格国家奇观与架空未来科技现已全部开放！",
-    unlocks: ["三轨财政预算与五大国体改制", "三格国家奇观", "架空未来科技与奇异矿脉"],
-  },
-};
-function noviceStage(A) {
-  if (!A || !A.noviceMode) return 4;
-  const cap = A.tiles && A.tiles.find((t) => t.capital),
-    lv = (cap && cap.level) || 1;
-  return Math.min(4, Math.max(1, lv));
+function noviceStage() {
+  return 4;
 }
-function isFeatureOpen(A, feat) {
-  const st = noviceStage(A);
-  if (st >= 4) return !0;
-  if (feat === "cards" || feat === "lord" || feat === "public") return st >= 2;
-  if (feat === "policy" || feat === "rank" || feat === "trade" || feat === "sez" || feat === "tax") return st >= 3;
-  if (feat === "budget" || feat === "regime" || feat === "wonder" || feat === "fictional") return st >= 4;
+function isFeatureOpen() {
   return !0;
 }
 const JP = new WeakMap();
@@ -7296,12 +7262,8 @@ const RD_GEARS = [
   ],
   BT_GEMS = [120, 240, 480, 960, 1600],
   DUP_REFUND_GEMS = [40, 80, 240, 800, 2400];
-function hasNgVow(A, vowId) {
-  return Boolean(
-    A &&
-      ((Array.isArray(A.ngVows) && A.ngVows.includes(vowId)) ||
-        (Array.isArray(A.vows) && A.vows.includes(vowId))),
-  );
+function hasNgVow() {
+  return !1;
 }
 function isDebtRestructureActive(A) {
   return Boolean(A && A.debtRestructureUntil && A.quarter < A.debtRestructureUntil);
@@ -7640,7 +7602,7 @@ function dt(A, e = Date.now()) {
     }
   }
   const d = ((AA = n.find((y) => y.capital)) == null ? void 0 : AA.level) ?? 1,
-    x = (O.util.capital[d - 1] ?? O.util.capital[0]) + (A.legacyUtilBonus || 0),
+    x = O.util.capital[d - 1] ?? O.util.capital[0],
     M = { supply: x, demand: 0, cut: 0 },
     z = { supply: x, demand: 0, cut: 0 };
   for (const y of n) {
@@ -8780,17 +8742,7 @@ function VP(A, e, t, n, s = "industry") {
     qe(void 0, { tile: f.id, tri: wTri })
   );
 }
-function checkNoviceCapitalUnlock(A, capTile) {
-  if (!A || !A.noviceMode || !capTile || !capTile.capital) return;
-  const lv = capTile.level || 1;
-  if (lv >= 2 && lv <= 4) {
-    A._justNoviceUnlock = { level: lv, stage: Math.min(4, lv) };
-  }
-  if (lv >= 4) {
-    A.noviceMode = !1;
-    A.noviceCompleted = !0;
-  }
-}
+function checkNoviceCapitalUnlock() {}
 function f7(A, e) {
   const t = e.build;
   if (!t) return null;
@@ -12565,10 +12517,6 @@ function j4(A, e, t, n, opts) {
     if (s.has(o.pair)) return UA(`「${o.name}」与它的对立性格不能同时选择`);
     s.add(o.pair);
   }
-  if (opts && typeof opts.noviceMode == "boolean") {
-    A.noviceMode = opts.noviceMode;
-    A.noviceCompleted = !opts.noviceMode;
-  }
   return (
     (A.lord.traits = [...e]),
     (A.lord.ready = !0),
@@ -12659,17 +12607,6 @@ function S4(A, e, t = Date.now()) {
         action: { type: "tile", tile: h.id },
         prio: 90,
       });
-  }
-  const capTile = f.find((d) => d.capital);
-  if (A.noviceMode && capTile && (capTile.level || 1) < 4 && Df(A, capTile, e).ok && A.treasury >= bo(A, capTile)) {
-    s({
-      id: "novice-cap",
-      text: `首都升级条件已齐备：升至 Lv.${capTile.level + 1} 解锁下一幕治国新系统！`,
-      cta: "升级首都",
-      kind: "gold",
-      action: { type: "tile", tile: capTile.id },
-      prio: 89,
-    });
   }
   e.net < 0 &&
     s({
@@ -28265,12 +28202,9 @@ function s9(A, e = Date.now()) {
     }
   );
 }
-const DQ = "eunopolis.v11",
-  LEGACY_KEY = "eunopolis.legacy.v10";
+const DQ = "eunopolis.v11";
 function isRankedEligible(A) {
-  return Boolean(
-    A && (A.originMode === "fresh" || (A.originMode === "ngplus" && !A.ngPlusBoosted)) && !A.usedFreeGems,
-  );
+  return Boolean(A && A.originMode === "fresh" && !A.usedFreeGems);
 }
 function QQ(A) {
   return JSON.stringify(A, (e, t) => (t === 1 / 0 ? "Infinity" : t));
@@ -28361,6 +28295,16 @@ function lQ(A) {
   t.respecCdQ = t.respecCdQ && typeof t.respecCdQ == "object" ? t.respecCdQ : {};
   t.skinsOff = Array.isArray(t.skinsOff) ? t.skinsOff.filter((x) => typeof x == "string") : [];
   Qa(e);
+  if (e.originMode === "ngplus") e.originMode = e.ngPlusBoosted ? "starter" : "fresh";
+  delete e.ngPlusBoosted;
+  delete e.legacySkins;
+  delete e.legacyCodex;
+  delete e.legacyUtilBonus;
+  delete e.legacyPolicySlot;
+  delete e.legacyExoticWeight;
+  delete e.vows;
+  delete e.ngVows;
+  delete e._justNoviceUnlock;
   return (
     (t.traits = (t.traits ?? []).filter((f) => Vi[f])),
     (t.hidden = (t.hidden ?? []).filter((f) => s0[f])),
@@ -28374,19 +28318,20 @@ function lQ(A) {
     e.settings.view !== "2d" && e.settings.view !== "3d" && (e.settings.view = "3d"),
     ["low", "mid", "high"].includes(e.settings.quality) || (e.settings.quality = C4()),
     delete e.settings._realV1,
-    ["fresh", "starter", "ultimate", "ngplus"].includes(e.originMode) ||
+    ["fresh", "starter", "ultimate"].includes(e.originMode) ||
       (e.originMode =
         e.nationName === "经世完全体帝国"
           ? "ultimate"
           : e.nationName === "示范共和国"
             ? "starter"
             : "fresh"),
-    (e.noviceMode = Boolean(e.noviceMode)),
-    (e.noviceCompleted = Boolean(e.noviceCompleted)),
+    (e.noviceMode = !1),
+    (e.noviceCompleted = !0),
     (e.usedFreeGems = Boolean(e.usedFreeGems || e.demoDay)),
     e.milestones ?? (e.milestones = {}),
     e.zones ?? (e.zones = []),
     e.buffs ?? (e.buffs = []),
+    (e.buffs = e.buffs.filter((b) => !String(b.id || "").startsWith("legacy:"))),
     e.log ?? (e.log = []),
     e.history ?? (e.history = []),
     e.edges ?? (e.edges = {}),
@@ -28409,579 +28354,7 @@ function f9(A) {
     return !1;
   }
 }
-function _indexDefs(arr) {
-  for (const item of arr) Object.defineProperty(arr, item.id, { value: item, enumerable: !1 });
-  return arr;
-}
-const LEGACY_BOONS = _indexDefs([
-    {
-      id: "boon_capital2",
-      name: "前朝遗泽",
-      cost: 2,
-      desc: "开局首都直达 Lv.2（提前就绪第 2 政策槽成长线），国库额外 +200 亿",
-    },
-    {
-      id: "boon_watergrid",
-      name: "百工图谱",
-      cost: 2,
-      desc: "开局永久拥有 +15 基础供水与电力供给",
-    },
-    {
-      id: "boon_exotic",
-      name: "天选地脉",
-      cost: 2,
-      desc: "地图生成时 T3/T4 战略与奇异矿脉权重翻倍",
-    },
-  ]),
-  TERRAIN_SCRIPTS = _indexDefs([
-    {
-      id: "standard",
-      name: "均衡山河",
-      desc: "地球标准地貌比例，平原、河谷、山海均衡分布",
-      shares: null,
-    },
-    {
-      id: "archipelago",
-      name: "万岛沧海",
-      desc: "海湾与河谷大幅增多，利好跨海大桥、航运水电与可燃冰",
-      shares: {
-        water: 0.28,
-        valley: 0.18,
-        plain: 0.2,
-        forest: 0.12,
-        hill: 0.1,
-        mountain: 0.05,
-        desert: 0.04,
-        ice: 0.03,
-      },
-    },
-    {
-      id: "frost",
-      name: "极北凛冬",
-      desc: "冰原与高山广布，富含稀土铂族与极寒算力加成",
-      shares: {
-        ice: 0.28,
-        mountain: 0.18,
-        forest: 0.16,
-        hill: 0.12,
-        valley: 0.1,
-        plain: 0.1,
-        water: 0.04,
-        desert: 0.02,
-      },
-    },
-    {
-      id: "heartland",
-      name: "内陆盆地",
-      desc: "沃野平原、河谷与丘陵连绵，极易规划超大型产业集群",
-      shares: {
-        plain: 0.34,
-        valley: 0.2,
-        hill: 0.18,
-        forest: 0.12,
-        mountain: 0.08,
-        desert: 0.04,
-        water: 0.02,
-        ice: 0.02,
-      },
-    },
-  ]),
-  MASTER_VOWS = _indexDefs([
-    {
-      id: "vow_nodebt",
-      name: "黄金紧缩",
-      cost: 0,
-      desc: "全程禁止跨零举债与融资（零付费词条时仍可登全球开荒排位榜）",
-    },
-    {
-      id: "vow_compact",
-      name: "精兵简政",
-      cost: 0,
-      desc: "全国开拓土地上限锁死 120 块（第三幕国土门槛调为 100 块）",
-    },
-    {
-      id: "vow_speed",
-      name: "百年竞速",
-      cost: 0,
-      desc: "挑战在 120 季（30 年）内达成第三幕奇点登顶",
-    },
-  ]);
-function applyTerrainScript(state, scriptId) {
-  const sc = TERRAIN_SCRIPTS[scriptId];
-  if (!sc || !sc.shares || !Array.isArray(state.tiles)) return;
-  state.terrainScript = sc.id;
-  const seed = state.seed || 1,
-    n1 = DB(seed ^ 20973),
-    n2 = DB(seed ^ 40503),
-    n3 = DB(seed ^ 32586),
-    rad = O.mapRadius,
-    core = state.tiles.filter((tl) => !tl.outer),
-    outer = state.tiles.filter((tl) => tl.outer),
-    elev = (h) => {
-      const p = ss(h.q, h.r);
-      return n2(p.x * 0.16, p.z * 0.16, 3) + (ks(h.q, h.r) / rad) * 0.12 + n1(p.x * 0.09, p.z * 0.09, 2) * 0.1;
-    },
-    moist = (h) => {
-      const p = ss(h.q, h.r);
-      return n3(p.x * 0.2, p.z * 0.2, 3) + p.z / (rad * 6);
-    },
-    assigned = new Map();
-  assigned.set("0,0", "plain");
-  const counts = {};
-  let sum = 0;
-  for (const k of Object.keys(sc.shares)) {
-    counts[k] = Math.floor(sc.shares[k] * core.length);
-    sum += counts[k];
-  }
-  counts.plain = Math.max(0, (counts.plain || 0) + (core.length - sum) - 1);
-  const rem = () => core.filter((h) => !assigned.has(Fn(h.q, h.r))),
-    pick = (terr, pool, fn) => {
-      pool
-        .sort((x, y) => fn(x) - fn(y))
-        .slice(0, Math.max(0, counts[terr] || 0))
-        .forEach((h) => assigned.set(Fn(h.q, h.r), terr));
-    };
-  (pick(
-    "ice",
-    rem().filter((h) => ks(h.q, h.r) >= 2),
-    (h) => ss(h.q, h.r).z + elev(h) * 0.6,
-  ),
-    pick(
-      "water",
-      rem().filter((h) => ks(h.q, h.r) >= 2),
-      (h) => elev(h) - (ks(h.q, h.r) / rad) * 0.45,
-    ),
-    pick(
-      "mountain",
-      rem().filter((h) => ks(h.q, h.r) >= 2),
-      (h) => -elev(h),
-    ),
-    pick("hill", rem(), (h) => -elev(h)));
-  const nearWater = (h) => Ri.some(([dq, dr]) => assigned.get(Fn(h.q + dq, h.r + dr)) === "water");
-  (pick("valley", rem(), (h) => -(moist(h) + (nearWater(h) ? 0.5 : 0))),
-    pick("desert", rem(), (h) => moist(h)),
-    pick("forest", rem(), (h) => -moist(h)),
-    rem().forEach((h) => assigned.set(Fn(h.q, h.r), "plain")));
-  for (const h of core) h.terrain = assigned.get(Fn(h.q, h.r)) || "plain";
-  const rng = new tn((seed ^ po(sc.id)) >>> 0),
-    terrKeys = Object.keys(sc.shares);
-  for (const h of outer) {
-    h.terrain = rng.weighted(terrKeys, (k) => sc.shares[k] || 0.05);
-  }
-}
-const EunopolisLegacy = {
-  LEGACY_BOONS,
-  TERRAIN_SCRIPTS,
-  MASTER_VOWS,
-  _cache: null,
-  _sig: "",
-  _norm(d = {}) {
-    return {
-      points: Math.max(0, Math.floor(Number(d.points) || 0)),
-      totalClears: Math.max(0, Math.floor(Number(d.totalClears) || 0)),
-      skins: Array.isArray(d.skins) ? [...new Set(d.skins.filter((x) => typeof x === "string"))] : [],
-      codexCards: Array.isArray(d.codexCards)
-        ? [...new Set(d.codexCards.filter((x) => typeof x === "string" && se[x]))]
-        : [],
-      cardStars: d.cardStars && typeof d.cardStars === "object" ? { ...d.cardStars } : {},
-      dynasties: Array.isArray(d.dynasties) ? d.dynasties.slice(-50) : [],
-      maxAchPts: Math.max(0, Math.floor(Number(d.maxAchPts) || 0)),
-    };
-  },
-  load() {
-    try {
-      const raw = localStorage.getItem(LEGACY_KEY);
-      const parsed = raw ? JSON.parse(raw) : {};
-      return (this._cache = this._norm(parsed));
-    } catch {
-      return (this._cache = this._norm({}));
-    }
-  },
-  save(data) {
-    const norm = this._norm(data);
-    this._cache = norm;
-    try {
-      localStorage.setItem(LEGACY_KEY, JSON.stringify(norm));
-      return !0;
-    } catch {
-      return !1;
-    }
-  },
-  syncFromState(A, m) {
-    if (!A || A.originMode === "ultimate") return;
-    const leg = this._cache || this.load();
-    let dirty = !1;
-    const achPts = typeof achSummary === "function" ? achSummary(A).pts : 0;
-    if (achPts > leg.maxAchPts) {
-      leg.maxAchPts = achPts;
-      dirty = !0;
-    }
-    const skinSet = new Set(leg.skins),
-      ulSkins = typeof unlockedWardrobeSkins === "function" ? unlockedWardrobeSkins(A) : [];
-    for (const sk of ulSkins) {
-      if (sk && sk.id && !skinSet.has(sk.id)) {
-        skinSet.add(sk.id);
-        dirty = !0;
-      }
-    }
-    for (const skId of (A.lord && A.lord.skills) || []) {
-      const sk = qi[skId] && qi[skId].skin;
-      if (sk && !skinSet.has(sk)) {
-        skinSet.add(sk);
-        dirty = !0;
-      }
-    }
-    for (const sk of A.legacySkins || []) {
-      if (typeof sk === "string" && !skinSet.has(sk)) {
-        skinSet.add(sk);
-        dirty = !0;
-      }
-    }
-    if (dirty) leg.skins = [...skinSet];
-    const cardSet = new Set(leg.codexCards);
-    for (const [cid, cObj] of Object.entries(A.cards || {})) {
-      if (!se[cid]) continue;
-      if (!cardSet.has(cid)) {
-        cardSet.add(cid);
-        dirty = !0;
-      }
-      const st = Math.max(0, Math.min(cObj.stars || 0, Is[se[cid].tier]));
-      if (st > (leg.cardStars[cid] || 0)) {
-        leg.cardStars[cid] = st;
-        dirty = !0;
-      }
-    }
-    if (dirty) {
-      leg.codexCards = [...cardSet];
-      this.save(leg);
-    }
-  },
-  recordMilestone(A, m, actId = null) {
-    if (!A || !Array.isArray(A.tiles)) return null;
-    const met = m || dt(A);
-    A.milestones ?? (A.milestones = {});
-    const unlocked = met.unlocked ?? A.tiles.filter((t) => t.unlocked).length;
-    const runIndSet = new Set(),
-      runFicSet = new Set();
-    let builtWonders = 0,
-      lv5Wonders = 0;
-    for (const tl of A.tiles) {
-      if (!tl.unlocked || tl.build) continue;
-      if (tl.industry && HA[tl.industry]) {
-        const running = !met.tiles || !met.tiles[tl.id] || met.tiles[tl.id].running !== !1;
-        if (running) {
-          runIndSet.add(tl.industry);
-          HA[tl.industry].source === "架空" && runFicSet.add(tl.industry);
-        }
-      }
-      if (tl.public && it[tl.public] && it[tl.public].wonder) {
-        builtWonders++;
-        (tl.level || 1) >= 5 && lv5Wonders++;
-      }
-    }
-    const activeIndTypes = runIndSet.size,
-      activeFictTypes = runFicSet.size,
-      curReg = (A.gov && A.gov.regime) || A.regime || "balanced",
-      vows = Array.isArray(A.vows) ? A.vows : [],
-      hasCompact = vows.includes("vow_compact"),
-      actsToCheck = actId ? [actId] : ["act1", "act2", "act3"];
-    for (const id of actsToCheck) {
-      if (A.milestones[id]) continue;
-      if (id === "act1" && unlocked >= 35 && activeIndTypes >= 15 && A.quarter >= 60) {
-        A.milestones.act1 = !0;
-        A.gems = (A.gems || 0) + 500;
-        pe(
-          A,
-          `【第一幕·工业立国纪元】开拓疆域 ${unlocked} 格、${activeIndTypes} 种产业轰鸣运转！赐星钻 ◇500。`,
-          "gold",
-        );
-        return {
-          actId: "act1",
-          actNum: 1,
-          title: "第一幕 · 工业立国纪元",
-          sub: `${A.nationName} · ${Ng(A.quarter)}`,
-          desc: "铁水奔流，机杼轰鸣。从原点一隅起步，你的国家已建立起门类齐全的现代工农基础体系！",
-          stats: [
-            { label: "开拓疆域", value: `${unlocked} 块` },
-            { label: "运转产业", value: `${activeIndTypes} 种` },
-            { label: "当季 GDP", value: `${fe(met.gdp)} 亿` },
-            { label: "全国人口", value: RC(met.population) },
-          ],
-          rewards: ["星钻 ◇500", "载入国史馆金榜纪事"],
-          gems: 500,
-        };
-      }
-      if (
-        id === "act2" &&
-        unlocked >= 100 &&
-        builtWonders >= 1 &&
-        curReg !== "balanced" &&
-        ["AAA", "AA"].includes(met.creditRating)
-      ) {
-        A.milestones.act2 = !0;
-        A.gems = (A.gems || 0) + 1000;
-        for (const dir of ["fiscal", "industry", "welfare", "sci"]) {
-          if (typeof addInsight === "function") addInsight(A, dir, 3);
-          else {
-            A.lord.insights ?? (A.lord.insights = { fiscal: 0, industry: 0, welfare: 0, sci: 0 });
-            A.lord.insights[dir] = (A.lord.insights[dir] || 0) + 3;
-          }
-        }
-        const regName = (REGIME_MAP[curReg] || REGIMES[0]).name;
-        pe(
-          A,
-          `【第二幕·现代盛世纪元】百格山河、国家奇观矗立、采纳「${regName}」且主权信用稳居 ${met.creditRating}！赐星钻 ◇1,000、四向洞察各 +3。`,
-          "gold",
-        );
-        return {
-          actId: "act2",
-          actNum: 2,
-          title: "第二幕 · 现代盛世纪元",
-          sub: `${A.nationName} · ${Ng(A.quarter)} · ${regName}`,
-          desc: "广厦千万，国家奇观拔地而起。现代治理体系与稳健主权信用交相辉映，国家正式迈入全球强国之列！",
-          stats: [
-            { label: "开拓疆域", value: `${unlocked} 块` },
-            { label: "国家奇观", value: `${builtWonders} 座` },
-            { label: "现代国体", value: regName },
-            { label: "主权信用", value: met.creditRating },
-          ],
-          rewards: ["星钻 ◇1,000", "四向民情洞察各 +3"],
-          gems: 1000,
-          insights: 3,
-        };
-      }
-      if (
-        id === "act3" &&
-        unlocked >= (hasCompact ? 100 : 180) &&
-        (!hasCompact || unlocked <= 120) &&
-        lv5Wonders >= 4 &&
-        activeFictTypes >= 8
-      ) {
-        A.milestones.act3 = !0;
-        const grade =
-            A.quarter <= 140 && met.creditRating === "AAA" ? "SSS" : A.quarter <= 200 ? "SS" : "S",
-          gradeTitle =
-            grade === "SSS" ? "SSS · 千古一帝" : grade === "SS" ? "SS · 盛世明君" : "S · 经世宏图",
-          ptsEarned = grade === "SSS" ? 5 : grade === "SS" ? 4 : 3;
-        const indMap = {};
-        let mvpId = null,
-          mvpScore = -1;
-        for (const tl of A.tiles) {
-          if (!tl.unlocked || tl.build) continue;
-          const tm = met.tiles && met.tiles[tl.id];
-          if (tl.industry && tm && tm.facility > 0) {
-            indMap[tl.industry] = (indMap[tl.industry] || 0) + tm.facility;
-          }
-          if (tl.card && se[tl.card]) {
-            const sc = ((tm && tm.gdp) || 0) + se[tl.card].tier * 50 + (A.cards[tl.card]?.level || 1) * 5;
-            if (sc > mvpScore) {
-              mvpScore = sc;
-              mvpId = tl.card;
-            }
-          }
-        }
-        if (!mvpId) {
-          const allOwned = Object.values(A.cards || {});
-          allOwned.sort((x, y) => se[y.id].tier - se[x.id].tier || y.level - x.level);
-          if (allOwned[0]) mvpId = allOwned[0].id;
-        }
-        const topIndEntry = Object.entries(indMap).sort((x, y) => y[1] - x[1])[0],
-          topIndustry = topIndEntry
-            ? {
-                id: topIndEntry[0],
-                name: HA[topIndEntry[0]] ? HA[topIndEntry[0]].name : topIndEntry[0],
-                gdp: Math.round(topIndEntry[1] * 10) / 10,
-              }
-            : { id: null, name: "多元产业", gdp: 0 },
-          mvpCard = mvpId
-            ? {
-                id: mvpId,
-                name: rn(se[mvpId]),
-                level: A.cards[mvpId]?.level || 1,
-                stars: A.cards[mvpId]?.stars || 0,
-              }
-            : { id: null, name: "群贤毕至", level: 1, stars: 0 },
-          vowsCompleted = vows.filter((vid) =>
-            vid === "vow_nodebt"
-              ? !(A.stats && A.stats.everDebt) && A.treasury >= 0
-              : vid === "vow_compact"
-                ? unlocked <= 120
-                : vid === "vow_speed"
-                  ? A.quarter <= 120
-                  : !1,
-          ),
-          regName = (REGIME_MAP[curReg] || REGIMES[0]).name,
-          peakGdp = Math.max((A.stats && A.stats.peakGdp) || 0, met.gdp || 0),
-          dynasty = {
-            id: `dyn_${Date.now()}`,
-            ts: Date.now(),
-            nationName: String(A.nationName || "经世共和国"),
-            lordName: String((A.lord && A.lord.name) || "主公"),
-            quarters: A.quarter,
-            eraText: Ng(A.quarter),
-            peakGdp: Math.round(peakGdp * 10) / 10,
-            gdp: Math.round((met.gdp || 0) * 10) / 10,
-            population: Math.round((met.population || 0) * 10) / 10,
-            creditRating: met.creditRating || "AAA",
-            regime: curReg,
-            regimeName: regName,
-            topIndustry,
-            mvpCard,
-            vowsCompleted,
-            grade,
-            gradeTitle,
-            pointsEarned: ptsEarned,
-            originMode: A.originMode || "fresh",
-          };
-        this.syncFromState(A, met);
-        const leg = this.load();
-        if (A.originMode !== "ultimate") {
-          leg.points += ptsEarned;
-          leg.totalClears += 1;
-          leg.dynasties.push(dynasty);
-          this.save(leg);
-        }
-        pe(
-          A,
-          `【第三幕·奇点登顶·文明胜利】获评「${gradeTitle}」！赢得传承国运点 +${ptsEarned}，载入历朝国史馆档案。`,
-          "gold",
-        );
-        return {
-          actId: "act3",
-          actNum: 3,
-          isVictory: !0,
-          grade,
-          gradeTitle,
-          pointsEarned: ptsEarned,
-          totalPoints: leg.points,
-          dynasty,
-          title: "第三幕 · 奇点登顶 · 文明胜利",
-          sub: `${dynasty.nationName} · 耗时 ${A.quarter} 季（${Ng(A.quarter)}） · ${gradeTitle}`,
-          desc: "太空天梯直贯苍穹，奇点产业照亮星海！你已将一方原点土地缔造为震古烁今的巅峰文明帝国！",
-          stats: [
-            { label: "建国耗时", value: `${A.quarter} 季 (${Ng(A.quarter)})` },
-            { label: "峰值 GDP", value: `${fe(peakGdp)} 亿/季` },
-            { label: "核心国体", value: regName },
-            { label: "第一支柱", value: `${topIndustry.name}` },
-            { label: "首席功臣", value: `${mvpCard.name} Lv.${mvpCard.level}` },
-            { label: "满级奇观 / 架空", value: `${lv5Wonders} 座 / ${activeFictTypes} 种` },
-          ],
-          rewards: [
-            `文明评级：${gradeTitle}`,
-            `传承国运点 +${ptsEarned}（累计 ${leg.points} 点）`,
-            ...(vowsCompleted.length
-              ? [`达成誓约：${vowsCompleted.map((v) => MASTER_VOWS[v]?.name || v).join("、")}`]
-              : []),
-          ],
-        };
-      }
-    }
-    return null;
-  },
-  applyNgPlusToNewState(state, opts = {}) {
-    if (!state) return state;
-    const leg = this.load();
-    state.originMode = "ngplus";
-    state.usedFreeGems = !1;
-    state.legacySkins = [...leg.skins];
-    state.legacyCodex = [...leg.codexCards];
-    state.legacyMaxAchPts = leg.maxAchPts;
-    const scriptId =
-      opts.script && TERRAIN_SCRIPTS[opts.script] ? opts.script : "standard";
-    if (scriptId !== "standard") applyTerrainScript(state, scriptId);
-    else state.terrainScript = "standard";
-    const reqBoons = Array.isArray(opts.boons)
-      ? [...new Set(opts.boons.filter((b) => LEGACY_BOONS[b]))]
-      : [];
-    const pickedBoons = [];
-    let availPts = leg.points;
-    for (const bid of reqBoons) {
-      const bDef = LEGACY_BOONS[bid];
-      if (bDef && availPts >= bDef.cost) {
-        availPts -= bDef.cost;
-        pickedBoons.push(bid);
-      }
-    }
-    if (pickedBoons.length && availPts !== leg.points) {
-      leg.points = availPts;
-      this.save(leg);
-    }
-    state.boons = pickedBoons;
-    const cap = state.tiles.find((t) => t.capital) || state.tiles[0];
-    if (pickedBoons.includes("boon_capital2")) {
-      if (cap) cap.level = Math.max(2, cap.level || 1);
-      state.treasury = (state.treasury || O.startTreasury) + 200;
-      state.legacyPolicySlot = 2;
-      state.lord.stamina = $n(state);
-    }
-    if (pickedBoons.includes("boon_watergrid")) {
-      state.legacyUtilBonus = 15;
-    }
-    if (pickedBoons.includes("boon_exotic")) {
-      state.legacyExoticWeight = 2;
-      state.buffs.push({
-        id: "legacy:boon_exotic",
-        src: "legacy:boon_exotic",
-        scope: "nation",
-        stat: "prospectRare",
-        value: 0.35,
-        until: 1 / 0,
-      });
-      const rng = new tn(((state.seed || 1) ^ 9918273) >>> 0),
-        hiRes = fs.filter((r) => r.tier >= 3);
-      for (const tl of state.tiles) {
-        if (tl.capital || tl.unlocked || tl.resource) continue;
-        const cands = hiRes.filter((r) => r.terrains.includes(tl.terrain));
-        if (cands.length && rng.next() < 0.24) {
-          const picked = rng.weighted(cands, (r) => (r.fictional ? 2.2 : r.tier === 4 ? 1.8 : 1.2));
-          ((tl.resource = picked.id), (tl.revealed = !0));
-        }
-      }
-    }
-    const rawElders = Array.isArray(opts.elders) ? opts.elders.slice(0, 2) : [],
-      validElders = [];
-    for (const item of rawElders) {
-      const cid = typeof item === "string" ? item : item && item.id;
-      if (!cid || !se[cid] || state.cards[cid]) continue;
-      const maxSt = Is[se[cid].tier],
-        savedSt =
-          typeof item === "object" && item && typeof item.stars === "number"
-            ? item.stars
-            : (leg.cardStars[cid] ?? 0);
-      state.cards[cid] = {
-        id: cid,
-        level: 1,
-        exp: 0,
-        stars: Math.max(0, Math.min(maxSt, savedSt)),
-        copies: 0,
-        tile: null,
-        obtained: Object.keys(state.cards).length,
-      };
-      validElders.push(cid);
-    }
-    state.elders = validElders;
-    const vows = Array.isArray(opts.vows)
-      ? [...new Set(opts.vows.filter((v) => MASTER_VOWS[v]))]
-      : [];
-    state.vows = vows;
-    state.ngPlusBoosted = Boolean(pickedBoons.length > 0 || validElders.length > 0);
-    const notes = [];
-    validElders.length &&
-      notes.push(`开国元勋：${validElders.map((id) => rn(se[id])).join("、")}`);
-    pickedBoons.length &&
-      notes.push(`国运词条：${pickedBoons.map((id) => LEGACY_BOONS[id].name).join("、")}`);
-    scriptId !== "standard" && notes.push(`山河剧本：${TERRAIN_SCRIPTS[scriptId].name}`);
-    vows.length && notes.push(`大师誓约：${vows.map((id) => MASTER_VOWS[id].name).join("、")}`);
-    notes.length &&
-      pe(state, `开启新纪元传承周目（${notes.join(" · ")}）。`, "gold");
-    return state;
-  },
-};
 if (typeof window < "u") {
-  window.EunopolisLegacy = EunopolisLegacy;
-  window.LEGACY_BOONS = LEGACY_BOONS;
-  window.TERRAIN_SCRIPTS = TERRAIN_SCRIPTS;
-  window.MASTER_VOWS = MASTER_VOWS;
   window.isRankedEligible = isRankedEligible;
 }
 const KI = 20261110;
@@ -30062,9 +29435,6 @@ const AUTO_PAUSE_MODALS = new Set([
   "techTree",
   "event",
   "fypPreview",
-  "eraMilestone",
-  "ngPlus",
-  "ngplus",
   "debtConfirm",
 ]);
 class fp {
@@ -30129,17 +29499,7 @@ class fp {
   }
   refresh() {
     this.state.demoDay && (this.state.usedFreeGems = !0);
-    if (Array.isArray(this.state.legacySkins) && this.state.legacySkins.length) {
-      const b = be(this.state);
-      for (const sk of this.state.legacySkins) !this.state.lord.skinsOff.includes(sk) && b.skins.add(sk);
-    }
     const onTitle = Boolean(this.modal && this.modal.type === "title");
-    if (!onTitle && this.state._justNoviceUnlock && !this.modal) {
-      const nu = this.state._justNoviceUnlock;
-      delete this.state._justNoviceUnlock;
-      Ht("complete");
-      this.modal = { type: "noviceUnlock", data: nu };
-    }
     this.metrics = dt(this.state);
     if (!this.state.history.length && this.state.lord.ready !== !1) {
       const sn = makeGdpSnap(this.state, this.metrics);
@@ -30147,22 +29507,15 @@ class fp {
     }
     (lB(this.state, this.metrics),
       (this.state.stats.peakGdp = Math.max(this.state.stats.peakGdp, this.metrics.gdp)),
-      !onTitle && EunopolisLegacy.syncFromState(this.state, this.metrics),
       (this.saveFailed = onTitle ? !1 : !f9(this.state)),
       this.emit());
   }
   act(e, t) {
     const st0 = this.state,
-      vows = Array.isArray(st0.vows) ? st0.vows : [],
       prevReg = st0.regime || "balanced",
       prevRegLockQ = st0.regimeLockUntilQ || 0,
-      needSnap = vows.length > 0 || prevRegLockQ > st0.quarter,
+      needSnap = prevRegLockQ > st0.quarter,
       snapBefore = needSnap ? QQ(st0) : null,
-      prevTr = st0.treasury,
-      prevUl = vows.includes("vow_compact") ? st0.tiles.filter((z) => z.unlocked).length : 0,
-      prevFin = vows.includes("vow_nodebt")
-        ? st0.tiles.filter((z) => (z.build && z.build.financed) || z.financeLeft > 0).length
-        : 0,
       prevPolExp = (st0.lord && st0.lord.exp && st0.lord.exp.pol) || 0,
       prevPcs = [...(st0.policyCards || [])],
       prevGovProg = (st0.dailyQ && st0.dailyQ.prog && st0.dailyQ.prog.gov) || 0,
@@ -30177,30 +29530,6 @@ class fp {
         const leftQ = prevRegLockQ - this.state.quarter;
         this.state = lQ(snapBefore) || this.state;
         const msg = `改制制度稳定期中，还需等待 ${leftQ} 个季度`;
-        this.toast(msg, "warn");
-        this.refresh();
-        return { ok: !1, msg };
-      }
-      if (
-        snapBefore &&
-        vows.includes("vow_nodebt") &&
-        ((prevTr >= 0 && this.state.treasury < 0) ||
-          this.state.tiles.filter((z) => (z.build && z.build.financed) || z.financeLeft > 0).length > prevFin)
-      ) {
-        this.state = lQ(snapBefore) || this.state;
-        const msg = "「黄金紧缩」誓约生效中：禁止跨零举债或使用融资建设";
-        this.toast(msg, "warn");
-        this.refresh();
-        return { ok: !1, msg };
-      }
-      if (
-        snapBefore &&
-        vows.includes("vow_compact") &&
-        this.state.tiles.filter((z) => z.unlocked).length > 120 &&
-        prevUl <= 120
-      ) {
-        this.state = lQ(snapBefore) || this.state;
-        const msg = "「精兵简政」誓约生效中：全国开拓土地上限为 120 块";
         this.toast(msg, "warn");
         this.refresh();
         return { ok: !1, msg };
@@ -30248,12 +29577,6 @@ class fp {
       this.refresh(),
       f
     );
-  }
-  exitNoviceMode() {
-    this.state.noviceMode = !1;
-    this.state.noviceCompleted = !0;
-    this.toast("已展开全部治国系统", "good");
-    this.refresh();
   }
   claimDemoGems() {
     return this.act((s) => {
@@ -30404,14 +29727,6 @@ class fp {
     if (!e || e.type !== "build") this.wonderPreviewIds = null;
     else if (e.tab === "wonder" && typeof allWonderTriangles === "function")
       this.wonderPreviewIds = allWonderTriangles(this.state).tileIds;
-    if (!e && this.state && this.state._justNoviceUnlock) {
-      const nu = this.state._justNoviceUnlock;
-      delete this.state._justNoviceUnlock;
-      Ht("complete");
-      this.modal = { type: "noviceUnlock", data: nu };
-      this.emit();
-      return;
-    }
     ((this.modal = e), this.emit());
   }
   startPlacement(e) {
@@ -30422,51 +29737,27 @@ class fp {
       e && e.tiles.size === 0 && (this.toast("当前没有符合条件的地块", "warn"), (this.placement = null)),
       this.emit());
   }
-  newGame(e, ngOpts = null) {
+  newGame(e, opts = null) {
     const t = Date.now(),
-      seed = (ngOpts && ngOpts.seed) || ((Math.random() * 2 ** 31) | 0);
+      seed = (opts && opts.seed) || ((Math.random() * 2 ** 31) | 0);
     let st;
     if (e === "ultimate") st = buildUltimateDemo(t);
     else if (e === "showcase" || e === "starter") st = o9(t);
-    else if (e === "ngplus") {
-      st = d7(seed, t);
-      st.originMode = "ngplus";
-      st.noviceMode = Boolean(ngOpts && ngOpts.noviceMode);
-      st.noviceCompleted = !st.noviceMode;
-      st.usedFreeGems = !1;
-      st.milestones = {};
-      st.settings.timeScale = 1;
-      st.settings.autoPauseModal = !1;
-      EunopolisLegacy.applyNgPlusToNewState(st, ngOpts || {});
-      if (ngOpts && Array.isArray(ngOpts.traits) && ngOpts.traits.length) {
-        j4(
-          st,
-          ngOpts.traits,
-          String(ngOpts.lordName ?? "主公").slice(0, 24),
-          String(ngOpts.nationName ?? "新元帝国").slice(0, 32),
-          { noviceMode: st.noviceMode },
-        );
-      }
-    } else {
+    else {
       st = d7(seed, t);
       st.originMode = "fresh";
-      st.noviceMode = Boolean(ngOpts && ngOpts.noviceMode);
-      st.noviceCompleted = !st.noviceMode;
+      st.noviceMode = !1;
+      st.noviceCompleted = !0;
       st.usedFreeGems = !1;
       st.milestones = {};
       st.settings.timeScale = 1;
       st.settings.autoPauseModal = !1;
-      if (ngOpts && ngOpts.script && ngOpts.script !== "standard") applyTerrainScript(st, ngOpts.script);
-      const leg = EunopolisLegacy.load();
-      leg.skins.length && (st.legacySkins = [...leg.skins]);
-      leg.codexCards.length && (st.legacyCodex = [...leg.codexCards]);
-      if (ngOpts && Array.isArray(ngOpts.traits) && ngOpts.traits.length) {
+      if (opts && Array.isArray(opts.traits) && opts.traits.length) {
         j4(
           st,
-          ngOpts.traits,
-          String(ngOpts.lordName ?? "主公").slice(0, 24),
-          String(ngOpts.nationName ?? "经世共和国").slice(0, 32),
-          { noviceMode: st.noviceMode },
+          opts.traits,
+          String(opts.lordName ?? "主公").slice(0, 24),
+          String(opts.nationName ?? "经世共和国").slice(0, 32),
         );
       }
     }
@@ -30478,16 +29769,11 @@ class fp {
       (this.filter = null),
       (this.heldFrac = null),
       (this.decreeTiles = {}),
-      (this.modal =
-        (e === "fresh" || e === "ngplus") && st.lord.ready === !1 ? { type: "lordCreate" } : null),
+      (this.modal = e === "fresh" && st.lord.ready === !1 ? { type: "lordCreate" } : null),
       this.resetCameraHome(),
       this.refresh());
   }
   replaceState(e) {
-    const leg = EunopolisLegacy.load();
-    if (e && e.originMode !== "ultimate" && leg.skins.length) {
-      e.legacySkins = [...new Set([...(e.legacySkins || []), ...leg.skins])];
-    }
     ((this.state = e),
       (e.lastTick = Date.now()),
       (this.selected = null),
@@ -30842,22 +30128,11 @@ class fp {
         { label: "看看", run: () => this.focusTile(n) },
       );
     }
-    if (this.state._justNoviceUnlock && !this.modal) {
-      const nu = this.state._justNoviceUnlock;
-      delete this.state._justNoviceUnlock;
-      Ht("complete");
-      this.modal = { type: "noviceUnlock", data: nu };
-    }
     if (this.state._justCompletedFyp) {
       const fypData = this.state._justCompletedFyp;
       delete this.state._justCompletedFyp;
       Ht("complete");
       if (!this.modal) this.modal = { type: "fypCelebrate", data: fypData };
-    }
-    const eraData = EunopolisLegacy.recordMilestone(this.state, dt(this.state));
-    if (eraData) {
-      Ht(eraData.isVictory ? "rare" : "complete");
-      this.modal = { type: "eraMilestone", data: eraData };
     }
     this.refresh();
   }
@@ -31442,7 +30717,7 @@ const Jr = [0, 1, 2, 3, 4],
   }),
   Nv = () => ({
     q: "星钻从哪来？「领取沙盒补给」有什么影响？",
-    a: `日常来源包括：委托与勤政宝箱、69 项国家成就、每日签到（◇${O.dailyGems}）、三幕盛世纪元碑（◇500 / ◇1,000）、五年规划达标大奖、奇观落成（魅力线「盛世地标」+◇200）与主公随机事件。1.1 正式版无任何付费内购：在招募页与设置中可随时点击「领取沙盒补给」（每次 ◇${O.demoGems}，不限次数）；注意一旦领取沙盒补给，该存档会自动归入云端「沙盒展示榜」，不再参与纯白手起家的「全球开荒排位榜」。`,
+    a: `日常来源包括：委托与勤政宝箱、69 项国家成就、每日签到（◇${O.dailyGems}）、五年规划达标大奖、奇观落成（魅力线「盛世地标」+◇200）与主公随机事件。正式版无任何付费内购：在招募页与设置中可随时点击「领取沙盒补给」（每次 ◇${O.demoGems}，不限次数）；注意一旦领取沙盒补给，该存档会自动归入云端「沙盒展示榜」，不再参与纯白手起家的「全球开荒排位榜」。`,
   }),
   w9 = (A) => {
     const e = Tt(A, "govern");
@@ -31473,7 +30748,7 @@ function If(A, e, t, n = {}) {
         },
         {
           q: "资源品质与“奇异资源”怎么出？",
-          a: `基础品质权重为：${Jr.map((i) => `${Ke[i]} ${Math.round((f[i] / o) * 100)}%`).join("、")}；驻守人物技术属性、主公技术线「勘探改良」技能与二周目「天选地脉」均会抬升紫橙红高阶概率。首都升至 Lv.5 放开外环 48 块边疆与高阶勘探后，还能发现 6 种红品奇异资源（氦-3、室温超导矿、振金、活性孢子、暗物质结晶、以太晶核），大幅赋能终局架空产业！`,
+          a: `基础品质权重为：${Jr.map((i) => `${Ke[i]} ${Math.round((f[i] / o) * 100)}%`).join("、")}；驻守人物技术属性与主公技术线「勘探改良」技能均会抬升紫橙红高阶概率。首都升至 Lv.5 放开外环 48 块边疆与高阶勘探后，还能发现 6 种红品奇异资源（氦-3、室温超导矿、振金、活性孢子、暗物质结晶、以太晶核），大幅赋能终局架空产业！`,
         },
         {
           q: "急缺原料更容易勘探出来吗？",
@@ -31538,7 +30813,7 @@ function If(A, e, t, n = {}) {
         D9(),
         {
           q: "政令生效时长与季度冷却怎么算？",
-          a: "v1.1 全部政令统一采用清晰直观的「季度」结算：常规政令持续 6 个季度，冷却 8 ~ 16 个季度（设立特区与调整税制永久生效，冷却 8 个季度）。点出政治线「政令简化（冷却 −20%、费用 −15%）」与「政策延续（持续时长 +25%）」可大幅提升政令覆盖率！",
+          a: "全部政令统一采用清晰直观的「季度」结算：常规政令持续 6 个季度，冷却 8 ~ 16 个季度（设立特区与调整税制永久生效，冷却 8 个季度）。点出政治线「政令简化（冷却 −20%、费用 −15%）」与「政策延续（持续时长 +25%）」可大幅提升政令覆盖率！",
         },
         {
           q: "落点地块可以自选吗？费用怎么定？",
@@ -31655,7 +30930,7 @@ function If(A, e, t, n = {}) {
         },
         {
           q: "怎样一眼看清完整上下游链条？",
-          a: "强烈推荐点击面板顶部的「产业链树」按钮打开《产业链建筑树（Lv.0 → Lv.4）》全景视图：支持按板块过滤、搜产物名、悬停高亮青色上游输入链与金色下游衍生链，并直接一键选址建设！",
+          a: "强烈推荐点击面板顶部的「建筑树」按钮打开《产业链建筑树（Lv.0 → Lv.4）》全景视图：支持按板块过滤、搜产物名、悬停高亮青色上游输入链与金色下游衍生链，并直接一键选址建设！",
         },
       ];
     case "techtree":
@@ -31685,8 +30960,8 @@ function If(A, e, t, n = {}) {
           a: "绝不消耗一分星钻！「一键同名突破」严格只消耗已拥有的同名卡副本（自动计算红卡连破 2 星及橙红卡赠送的星钻与历练升级），无同名卡的角色不会被扣钻猎头。",
         },
         {
-          q: "229 位人物检索与二周目（NG+）图鉴继承？",
-          a: "顶部搜索框支持搜人名、专属企业或「芯片」「电力」「银行」等行业关键词；通关开启新纪元传承周目时，历史点亮过的名臣图鉴 100% 永久继承，并可钦点 1–2 位开国元勋随行出征。",
+          q: "229 位人物如何快速检索与收集？",
+          a: "顶部搜索框支持搜人名、专属企业或「芯片」「电力」「银行」等行业关键词，并可按未拥有或特定板块筛选目标名士。",
         },
         hg(),
         Nv(),
@@ -31703,7 +30978,7 @@ function If(A, e, t, n = {}) {
         },
         {
           q: "15 款主公与帝国衣橱装扮怎么解锁？",
-          a: "衣橱装扮与技能点彻底解耦，不占用任何专精强度！随着五维总等级从 Lv.2 提升至 Lv.40，自动永久解锁商务装、琥珀/极光流光、节庆彩灯、机器人工厂、新古典/赛博首都、全息巨幕与未来之城等 15 款视觉外观，随时在衣橱自由开关，跨周目永久继承。",
+          a: "衣橱装扮与技能点彻底解耦，不占用任何专精强度！随着五维总等级从 Lv.2 提升至 Lv.40，自动永久解锁商务装、琥珀/极光流光、节庆彩灯、机器人工厂、新古典/赛博首都、全息巨幕与未来之城等 15 款视觉外观，随时在衣橱自由开关。",
         },
         {
           q: "「调研」「督办」「指点」「贸易」各有什么核心收益？",
@@ -31738,11 +31013,7 @@ function If(A, e, t, n = {}) {
         },
         {
           q: "69 项国家成就与 6 阶爵位光环有什么用？",
-          a: "达成疆域、产业链、主权信用、国家奇观与天梯龙头里程碑不仅奖励大量星钻，还会累积成就点晋升 6 阶国家爵位，最高提供全国全产业产出 +15% 的永久光环！最高成就点纪录在二周目传承中永久保留。",
-        },
-        {
-          q: "什么是「三幕盛世纪元碑」与文明胜利？",
-          a: "治国途中依次矗立三座历史丰碑：① 工业立国（35 格 + 15 种产业 + 第 16 年）赠 ◇500；② 现代盛世（100 格 + 奇观 + 现代国体 + AA 以上信用）赠 ◇1,000 与全洞察 +3；③ 奇点登顶（180 格 + 4 座满级奇观 + 8 种架空产业）评定 S / SS / SSS 文明等级并授予二周目传承国运点！",
+          a: "达成疆域、产业链、主权信用、国家奇观与天梯龙头里程碑不仅奖励大量星钻，还会累积成就点晋升 6 阶国家爵位，最高提供全国全产业产出 +15% 的永久光环！",
         },
         Nv(),
       ];
@@ -31750,7 +31021,7 @@ function If(A, e, t, n = {}) {
       return [
         {
           q: "「全球开荒排位榜」和「沙盒展示榜」怎么区分？",
-          a: "1.1 正式版实行严格双轨分榜：纯白手起家新局（或未选国运加成/元勋的纯誓约挑战周目）且未领取过沙盒补给的存档，荣登「全球开荒排位榜」公平竞技；起步示范档、完全体帝国、带传承加成的周目或领过沙盒补给的存档，自动归入「沙盒展示榜」供全服观摩宏伟沙盘。",
+          a: "实行严格双轨分榜：从原点纯手打开荒且未领取过沙盒补给的存档，荣登「全球开荒排位榜」公平竞技；起步示范档、完全体帝国或领过沙盒补给的存档，自动归入「沙盒展示榜」供全服观摩宏伟沙盘。",
         },
         {
           q: "GDP 总榜与 75 产业龙头榜怎么夺冠？",
@@ -31777,10 +31048,6 @@ function If(A, e, t, n = {}) {
         {
           q: "统一 ×1 实时节奏与离线收益怎么算？",
           a: `1.1 正式版统一采用 60 秒/季的实时治国节奏，所有玩家在同一时间尺度下从容规划、公平竞逐天梯；需要深思熟虑时随时手动暂停即可。切后台或关闭页面后，离线补算上限按真实自然时间满 ${O.offlineCapHours} 小时计算（勤勉 6h / 散漫 12h）。`,
-        },
-        {
-          q: "什么是渐进式「新手引导模式」？",
-          a: "开新局时可勾选开启（新玩家默认开启）：第一幕仅展示核心开拓、水电与基础产业链，伴随首都升至 Lv.2（招贤兴市）、Lv.3（经世宏调）、Lv.4（盛世奇点）分四幕渐进解锁全部面板与系统；老玩家也可随时在设置中一键展开全部治国系统。",
         },
         {
           q: "3D 画质怎么选？存档存在哪里？",
@@ -32741,14 +32008,8 @@ function hp() {
       return typeof FypPreviewModal === "function" ? w(FypPreviewModal, { planId: e.planId, m: e }) : null;
     case "fypCelebrate":
       return typeof FypCelebrateModal === "function" ? w(FypCelebrateModal, { data: e.data, m: e }) : null;
-    case "eraMilestone":
-      return typeof EraMilestoneModal === "function" ? w(EraMilestoneModal, { data: e.data, m: e }) : null;
     case "debtConfirm":
       return typeof DebtConfirmModal === "function" ? w(DebtConfirmModal, { m: e }) : null;
-    case "legacyHall":
-      return typeof LegacyHallModal === "function" ? w(LegacyHallModal, { m: e }) : null;
-    case "noviceUnlock":
-      return typeof NoviceUnlockModal === "function" ? w(NoviceUnlockModal, { data: e.data, m: e }) : null;
     case "autoDeploy":
       return typeof AutoDeployModal === "function" ? w(AutoDeployModal, { m: e }) : null;
     case "confirm":
@@ -32774,9 +32035,6 @@ function hp() {
   }
 }
 function Ep() {
-  const leg = loadLegacySafe(),
-    canNg = leg.totalClears > 0 || leg.points > 0,
-    hasArchive = canNg || (leg.codexCards && leg.codexCards.length > 0);
   return w("div", {
     class: "title-screen",
     children: w("div", {
@@ -32813,36 +32071,20 @@ function Ep() {
           children: [
             w("button", {
               class: "tmenu-btn hero",
-              onClick: () => {
-                ie._ngPlusMode = !1;
-                ie.openModal({ type: "lordCreate", fromTitle: !0 });
-              },
+              onClick: () => ie.openModal({ type: "lordCreate", fromTitle: !0 }),
               children: "开始新游戏",
             }),
-            canNg &&
-              w("button", {
-                class: "tmenu-btn legacy",
-                onClick: () => {
-                  ie._ngPlusMode = !0;
-                  ie.openModal({ type: "lordCreate", fromTitle: !0 });
-                },
-                children: ["开启新纪元 · 传承", w("em", { children: `国运 ${leg.points}` })],
-              }),
             w("div", {
               class: "tmenu-subrow",
               children: [
                 w("button", {
                   class: "tmenu-btn sub",
-                  onClick: () => {
-                    ie._ngPlusMode = !1;
-                    ie.newGame("showcase");
-                  },
+                  onClick: () => ie.newGame("showcase"),
                   children: "起步示范",
                 }),
                 w("button", {
                   class: "tmenu-btn sub",
                   onClick: () => {
-                    ie._ngPlusMode = !1;
                     if (ie.state && ie.state.originMode === "ultimate") {
                       ie.openModal(null);
                       ie.resetCameraHome();
@@ -32855,12 +32097,6 @@ function Ep() {
                 }),
               ],
             }),
-            hasArchive &&
-              w("button", {
-                class: "tmenu-link",
-                onClick: () => ie.openModal({ type: "legacyHall", fromTitle: !0 }),
-                children: `列朝国史馆（${leg.totalClears} 朝）`,
-              }),
           ],
         }),
         w("div", { class: "title-ver", children: "v1.1 · 实时战略演进" }),
@@ -32876,7 +32112,7 @@ const Eg = [
   },
   {
     name: "扩张开拓",
-    desc: "开地快、工期短、敢花钱，适合想尽快铺满地图",
+    desc: "开地快、工期短、敢花钱，适合尽快铺满地图",
     ids: ["t1", "t10", "t12", "t18", "t23", "t25", "t29"],
   },
   {
@@ -32893,38 +32129,9 @@ function dp() {
 }
 function xp() {
   const A = Pe(),
-    leg = loadLegacySafe(),
-    showNg = Boolean(leg.totalClears > 0 || leg.points > 0 || ie._ngPlusMode),
-    boonList =
-      typeof LEGACY_BOONS < "u" && Array.isArray(LEGACY_BOONS)
-        ? LEGACY_BOONS
-        : [
-            { id: "boon_capital2", name: "前朝遗泽", cost: 2, desc: "开局首都 Lv.2 且国库 +200 亿" },
-            { id: "boon_watergrid", name: "百工图谱", cost: 2, desc: "开局永久 +15 基础供水与电力供给" },
-            { id: "boon_exotic", name: "天选地脉", cost: 2, desc: "T3/T4 战略与奇异矿脉权重翻倍" },
-          ],
-    scriptList =
-      typeof TERRAIN_SCRIPTS < "u" && Array.isArray(TERRAIN_SCRIPTS)
-        ? TERRAIN_SCRIPTS
-        : [{ id: "standard", name: "均衡山河", desc: "地球标准地貌比例" }],
-    vowList =
-      typeof MASTER_VOWS < "u" && Array.isArray(MASTER_VOWS)
-        ? MASTER_VOWS
-        : [],
     [e, t] = gt("主公"),
     [n, s] = gt(A.modal && A.modal.fromTitle ? "经世共和国" : A.state.nationName),
-    [noviceMode, setNoviceMode] = gt(
-      () =>
-        (leg.totalClears || 0) === 0 &&
-        (!leg.codexCards || leg.codexCards.length === 0) &&
-        !ie._ngPlusMode,
-    ),
     [f, o] = gt(Eg[0].ids),
-    [elders, setElders] = gt([]),
-    [boons, setBoons] = gt([]),
-    [script, setScript] = gt("standard"),
-    [vows, setVows] = gt([]),
-    [eq, setEq] = gt(""),
     r = Eg.find((c) => c.ids.length === f.length && c.ids.every((g) => f.includes(g))),
     i = Dn(() => {
       const c = [];
@@ -32938,54 +32145,11 @@ function xp() {
         return B.length >= Io ? (A.toast(`最多选择 ${Io} 条性格`, "warn"), P) : [...B, c];
       });
     };
-  const spentPts = boons.reduce((sum, bid) => {
-      const b = boonList.find((x) => x.id === bid);
-      return sum + (b ? b.cost : 0);
-    }, 0),
-    ptsLeft = Math.max(0, (leg.points || 0) - spentPts),
-    codexDefs = Dn(() => {
-      const ids = leg.codexCards || [],
-        qq = eq.trim().toLowerCase();
-      return ids
-        .map((cid) => se[cid])
-        .filter(
-          (d) =>
-            d &&
-            (!qq ||
-              d.name.toLowerCase().includes(qq) ||
-              (d.title && d.title.toLowerCase().includes(qq))),
-        )
-        .sort((x, y) => y.tier - x.tier || (leg.cardStars[y.id] || 0) - (leg.cardStars[x.id] || 0));
-    }, [leg.codexCards.join(","), eq]),
-    ngBoosted = elders.length > 0 || boons.length > 0;
-  const toggleElder = (cid) => {
-    setElders((prev) =>
-      prev.includes(cid)
-        ? prev.filter((x) => x !== cid)
-        : prev.length >= 2
-          ? (A.toast("最多挑选 2 位开国元勋随行", "warn"), prev)
-          : [...prev, cid],
-    );
-  };
-  const toggleBoon = (b) => {
-    setBoons((prev) => {
-      if (prev.includes(b.id)) return prev.filter((x) => x !== b.id);
-      if (ptsLeft < b.cost) {
-        A.toast(`传承国运点不足（还差 ${b.cost - ptsLeft} 点）`, "warn");
-        return prev;
-      }
-      return [...prev, b.id];
-    });
-  };
-  const toggleVow = (vid) => {
-    setVows((prev) => (prev.includes(vid) ? prev.filter((x) => x !== vid) : [...prev, vid]));
-  };
   return w(Cn, {
     wide: !0,
-    title: showNg ? "主公就任 · 新纪元传承建国" : "主公就任",
+    title: "主公就任",
     sub: "给国家和主公各起个名字，选一套性格就能开始。每条性格都有好处和代价，隐藏性格会在游戏中自动获得。",
     onClose: () => {
-      ie._ngPlusMode = !1;
       if (A.modal && A.modal.fromTitle && ie.state && ie.state.originMode === "ultimate") {
         ie.openModal({ type: "title" });
         return;
@@ -33020,33 +32184,6 @@ function xp() {
               "主公名字",
               w("input", { value: e, maxLength: 10, placeholder: "主公", onInput: (c) => t(c.target.value) }),
             ],
-          }),
-        ],
-      }),
-      w("button", {
-        type: "button",
-        class: `novice-toggle-card${noviceMode ? " on" : ""}`,
-        onClick: () => setNoviceMode((cur) => !cur),
-        children: [
-          w("div", {
-            class: "ntc-main",
-            children: [
-              w("b", {
-                children: [
-                  "🌱 新手渐进引导",
-                  w("em", { class: "ntc-tag", children: noviceMode ? "推荐开启" : "老手全开" }),
-                ],
-              }),
-              w("small", {
-                children:
-                  "开启后随首都 Lv.1 → Lv.4 分四幕逐步揭幕人才、施政与奇观，零眩晕上手（局内设置可随时一键全展开）",
-              }),
-            ],
-          }),
-          w("span", {
-            class: `ntc-switch${noviceMode ? " on" : ""}`,
-            "aria-hidden": "true",
-            children: [w("i", {}), w("u", { children: noviceMode ? "开启" : "关闭" })],
           }),
         ],
       }),
@@ -33119,188 +32256,24 @@ function xp() {
           }),
         ],
       }),
-      showNg &&
-        w("div", {
-          class: "ngp-box",
-          children: [
-            w("div", {
-              class: "ngp-hd",
-              children: [
-                w("b", { children: "✦ 文明传承 · 新纪元天命配置 (NG+)" }),
-                w("span", {
-                  class: `lb-elig-badge ${ngBoosted ? "sandbox" : "ranked"}`,
-                  children: ngBoosted
-                    ? "🏛️ 启用元勋/天命 → 沙盒展示榜"
-                    : "🏆 零付费增益 → 可登全球开荒排位榜",
-                }),
-              ],
-            }),
-            w("div", {
-              class: "ngp-sec",
-              children: [
-                w("h5", { children: "1. 山河剧本（地形地貌分布）" }),
-                w("div", {
-                  class: "ngp-cards",
-                  children: scriptList.map((sc) =>
-                    w(
-                      "button",
-                      {
-                        class: `ngp-card${script === sc.id ? " on" : ""}`,
-                        onClick: () => setScript(sc.id),
-                        children: [w("b", { children: sc.name }), w("small", { children: sc.desc })],
-                      },
-                      sc.id,
-                    ),
-                  ),
-                }),
-              ],
-            }),
-            w("div", {
-              class: "ngp-sec",
-              children: [
-                w("h5", {
-                  children: [
-                    "2. 天命国策（消耗传承国运点 · 剩余 ",
-                    w("em", { class: "gold", children: `${ptsLeft}/${leg.points || 0}` }),
-                    " 点）",
-                  ],
-                }),
-                w("div", {
-                  class: "ngp-cards",
-                  children: boonList.map((b) => {
-                    const on = boons.includes(b.id);
-                    return w(
-                      "button",
-                      {
-                        class: `ngp-card${on ? " on" : ""}`,
-                        disabled: !on && ptsLeft < b.cost,
-                        onClick: () => toggleBoon(b),
-                        children: [
-                          w("b", { children: [`${b.name} `, w("em", { class: "gold", children: `${b.cost}点` })] }),
-                          w("small", { children: b.desc }),
-                        ],
-                      },
-                      b.id,
-                    );
-                  }),
-                }),
-              ],
-            }),
-            (leg.codexCards || []).length > 0 &&
-              w("div", {
-                class: "ngp-sec",
-                children: [
-                  w("div", {
-                    class: "ngp-subhd",
-                    children: [
-                      w("h5", {
-                        children: `3. 开国元勋随行（已选 ${elders.length}/2 位 · Lv.1 起步并保留历史最高突破星级）`,
-                      }),
-                      (leg.codexCards || []).length > 10 &&
-                        w("input", {
-                          class: "ngp-elder-search",
-                          type: "search",
-                          placeholder: "搜已解锁名士…",
-                          value: eq,
-                          onInput: (ev) => setEq(ev.target.value),
-                        }),
-                    ],
-                  }),
-                  w("div", {
-                    class: "ngp-elders",
-                    children: codexDefs.slice(0, 36).map((cd) => {
-                      const on = elders.includes(cd.id),
-                        stCnt = leg.cardStars[cd.id] || 0;
-                      return w(
-                        "button",
-                        {
-                          class: `ngp-elder${on ? " on" : ""}`,
-                          style: { "--tier": Xe[cd.tier] },
-                          onClick: () => toggleElder(cd.id),
-                          children: [
-                            w(Ls, { id: cd.id, size: 30 }),
-                            w("span", {
-                              children: [
-                                w("b", { style: { color: Xe[cd.tier] }, children: cd.name }),
-                                w("small", { children: stCnt > 0 ? `★${stCnt} 上限保留` : Ke[cd.tier] }),
-                              ],
-                            }),
-                          ],
-                        },
-                        cd.id,
-                      );
-                    }),
-                  }),
-                ],
-              }),
-            vowList.length > 0 &&
-              w("div", {
-                class: "ngp-sec",
-                children: [
-                  w("h5", { children: "4. 大师誓约（0 消耗自我挑战 · 不影响排位榜资格）" }),
-                  w("div", {
-                    class: "ngp-cards",
-                    children: vowList.map((vw) => {
-                      const on = vows.includes(vw.id);
-                      return w(
-                        "button",
-                        {
-                          class: `ngp-card vow${on ? " on" : ""}`,
-                          onClick: () => toggleVow(vw.id),
-                          children: [
-                            w("b", { children: [`⚔️ ${vw.name}`, on ? " · 已立誓" : ""] }),
-                            w("small", { children: vw.desc }),
-                          ],
-                        },
-                        vw.id,
-                      );
-                    }),
-                  }),
-                ],
-              }),
-          ],
-        }),
       w("div", {
         class: "actions end",
         children: [
           w("span", { class: "muted", children: ["已选性格 ", f.length, "/", Io] }),
           w("button", {
-            class: `btn ${showNg && (ngBoosted || vows.length || script !== "standard") ? "gold" : "primary"}`,
+            class: "btn primary",
             onClick: () => {
-              const useNg =
-                showNg &&
-                (elders.length > 0 || boons.length > 0 || vows.length > 0 || script !== "standard");
-              ie._ngPlusMode = !1;
-              if (useNg) {
-                A.newGame("ngplus", {
-                  elders,
-                  boons,
-                  script,
-                  vows,
-                  traits: f,
-                  lordName: e.trim() || "主公",
-                  nationName: n.trim() || "新元帝国",
-                  noviceMode,
-                });
-              } else if ((A.modal && A.modal.fromTitle) || A.state.lord.ready !== !1) {
+              if ((A.modal && A.modal.fromTitle) || A.state.lord.ready !== !1) {
                 A.newGame("fresh", {
                   traits: f,
                   lordName: e.trim() || "主公",
                   nationName: n.trim() || "经世共和国",
-                  noviceMode,
                 });
               } else {
-                A.act((g) => {
-                  const res = j4(g, f, e.trim() || "主公", n);
-                  g.noviceMode = Boolean(noviceMode);
-                  return res;
-                }).ok && A.openModal(null);
+                A.act((g) => j4(g, f, e.trim() || "主公", n)).ok && A.openModal(null);
               }
             },
-            children:
-              showNg && (ngBoosted || vows.length || script !== "standard")
-                ? "受命于天 · 开启新纪元"
-                : "就任",
+            children: "就任",
           }),
         ],
       }),
@@ -33378,11 +32351,6 @@ function confirmUnzone(store, centerTileId) {
           });
     },
   });
-}
-function loadLegacySafe() {
-  return typeof EunopolisLegacy < "u" && EunopolisLegacy.load
-    ? EunopolisLegacy.load()
-    : { points: 0, totalClears: 0, skins: [], codexCards: [], cardStars: {}, dynasties: [], maxAchPts: 0 };
 }
 function DebtConfirmModal({ m }) {
   const A = Pe(),
@@ -33625,298 +32593,14 @@ function FypCelebrateModal({ data }) {
     ],
   });
 }
-function EraMilestoneModal({ data }) {
-  const A = Pe(),
-    st = A.state,
-    met = A.metrics,
-    d = data || {},
-    isVic = !!d.isVictory || d.actId === "act3",
-    ach = typeof achSummary == "function" ? achSummary(st) : { pts: 0, rankName: "执政官" },
-    pcNames = (st.policyCards || [])
-      .map((cid) => POLICY_CARD_MAP[cid] && POLICY_CARD_MAP[cid].name)
-      .filter(Boolean);
-  return w(Cn, {
-    wide: !0,
-    cls: `era-milestone-modal${isVic ? " victory" : ""}`,
-    title: `🏛️ ${d.title || "盛世纪元里程碑"}`,
-    sub: d.sub || `${st.nationName} · ${Ng(st.quarter)}`,
-    children: [
-      isVic &&
-        w("div", {
-          class: "era-seal-banner",
-          children: [
-            w("div", { class: "era-grade-seal", children: d.grade || "SS" }),
-            w("div", {
-              class: "era-seal-txt",
-              children: [
-                w("strong", { children: d.gradeTitle || "盛世纪元总结画卷" }),
-                w("span", {
-                  children:
-                    (d.pointsEarned ?? 0) > 0
-                      ? `本朝赢得传承国运点 +${d.pointsEarned}（累计可用 ${d.totalPoints ?? loadLegacySafe().points} 点） · 已永久载入《列朝国史馆》`
-                      : `示范沙盒档通关展示（从原点开始通关可赢得 +3~+5 传承国运点 · 当前可用 ${d.totalPoints ?? loadLegacySafe().points} 点）`,
-                }),
-              ],
-            }),
-          ],
-        }),
-      w("p", { class: "era-story", children: d.desc || "山河锦绣，百业兴旺，盛世宏图已成！" }),
-      w("div", {
-        class: "era-stats-grid",
-        children: [
-          ...(d.stats || []).map((item, idx) =>
-            w(
-              "div",
-              {
-                class: "era-stat-box",
-                children: [w("span", { children: item.label }), w("b", { children: item.value })],
-              },
-              idx,
-            ),
-          ),
-          isVic &&
-            w("div", {
-              class: "era-stat-box",
-              children: [
-                w("span", { children: "内阁名臣卡" }),
-                w("b", { children: pcNames.length ? pcNames.join(" · ") : "均衡内阁" }),
-              ],
-            }),
-          isVic &&
-            w("div", {
-              class: "era-stat-box",
-              children: [
-                w("span", { children: "成就爵位 / 人口" }),
-                w("b", { children: `${ach.rankName} (★${ach.pts}) · ${RC(met.population)}` }),
-              ],
-            }),
-        ],
-      }),
-      Array.isArray(d.rewards) &&
-        d.rewards.length > 0 &&
-        w("div", {
-          class: "fyp-rwd-row",
-          style: "margin-top:10px",
-          children: d.rewards.map((rw, idx) =>
-            w("span", { class: "chip chip-gold", children: `✦ ${rw}` }, idx),
-          ),
-        }),
-      w("div", {
-        class: "actions wrap end",
-        children: [
-          isVic &&
-            w("button", {
-              class: "btn gold",
-              onClick: () => {
-                ie._ngPlusMode = !0;
-                A.newGame("fresh");
-              },
-              children: "功成身退 · 开启新纪元传承 (NG+)",
-            }),
-          w("button", {
-            class: `btn ${isVic ? "primary" : "gold"}`,
-            onClick: () => A.openModal(null),
-            children: isVic ? "继续经略当前帝国" : "铭刻纪元碑，继续经略",
-          }),
-        ],
-      }),
-    ],
-  });
+function getNoviceStageSafe() {
+  return 4;
 }
-function LegacyHallModal({ m }) {
-  const A = Pe(),
-    leg = loadLegacySafe(),
-    dyns = [...(leg.dynasties || [])].reverse();
-  return w(Cn, {
-    wide: !0,
-    cls: "legacy-hall-modal",
-    title: "📜 列朝国史馆 · 文明传承总览",
-    sub: "历代通关王朝的国运点、已收集人物星级上限与主公华服永久跨周目传承",
-    onClose: m && m.fromTitle ? () => A.openModal({ type: "title" }) : void 0,
-    children: [
-      w("div", {
-        class: "kpis",
-        children: [
-          w("div", {
-            class: "kpi",
-            children: [
-              w("span", { children: "可用传承国运点" }),
-              w("strong", { class: "gold", children: [leg.points, w("small", { children: "点" })] }),
-            ],
-          }),
-          w("div", {
-            class: "kpi",
-            children: [
-              w("span", { children: "奇点登顶王朝" }),
-              w("strong", { children: [leg.totalClears, w("small", { children: "朝" })] }),
-            ],
-          }),
-          w("div", {
-            class: "kpi",
-            children: [
-              w("span", { children: "跨周目名士图鉴 / 华服" }),
-              w("strong", { children: `${(leg.codexCards || []).length}/${eo.length} · ${(leg.skins || []).length} 袭` }),
-            ],
-          }),
-        ],
-      }),
-      dyns.length
-        ? w("ul", {
-            class: "dynasty-list",
-            children: dyns.map((dy, idx) =>
-              w(
-                "li",
-                {
-                  class: "dynasty-card",
-                  children: [
-                    w("span", { class: "dyn-grade", children: dy.grade || "S" }),
-                    w("div", {
-                      class: "dyn-main",
-                      children: [
-                        w("b", {
-                          children: `${dy.nationName} · ${dy.lordName}（${dy.eraText || `${dy.quarters}季`}）`,
-                        }),
-                        w("small", {
-                          children: `峰值 GDP ${fe(dy.peakGdp || dy.gdp || 0)} 亿 · 国体「${dy.regimeName || "均衡"}」 · 第一支柱「${(dy.topIndustry && dy.topIndustry.name) || "多元"}」 · 首席功臣「${(dy.mvpCard && dy.mvpCard.name) || "群贤"}」`,
-                        }),
-                      ],
-                    }),
-                    w("em", { class: "gold", children: `+${dy.pointsEarned || 3} 国运` }),
-                  ],
-                },
-                dy.id || idx,
-              ),
-            ),
-          })
-        : w("p", {
-            class: "empty",
-            children:
-              "尚无奇点登顶王朝记录。在任一非完全体存档达成【第三幕·奇点登顶】（国土 ≥180、Lv.5 奇观 ≥4、运转架空产业 ≥8）即可获评 S/SS/SSS 王朝并赢得传承国运点！",
-          }),
-      w("div", {
-        class: "actions end",
-        children: [
-          w("button", {
-            class: "btn ghost",
-            onClick: () => A.openModal(m && m.fromTitle ? { type: "title" } : null),
-            children: "返回",
-          }),
-          (leg.totalClears > 0 || leg.points > 0 || (leg.codexCards && leg.codexCards.length > 0)) &&
-            w("button", {
-              class: "btn gold",
-              onClick: () => {
-                ie._ngPlusMode = !0;
-                if (m && m.fromTitle) A.openModal({ type: "lordCreate", fromTitle: !0 });
-                else A.newGame("fresh");
-              },
-              children: "✦ 开启新纪元传承 (NG+)",
-            }),
-        ],
-      }),
-    ],
-  });
-}
-function getNoviceStageSafe(st) {
-  if (typeof noviceStage == "function") return noviceStage(st);
-  if (!st || !st.noviceMode) return 4;
-  const cap = st.tiles && st.tiles.find((t) => t.capital);
-  return Math.min(4, Math.max(1, (cap && cap.level) || 1));
-}
-function isFeatOpenSafe(st, feat) {
-  if (typeof isFeatureOpen == "function") return isFeatureOpen(st, feat);
-  const stg = getNoviceStageSafe(st);
-  if (stg >= 4) return !0;
-  if (feat === "cards" || feat === "lord" || feat === "public") return stg >= 2;
-  if (feat === "policy" || feat === "rank" || feat === "trade" || feat === "sez" || feat === "tax")
-    return stg >= 3;
-  if (feat === "budget" || feat === "regime" || feat === "wonder" || feat === "fictional")
-    return stg >= 4;
+function isFeatOpenSafe() {
   return !0;
 }
-function isIndVisibleV1(st, ind) {
-  if (!ind) return !1;
-  const isFic = ind.source === "架空" || !!ind.fictional;
-  if (isFic && !isFeatOpenSafe(st, "fictional")) return !1;
-  const stg = getNoviceStageSafe(st);
-  if (stg === 1) return ind.level <= 1 || ["201010", "201011", "131110"].includes(String(ind.id));
-  if (stg === 2) return ind.level <= 2 && !isFic;
-  if (stg === 3) return !isFic;
-  return !0;
-}
-function NoviceUnlockModal({ data }) {
-  const A = Pe(),
-    st = A.state,
-    stg =
-      typeof data == "number"
-        ? data
-        : (data && data.stage) || getNoviceStageSafe(st),
-    stageMap = typeof NOVICE_STAGE_INFO < "u" && NOVICE_STAGE_INFO ? NOVICE_STAGE_INFO : {},
-    info = stageMap[stg] || {
-      stage: stg,
-      title: (data && data.title) || `第 ${stg} 幕 · 新篇揭幕`,
-      desc: (data && data.desc) || "首都晋升，更多治国核心模块现已正式解锁！",
-      unlocks: (data && data.unlocks) || [],
-    },
-    isFinal = stg >= 4;
-  return w(Cn, {
-    cls: `novice-unlock-modal stage-${stg}`,
-    title: isFinal ? "🏛️ 四幕圆满 · 盛世系统全量揭幕！" : `🌱 阶段揭幕 · ${info.title}`,
-    sub: `首都已升至 Lv.${stg} · 新手渐进引导第 ${stg}/4 幕`,
-    onClose: () => A.openModal(null),
-    children: [
-      w("div", {
-        class: `nu-curtain${isFinal ? " final" : ""}`,
-        children: [
-          w("span", {
-            class: "nu-stage-badge",
-            children: isFinal ? "ACT IV · 圆满全开" : `ACT 0${stg} · 幕布开启`,
-          }),
-          w("strong", { class: "nu-title", children: info.title }),
-          w("p", { class: "nu-desc", children: info.desc }),
-        ],
-      }),
-      Array.isArray(info.unlocks) &&
-        info.unlocks.length > 0 &&
-        w("div", {
-          class: "nu-unlocks",
-          children: [
-            w("h4", { children: "本幕新开放模块" }),
-            w("div", {
-              class: "nu-chips",
-              children: info.unlocks.map((u, idx) =>
-                w("span", { class: "chip chip-gold nu-chip", children: `✦ ${u}` }, idx),
-              ),
-            }),
-          ],
-        }),
-      w("div", {
-        class: "actions end",
-        children: [
-          !isFinal &&
-            st.noviceMode &&
-            w("button", {
-              class: "btn ghost small",
-              onClick: () => {
-                A.openModal(null);
-                typeof A.exitNoviceMode == "function"
-                  ? A.exitNoviceMode()
-                  : A.act((s) => {
-                      s.noviceMode = !1;
-                      s.noviceCompleted = !0;
-                      return qe("已展开全部治国系统");
-                    });
-              },
-              children: "我是老手 · 立即展开全部功能",
-            }),
-          w("button", {
-            class: "btn gold",
-            onClick: () => A.openModal(null),
-            children: "继续治国",
-          }),
-        ],
-      }),
-    ],
-  });
+function isIndVisibleV1(_st, ind) {
+  return Boolean(ind);
 }
 function AutoDeployModal() {
   const A = Pe(),
@@ -34868,12 +33552,6 @@ function pp({ tile: A, tab: e }) {
       ],
     }),
     children: [
-      nStage === 1 &&
-        w("div", {
-          class: "novice-build-banner",
-          children:
-            "🌱 第一幕·拓荒期：当前展示基础民生与水电产业，升级首都至 Lv.2 解锁中高级产业链与市政设施",
-        }),
       w("div", {
         class: "build-bar",
         children: [
@@ -38972,8 +37650,8 @@ function Vp() {
 function isSaveRankedV1(st) {
   if (!st) return !1;
   if (typeof isRankedEligible == "function") return Boolean(isRankedEligible(st));
-  if (st.usedFreeGems || st.ngPlusBoosted) return !1;
-  if (st.originMode) return st.originMode === "fresh" || st.originMode === "ngplus";
+  if (st.usedFreeGems) return !1;
+  if (st.originMode) return st.originMode === "fresh";
   const nm = String(st.nationName || "");
   return !nm.includes("完全体") && !nm.includes("示范");
 }
@@ -38997,7 +37675,7 @@ function claimSandboxSupply(store) {
     store.openModal({
       type: "confirm",
       title: `领取沙盒补给（◇${O.demoGems}）？`,
-      body: `每次可免费领取 ◇${O.demoGems} 星钻（国库与主公体力每日首领同步补满）。\n注意：领取沙盒补给后，本局存档在云端天梯将自动归入【🏛️ 沙盒展示榜】，不再参与纯手打【🏆 全球开荒排位榜】名次争夺（单机成就与二周目传承不受影响）。`,
+      body: `每次可免费领取 ◇${O.demoGems} 星钻（国库与主公体力每日首领同步补满）。\n注意：领取沙盒补给后，本局存档在云端天梯将自动归入【🏛️ 沙盒展示榜】，不再参与纯手打【🏆 全球开荒排位榜】名次争夺（单机国家成就与图鉴收集不受影响）。`,
       okText: `确认领取 ◇${O.demoGems}`,
       onOk: exec,
     });
@@ -39067,25 +37745,6 @@ function Wp() {
       rb = !db && b.progress(e, t) >= b.target;
     return (rb ? 1 : 0) - (ra ? 1 : 0) || (da ? 1 : 0) - (db ? 1 : 0) || b.tier - a.tier;
   });
-  const milestones = e.milestones || {},
-    builtWonders = e.tiles.filter(
-      (tl) => tl.unlocked && !tl.build && tl.public && it[tl.public] && it[tl.public].wonder,
-    ),
-    lv5Wonders = builtWonders.filter((tl) => (tl.level || 1) >= 5).length,
-    activeFic = new Set(
-      e.tiles
-        .filter((tl) => tl.unlocked && !tl.build && tl.industry && HA[tl.industry]?.source === "架空" && t.tiles[tl.id]?.running)
-        .map((tl) => tl.industry),
-    ).size,
-    act1Done = Boolean(milestones.act1 || (t.unlocked >= 35 && t.diversity >= 15 && e.quarter >= 60)),
-    act2Done = Boolean(
-      milestones.act2 ||
-        (t.unlocked >= 100 &&
-          builtWonders.length >= 1 &&
-          ensureRegime(e) !== "balanced" &&
-          (t.creditRating === "AAA" || t.creditRating === "AA")),
-    ),
-    act3Done = Boolean(milestones.act3 || (t.unlocked >= 180 && lv5Wonders >= 4 && activeFic >= 8));
   const chestTip = dq.bonusClaimed
     ? "今日勤政宝箱已开启，现实自然日 0 点自动刷新"
     : `完成当日全部 ${qs.length} 项日常委托，即可领取 ◇150 星钻 + 主公政治与魅力历练经验（现实自然日 0 点自动刷新）`;
@@ -39244,72 +37903,6 @@ function Wp() {
           })
         : w(he, {
             children: [
-              w("div", {
-                class: "era-strip",
-                children: [
-                  w("div", {
-                    class: "es-hd",
-                    children: [
-                      w("b", {
-                        "data-tip-touch": !0,
-                        "data-tip-title": "盛世纪元碑",
-                        "data-tip":
-                          "达成三幕盛世里程碑将触发纪元庆典画卷并永久铭刻于列朝国史馆；点击已点亮碑铭可重温画卷。",
-                        children: "🏛️ 盛世纪元碑",
-                      }),
-                      w("button", {
-                        class: "btn tiny",
-                        onClick: () => A.openModal({ type: "legacyHall" }),
-                        children: "列朝国史馆",
-                      }),
-                    ],
-                  }),
-                  w("div", {
-                    class: "es-acts",
-                    children: [
-                      {
-                        id: "act1",
-                        nm: "第一幕·工业立国",
-                        done: act1Done,
-                        tip: `35 格国土 (${t.unlocked}/35) · 15 种产业 (${t.diversity}/15) · 第 60 季 (${e.quarter}/60)`,
-                      },
-                      {
-                        id: "act2",
-                        nm: "第二幕·现代盛世",
-                        done: act2Done,
-                        tip: `100 格国土 (${t.unlocked}/100) · 首座奇观 (${builtWonders.length}/1) · 现代国体 · AA+ 信用`,
-                      },
-                      {
-                        id: "act3",
-                        nm: "第三幕·奇点登顶",
-                        done: act3Done,
-                        tip: `180 格国土 (${t.unlocked}/180) · 4 座满级奇观 (${lv5Wonders}/4) · 8 种架空产业 (${activeFic}/8)`,
-                      },
-                    ].map((acItem) => {
-                      const mTip = `${acItem.tip}\n${acItem.done ? "✓ 已达成，点击展阅纪元画卷" : "继续经营达成后将开启纪元盛典奖励"}`;
-                      return w(
-                        "button",
-                        {
-                          class: `es-pill${acItem.done ? " done" : ""}`,
-                          "data-tip-title": acItem.nm,
-                          "data-tip": mTip,
-                          onClick: () =>
-                            acItem.done
-                              ? A.openModal({ type: "eraMilestone", data: { actId: acItem.id, replay: !0 } })
-                              : A.toast(`${acItem.nm}条件：${acItem.tip}`, "info"),
-                          children: [
-                            acItem.done ? "✦ " : "○ ",
-                            acItem.nm,
-                            " ",
-                            qTipC(acItem.nm, mTip),
-                          ],
-                        },
-                        acItem.id,
-                      );
-                    }),
-                  }),
-                ],
-              }),
               w("div", {
                 class: "ach-hero",
                 "data-tip-touch": !0,
@@ -39522,8 +38115,8 @@ function qp() {
       idx,
     );
   };
-  const rankedRuleTip = `原点纯手打开荒、未启用传承数值增益且未领取沙盒补给的存档，由引擎实时重算核验，公平角逐全球排位与 75 产业龙头。${!myRanked ? "\n（当前本档属于沙盒展示赛道，切至沙盒展示榜可查看本档位置）" : ""}`;
-  const sandboxRuleTip = `陈列示范国、领取过沙盒星钻补给或开启传承增益的繁荣帝国，供全服玩家点击参观疆域规划与产业结构。${myRanked ? "\n（当前本档属于开荒排位赛道，切回开荒排位榜可查看本档名次）" : ""}`;
+  const rankedRuleTip = `原点纯手打开荒且未领取沙盒补给的存档，由引擎实时重算核验，公平角逐全球排位与 75 产业龙头。${!myRanked ? "\n（当前本档属于沙盒展示赛道，切至沙盒展示榜可查看本档位置）" : ""}`;
+  const sandboxRuleTip = `陈列示范国或领取过沙盒星钻补给的繁荣帝国，供全服玩家点击参观疆域规划与产业结构。${myRanked ? "\n（当前本档属于开荒排位赛道，切回开荒排位榜可查看本档名次）" : ""}`;
   const inspectTip = "点击榜单中带有「真人 / 沙盒 / 导入」标签的国家行，即可打开国家快照参观其疆域布局与支柱产业。";
   return w(he, {
     children: [
@@ -39548,7 +38141,7 @@ function qp() {
                 "data-tip-title": myRanked ? "当前存档：开荒排位资格" : "当前存档：沙盒展示赛道",
                 "data-tip": myRanked
                   ? "本档从原点纯手打开荒且未领取过沙盒星钻补给，上传后直接参与【开荒排位榜】与 75 产业龙头争夺！"
-                  : "本档为示范帝国、启用过二周目传承增益或领取过沙盒补给，上传后归入【沙盒展示榜】供全服参观交流。",
+                  : "本档为示范帝国或领取过沙盒补给，上传后归入【沙盒展示榜】供全服参观交流。",
                 children: myRanked ? "🏆 开荒排位" : "🏛️ 沙盒展示",
               }),
             ],
@@ -39924,27 +38517,12 @@ function Zp() {
   const A = Pe(),
     e = A.state,
     t = us(null),
-    leg = loadLegacySafe(),
-    hasNgPlus = (leg.totalClears || 0) > 0 || (leg.points || 0) > 0,
-    novStg = getNoviceStageSafe(e),
-    novInfo =
-      (typeof NOVICE_STAGE_INFO < "u" && NOVICE_STAGE_INFO && NOVICE_STAGE_INFO[novStg]) || {
-        stage: novStg,
-        title: `第 ${novStg} 幕`,
-        desc: "",
-      },
     unlockedCnt = e.tiles.filter((f) => f.unlocked).length,
     landCap = A.metrics.landCap,
     rankedOk = isSaveRankedV1(e),
     s = (f) => {
       (f(), A.refresh());
     };
-  const qualTip =
-    "清爽省电：关闭后处理泛光，移动端流畅省电\n标准画质：开启奇观光效与实时阴影（桌面推荐）\n极致画质：开启环境光遮蔽、辉光与移轴景深";
-  const audioViewTip =
-    "音效：界面交互、建设竣工与政令颁布音效\n音乐：5 首国风与管弦交响背景乐随机轮播\n地貌：按山川平原地形错开六角地块立体海拔高度";
-  const newGameTip =
-    "从原点开始：纯手打开荒，可登【全球开荒排位榜】\n开启新纪元 (NG+)：携带列朝传承与开国元勋开启新周目\n示范帝国 / 沙盒补给：体验中后期宏大布局或免费领星钻，归入【沙盒展示榜】";
   return w(he, {
     children: [
       w(Qt, {
@@ -39992,34 +38570,6 @@ function Zp() {
           }),
         ],
       }),
-      e.noviceMode &&
-        w(Qt, {
-          title: "新手引导",
-          children: w("div", {
-            class: "novice-settings-card",
-            style: "display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap",
-            children: [
-              w("b", {
-                "data-tip-touch": !0,
-                "data-tip-title": `新手渐进引导 · ${novInfo.title}`,
-                "data-tip": `${novInfo.desc || "随发展阶段逐步解锁高级治国面板，避免开局信息过载。"}\n共 4 幕，熟悉玩法可随时一键展开全部功能。`,
-                children: `🌱 新手引导 · 第 ${novStg} 幕`,
-              }),
-              w("button", {
-                class: "btn small gold nsc-exit-btn",
-                onClick: () =>
-                  typeof A.exitNoviceMode == "function"
-                    ? A.exitNoviceMode()
-                    : A.act((st) => {
-                        st.noviceMode = !1;
-                        st.noviceCompleted = !0;
-                        return qe("已展开全部治国系统");
-                      }),
-                children: "立即展开全部功能",
-              }),
-            ],
-          }),
-        }),
       !A.webglFailed &&
         w(Qt, {
           title: "3D 画质",
@@ -40090,16 +38640,7 @@ function Zp() {
         }),
       }),
       w(Qt, {
-        title: "存档与国史馆",
-        extra: hasNgPlus
-          ? w("span", {
-              class: "pill",
-              "data-tip-touch": !0,
-              "data-tip-title": "列朝传承遗产",
-              "data-tip": `累计荣登史册：${leg.totalClears || 0} 朝 · 可支配国运点：${leg.points || 0} 点`,
-              children: `✦ 国运 ${leg.points || 0}`,
-            })
-          : null,
+        title: "存档管理",
         children: [
           w("div", {
             class: "actions wrap",
@@ -40123,11 +38664,6 @@ function Zp() {
                   return (f = t.current) == null ? void 0 : f.click();
                 },
                 children: "导入存档",
-              }),
-              w("button", {
-                class: "btn",
-                onClick: () => A.openModal({ type: "legacyHall" }),
-                children: ["📜 列朝国史馆", leg.totalClears > 0 ? ` (${leg.totalClears})` : ""],
               }),
               w("input", {
                 ref: t,
@@ -40169,24 +38705,6 @@ function Zp() {
         children: w("div", {
           class: "actions wrap",
           children: [
-            hasNgPlus &&
-              w("button", {
-                class: "btn gold",
-                "data-tip-title": "文明传承 · 新纪元 (NG+)",
-                "data-tip": `当前拥有 ${leg.points || 0} 点国运点，可携带图鉴遗产与开国元勋开启新周目`,
-                onClick: () =>
-                  A.openModal({
-                    type: "confirm",
-                    title: "开启「文明传承 · 新纪元 (NG+)」？",
-                    body: `你将携带图鉴与主公外观遗产进入新纪元选配（当前拥有 ${leg.points || 0} 点国运点），可钦点最多 2 位开国元勋随行并自选天命国策、山河剧本与大师誓约。当前本地存档将被新纪元覆盖。`,
-                    okText: "进入新纪元配置",
-                    onOk: () => {
-                      ie._ngPlusMode = !0;
-                      A.newGame("fresh");
-                    },
-                  }),
-                children: "✦ 开启新纪元 (NG+)",
-              }),
             w("button", {
               class: "btn gold",
               "data-tip-title": "完全体示范帝国",
@@ -40197,10 +38715,7 @@ function Zp() {
                   title: "载入完全体示范帝国？",
                   body: "217 块满疆域（169 核心 + 48 边疆）、全 75 产业体系、Lv.6 首都、8 座 Lv.5 国家奇观与 24 座满级市政设施。该存档归入【沙盒展示榜】，当前进度会被覆盖。",
                   okText: "立即载入",
-                  onOk: () => {
-                    ie._ngPlusMode = !1;
-                    A.newGame("ultimate");
-                  },
+                  onOk: () => A.newGame("ultimate"),
                 }),
               children: "完全体示范帝国",
             }),
@@ -40214,10 +38729,7 @@ function Zp() {
                   title: "进入起步示范国家？",
                   body: "中盘产业链与现代治理刚起步的示范档（归入【沙盒展示榜】）。当前进度会被覆盖。",
                   okText: "进入",
-                  onOk: () => {
-                    ie._ngPlusMode = !1;
-                    A.newGame("showcase");
-                  },
+                  onOk: () => A.newGame("showcase"),
                 }),
               children: "起步示范国",
             }),
@@ -40232,10 +38744,7 @@ function Zp() {
                   body: "生成全新的 217 块随机山河世界并重新选择主公性格（纯手打可登【全球开荒排位榜】）。当前进度会被覆盖。",
                   okText: "重新开始",
                   danger: !0,
-                  onOk: () => {
-                    ie._ngPlusMode = !1;
-                    A.newGame("fresh");
-                  },
+                  onOk: () => A.newGame("fresh"),
                 }),
               children: "从原点开始",
             }),
@@ -42059,13 +40568,10 @@ function HudBlV1() {
 function ModalHostV1() {
   const m = Pe().modal;
   if (!m) return null;
-  if (m.type === "noviceUnlock") return w(NoviceUnlockModal, { data: m.data, m });
   if (m.type === "autoDeploy") return w(AutoDeployModal, { m });
   if (m.type === "fypPreview") return w(FypPreviewModal, { planId: m.planId, m });
   if (m.type === "fypCelebrate") return w(FypCelebrateModal, { data: m.data, m });
-  if (m.type === "eraMilestone") return w(EraMilestoneModal, { data: m.data, m });
   if (m.type === "debtConfirm") return w(DebtConfirmModal, { m });
-  if (m.type === "legacyHall") return w(LegacyHallModal, { m });
   return w(hp, {});
 }
 function fL() {
@@ -42510,7 +41016,7 @@ const rL = [
     label: "委托",
     color: "#7ddc8f",
     title: "委托与成就",
-    tip: "每日委托与勤政宝箱、69 项国家成就爵位光环、盛世纪元碑",
+    tip: "每日委托与勤政宝箱、69 项国家成就与爵位光环",
   },
   {
     id: "rank",
@@ -42526,7 +41032,7 @@ const rL = [
     label: "设置",
     color: "#aab4c3",
     title: "世界与存档",
-    tip: "国名、新手渐进引导、画质、云端存档与文明传承",
+    tip: "国名、3D 画质、声音地貌、存档导入导出与沙盒补给",
   },
 ];
 function vL() {
@@ -42535,15 +41041,14 @@ function vL() {
     t = totalClaimableTasks(e, A.metrics).total,
     n = Object.values(e.cards).filter((o) => Boolean(cardBtMode(e, o))).length,
     s = z7(e),
-    f = {},
-    visNav = rL.filter((o) => isFeatOpenSafe(e, o.id));
+    f = {};
   return (
     t > 0 && (f.tasks = { n: t, text: `✓ ${t} 项奖励可以领取` }),
     n > 0 && (f.cards = { n, text: `✓ ${n} 位人物可突破（含星钻猎头）` }),
     s > 0 && (f.lord = { n: s, text: `✓ 有 ${s} 个技能点可以用` }),
     w("nav", {
       class: "nav",
-      children: visNav.map((o) => {
+      children: rL.map((o) => {
         const r = f[o.id];
         return w(
           "button",
@@ -42572,87 +41077,7 @@ ${r.text}`
     })
   );
 }
-function isAdviceAllowedV1(st, item) {
-  if (!item || !item.action) return !0;
-  const act = item.action;
-  if (act.type === "panel") {
-    if ((act.panel === "recruit" || act.panel === "cards") && !isFeatOpenSafe(st, "cards")) return !1;
-    if (act.panel === "lord" && !isFeatOpenSafe(st, "lord")) return !1;
-    if (act.panel === "policy" && !isFeatOpenSafe(st, "policy")) return !1;
-    if (act.panel === "rank" && !isFeatOpenSafe(st, "rank")) return !1;
-  }
-  if ((act.type === "deploy" || act.type === "breakthrough") && !isFeatOpenSafe(st, "cards")) return !1;
-  if (act.type === "roll" && !isFeatOpenSafe(st, "lord")) return !1;
-  return !0;
-}
-function buildStage1FallbackAdvice(st, met) {
-  const out = [],
-    cap = st.tiles.find((z) => z.capital),
-    emp = st.tiles.find(
-      (z) => z.unlocked && !z.capital && !z.industry && !z.public && !z.build && z.wonderHost == null,
-    ),
-    fr = st.tiles.find((z) => !z.unlocked && ko(st, z)),
-    utilShort = met.powerUsed > met.power || met.waterUsed > met.water;
-  if (cap && cap.level < 2 && Df(st, cap, met).ok) {
-    out.push({
-      id: "nov1-cap-up",
-      prio: 92,
-      kind: "gold",
-      text: "🌱 拓荒就绪：首都已满足升级条件，升至 Lv.2 即可揭幕名士招募、主公巡察与市政设施！",
-      cta: "升级首都",
-      action: { type: "tile", tile: cap.id },
-    });
-  }
-  if (utilShort) {
-    out.push({
-      id: "nov1-util",
-      prio: 89,
-      kind: "warn",
-      text: "🌱 拓荒指引：水电供给不足，先在空地增建发电厂或自来水厂恢复满负荷运转",
-      cta: emp ? "去选址" : "看水电",
-      action: emp ? { type: "tile", tile: emp.id } : { type: "panel", panel: "economy" },
-    });
-  }
-  if (emp) {
-    out.push({
-      id: "nov1-build",
-      prio: 72,
-      kind: "info",
-      text: "🌱 第一幕·拓荒期：在空地建设基础民生与水电产业，连成供需链并升首都至 Lv.2",
-      cta: "去建设",
-      action: { type: "tile", tile: emp.id },
-    });
-  }
-  if (fr) {
-    out.push({
-      id: "nov1-expand",
-      prio: 68,
-      kind: "info",
-      text: "🌱 第一幕·拓荒期：开拓相邻领土获取更多建设用地与矿脉，迈向首都 Lv.2",
-      cta: "去开拓",
-      action: { type: "tile", tile: fr.id },
-    });
-  }
-  if (cap && cap.level < 2) {
-    out.push({
-      id: "nov1-cap-check",
-      prio: 64,
-      kind: "info",
-      text: "🌱 第一幕·拓荒期：点击首都查看升至 Lv.2 所需条件，解锁第二幕「招贤兴市」",
-      cta: "查看首都",
-      action: { type: "tile", tile: cap.id },
-    });
-  }
-  return out;
-}
 function C9(A) {
-  const st = ie.state,
-    met = ie.metrics;
-  if (!isAdviceAllowedV1(st, A)) {
-    const fb = buildStage1FallbackAdvice(st, met)[0];
-    if (fb) return C9(fb);
-    return;
-  }
   const e = A.action;
   if (e.type === "tile") ((ie.panel = null), ie.select(e.tile));
   else if (e.type === "panel")
@@ -42680,19 +41105,7 @@ function C9(A) {
 function cL() {
   const A = Pe(),
     [e, t] = gt(!1),
-    n = Dn(() => {
-      const raw = S4(A.state, A.metrics),
-        allowed = raw.filter((it) => isAdviceAllowedV1(A.state, it));
-      if (A.state.noviceMode && getNoviceStageSafe(A.state) === 1) {
-        const fb = buildStage1FallbackAdvice(A.state, A.metrics),
-          seen = new Set(allowed.map((it) => it.id));
-        for (const fItem of fb) {
-          if (!seen.has(fItem.id)) allowed.push(fItem);
-        }
-        allowed.sort((x, y) => (y.prio || 0) - (x.prio || 0));
-      }
-      return allowed;
-    }, [A.version]),
+    n = Dn(() => S4(A.state, A.metrics), [A.version]),
     s = us({ id: "", until: 0 });
   if (!n.length || A.placement) return null;
   const f = Date.now(),
