@@ -4403,8 +4403,8 @@ const oA = (A, e, t, n, s) => ({ mgmt: A, tech: e, pol: t, amb: n, cha: s }),
         "einstein2088",
         "阿尔伯特·爱因斯叹",
         4,
-        "相对论时停巨匠",
-        "爱因斯坦 · 时空物理学宗师",
+        "相对论物理学家",
+        "爱因斯坦 · 现代物理学奠基人",
         ["X014", "X009", "X003"],
         oA(80, 100, 84, 90, 98),
         iA(0, 4, 3, 2, 0, 1),
@@ -5801,14 +5801,14 @@ const WARDROBE_SKINS = [
     { id: "tech", name: "技术", role: "管网与奇点" },
     { id: "pol", name: "政治", role: "财税与宏调" },
     { id: "amb", name: "野心", role: "疆域与山海" },
-    { id: "cha", name: "魅力", role: "名士与通商" },
+    { id: "cha", name: "魅力", role: "人才与外贸" },
   ],
   Yl = [0, 0, 1, 1, 2, 2, 3, 3, 4, 4, 5, 5],
   Jl = [2, 2, 1, 1, 1, 1],
   YP = {
     mgmt: [
       {
-        name: "领导视察",
+        name: "现场督导",
         type: "被动",
         effect: "主公驻留地块产出 +6%",
         mods: { stayAdd: 0.06 },
@@ -5828,7 +5828,7 @@ const WARDROBE_SKINS = [
       {
         name: "满载调度",
         type: "被动",
-        effect: "全国施工队上限 +1，知人善任（人物「管理」属性效果 +12%）",
+        effect: "全国施工队上限 +1，人物「管理」属性效果 +12%",
         mods: { builders: 1, mgmtAttr: 0.12 },
       },
       {
@@ -5838,7 +5838,7 @@ const WARDROBE_SKINS = [
         mods: { cluster: 0.08 },
       },
       {
-        name: "百业生态",
+        name: "多元生态",
         type: "被动",
         effect: "每多 1 种不同行业全国产出 +0.4%（上限 +20%）",
         mods: { diversity: 0.004, diversityCapAdd: 0.05 },
@@ -5856,15 +5856,15 @@ const WARDROBE_SKINS = [
         mods: { pillarSupplyBoost: 0.3, maxRoadTax: 0.05 },
       },
       {
-        name: "龙头垄断",
+        name: "龙头集中",
         type: "被动",
         effect: "每个板块单格产值最高地块额外 +18%",
         mods: { sectorTop: 0.18 },
       },
       {
-        name: "巡抚驻节",
+        name: "区域辐射",
         type: "被动",
-        effect: "主公驻留光环扩大至周边 2 圈地块",
+        effect: "主公驻留加成范围扩大至周边 2 圈地块",
         mods: { stayRadius: 1 },
       },
       {
@@ -5874,7 +5874,7 @@ const WARDROBE_SKINS = [
         mods: { noCrowdAll: 1, clusterOutBonus: 0.14 },
       },
       {
-        name: "全链柔性帝国",
+        name: "全链柔性协同",
         type: "终极",
         effect: "满级供需边额外提供 +6% 产出与 +8% 税收，拆除/改建产业返还提升至 85%",
         mods: { maxRoadOut: 0.06, maxRoadTax: 0.08, demolishRefund: 0.85 },
@@ -5937,19 +5937,19 @@ const WARDROBE_SKINS = [
         mods: { zoneBuild: -0.25 },
       },
       {
-        name: "智慧结算",
+        name: "智能清算",
         type: "被动",
         effect: "分期融资建造的还款周期缩短 −25%，人物「技术」属性效果 +15%",
         mods: { finPeriod: -0.25, techAttr: 0.15 },
       },
       {
-        name: "技术奇点飞升",
+        name: "技术奇点架构",
         type: "终极",
         effect: "架空未来产业产出 +22%、奇异资源赋能额外 +20%，「奇点跃升」政令冷却 −40%",
         mods: { ficOut: 0.22, exoticBoost: 0.2, singularityCdCut: 0.4 },
       },
       {
-        name: "全自动超级工场",
+        name: "无人工厂矩阵",
         type: "终极",
         effect: "全国工期再 −20%，电力/供水盈余部分按比例转化为全国工业产出（最高 +15%）",
         mods: { buildTime: -0.2, utilSurplusOut: 0.15 },
@@ -5999,7 +5999,7 @@ const WARDROBE_SKINS = [
         mods: { budgetPosMult: 0.2 },
       },
       {
-        name: "内阁扩编",
+        name: "中枢扩容",
         type: "被动",
         effect: "人物「政治」属性效果 +20%，首都驻守人物对全国税损减免效果 +35%",
         mods: { polAttr: 0.2, capTaxShieldMult: 0.35 },
@@ -6024,7 +6024,7 @@ const WARDROBE_SKINS = [
         mods: { interest: 0.0015 },
       },
       {
-        name: "中枢铁腕宏调",
+        name: "宏观统筹中枢",
         type: "终极",
         effect: "首都可同时生效 2 条全国政令，且五年规划达标奖励翻倍、进行中增益 +35%",
         mods: { nationalSlots: 1, fypRewardMult: 1, fypModBoost: 0.35 },
@@ -6084,26 +6084,26 @@ const WARDROBE_SKINS = [
         mods: { enclave3: 1, enclaveMicroGrid: 1, enclave: 1 },
       },
       {
-        name: "天选奇遇",
+        name: "高频采样",
         type: "被动",
-        effect: "巡察触发橙色、红色高阶事件概率翻倍，体力恢复速度 +20%",
+        effect: "调研触发橙色、红色高阶事件概率翻倍，体力恢复速度 +20%",
         mods: { eventHigh: 0.08, staminaRegen: 0.2 },
       },
       {
-        name: "雄心壮志",
+        name: "高压推进",
         type: "被动",
         effect: "人物「野心」属性效果 +25%，主公督办缩减工期比例提升至 90%",
         mods: { ambAttr: 0.25, superviseBoost: 0.15 },
       },
       {
-        name: "山海重塑奇工",
+        name: "地形重塑工程",
         type: "终极",
-        effect: "填海与移山费用 −50%，经地形改造的地块永久获得 +18% 沃土产出加成",
+        effect: "填海与移山费用 −50%，经地形改造的地块永久获得 +18% 基础产出加成",
         extraRules: ["reclaimWater", "reclaimMountain"],
         mods: { reclaimDiscount: 0.5, reclaimedTileOut: 0.18 },
       },
       {
-        name: "特区星链联邦",
+        name: "特区星链网络",
         type: "终极",
         effect: "经济特区上限 +2，所有特区中心地块之间视作直接相邻并互通满级供需边",
         mods: { zoneMax: 2, sezStarLink: 1 },
@@ -6111,73 +6111,73 @@ const WARDROBE_SKINS = [
     ],
     cha: [
       {
-        name: "礼贤下士",
+        name: "定向招募",
         type: "被动",
-        effect: "名士招募十连星钻消耗 −10%，首次派驻人物额外获 +25 魅力历练",
+        effect: "人才招募十连星钻消耗 −10%，首次派驻人物额外获 +25 魅力经验",
         mods: { recruitTenCut: 0.1, firstDeployChaExp: 25 },
       },
       {
-        name: "市井繁荣",
+        name: "城市承载",
         type: "被动",
         effect: "全国基础人口与宜居度上限 +10%，消费类产业产出 +6%",
         mods: { popCapMult: 0.1, livCapAdd: 6, consumerOut: 0.06 },
       },
       {
-        name: "四海商路",
+        name: "跨境结算",
         type: "被动",
         effect: "国际贸易订单收益 +20%，贸易充能恢复速度加快 15%",
         mods: { tradeGainMult: 0.2, tradeRegenMult: 0.15 },
       },
       {
-        name: "名士风流",
+        name: "核心激励",
         type: "被动",
-        effect: "人物「魅力」属性效果 +20%，主公「指点」触发顿悟大奖概率翻倍",
+        effect: "人物「魅力」属性效果 +20%，主公「指点」暴击概率翻倍",
         mods: { chaAttr: 0.2, mentorJackpotMult: 1 },
       },
       {
-        name: "伯乐识才",
+        name: "高阶寻访",
         type: "被动",
-        effect: "招募出橙色、红色名士概率提升 +25%（含保底加速）",
+        effect: "招募出橙色、红色人才概率提升 +25%（含保底加速）",
         mods: { recruitHighBoost: 0.25 },
       },
       {
-        name: "惠民工程",
+        name: "公共配套",
         type: "被动",
         effect: "文体医疗生态类市政设施覆盖效果 +25%，民生预算成本 −12%",
         mods: { civicWellMult: 0.25, welCostCut: 0.12 },
       },
       {
-        name: "将星共鸣",
+        name: "星级协同",
         type: "被动",
-        effect: "同名卡或高星名士的星级突破属性乘区额外 +20%",
+        effect: "同名卡或高星人才的星级突破属性乘区额外 +20%",
         mods: { starMultBoost: 0.2 },
       },
       {
         name: "远洋溢价",
         type: "被动",
-        effect: "出口稀缺与高阶产品时额外获得 +25% 外汇奖金并附赠随机洞察",
+        effect: "出口稀缺与高阶产品时额外获得 +25% 外汇收益并附赠随机洞察",
         mods: { tradeHighBonus: 0.25, tradeInsightChance: 0.5 },
       },
       {
-        name: "群贤毕至",
+        name: "精英密度",
         type: "被动",
-        effect: "全国已派驻橙/红名士每满 5 人，全国全产业产出 +2%（上限 +16%）",
+        effect: "全国已派驻橙/红人才每满 5 人，全国全产业产出 +2%（上限 +16%）",
         mods: { highCardNationOut: 1 },
       },
       {
-        name: "盛世地标",
+        name: "地标工程",
         type: "被动",
         effect: "全部三格国家奇观建造成本 −20%，奇观落成额外奖励 ◇200 星钻",
         mods: { wonderCostCut: 0.2, wonderGemBonus: 200 },
       },
       {
-        name: "天下归心·名士阁",
+        name: "全局人才网络",
         type: "终极",
-        effect: "全体驻守名士视为高 1 星生效（可突破原星级上限乘区），指点经验翻倍",
+        effect: "全体驻守人才视为高 1 星生效（可突破原星级上限乘区），指点经验翻倍",
         mods: { cardVirtualStar: 1, mentorExpMult: 1 },
       },
       {
-        name: "万国世博·自由港",
+        name: "全球枢纽网络",
         type: "终极",
         effect: "国家奇观辐射范围扩大 +1 环、奇观全局加成 +30%，贸易充能上限 +2",
         mods: { wonderRadiusAdd: 1, wonderGlobalMult: 0.3, tradeMaxAdd: 2 },
@@ -6258,8 +6258,8 @@ const REGIMES = [
     name: "均衡混合制",
     needDir: null,
     need: 0,
-    brief: "国体均衡 · 古代通典",
-    pros: "国体均衡 · 古代经世通典",
+    brief: "税负与支出均衡 · 基础制度",
+    pros: "各项宏观参数均衡，开放 6 项基础体制政策",
     cons: "",
     mods: {},
   },
@@ -6310,12 +6310,12 @@ const REGIMES = [
 ];
 const REGIME_MAP = Object.fromEntries(REGIMES.map((r) => [r.id, r]));
 const POLICY_CARDS = [
-  // ⚖️ 均衡混合制（6 · 中华古代经世巨擘）
+  // 均衡混合制（6）
   {
     id: "pc_guanzhong",
     regime: "balanced",
-    name: "《管子》轻重之术",
-    who: "管仲 · 春秋齐",
+    name: "轻重平准制度",
+    who: "管仲 · 轻重论",
     pros: "全国税收 +12% · 储备 +15%",
     cons: "行政治理 +6%",
     mods: { taxMult: 0.12, reserveMult: 0.15, adminMult: 0.06 },
@@ -6323,8 +6323,8 @@ const POLICY_CARDS = [
   {
     id: "pc_shangyang",
     regime: "balanced",
-    name: "奖励耕织变法",
-    who: "商鞅 · 秦",
+    name: "垦殖激励法令",
+    who: "商鞅 · 垦草令",
     pros: "开拓费 −20% · 食品人口 +12%",
     cons: "全国税收 −5%",
     mods: { unlockCost: -0.2, foodPopAdd: 0.12, taxMult: -0.05 },
@@ -6332,8 +6332,8 @@ const POLICY_CARDS = [
   {
     id: "pc_sanghy",
     regime: "balanced",
-    name: "均输平准官营",
-    who: "桑弘羊 · 汉武帝",
+    name: "均输平准专营",
+    who: "桑弘羊 · 平准法",
     pros: "全国税收 +15% · 储备 +25%",
     cons: "消费产出 −8%",
     mods: { taxMult: 0.15, reserveMult: 0.25, consumerOut: -0.08 },
@@ -6341,8 +6341,8 @@ const POLICY_CARDS = [
   {
     id: "pc_yangyan",
     regime: "balanced",
-    name: "两税法改革",
-    who: "杨炎 · 唐",
+    name: "两税法并轨",
+    who: "杨炎 · 税制改革",
     pros: "全国税收 +10% · 产出 +6%",
     cons: "",
     mods: { taxMult: 0.1, outputAll: 0.06 },
@@ -6351,7 +6351,7 @@ const POLICY_CARDS = [
     id: "pc_zhangjz",
     regime: "balanced",
     name: "一条鞭法折银",
-    who: "张居正 · 明",
+    who: "张居正 · 赋役折算",
     pros: "全国税收 +12% · 治理 −22%",
     cons: "",
     mods: { taxMult: 0.12, adminMult: -0.22 },
@@ -6359,18 +6359,18 @@ const POLICY_CARDS = [
   {
     id: "pc_yongzheng",
     regime: "balanced",
-    name: "摊丁入亩改革",
-    who: "雍正 · 清",
+    name: "摊丁入亩税改",
+    who: "地丁合一 · 税基改革",
     pros: "全国人口 +15% · 宜居 +8",
     cons: "行政治理 +8%",
     mods: { population: 0.15, livFlat: 8, adminMult: 0.08 },
   },
-  // 💰 自由金融制（6 · 中外顶级财税巨头）
+  // 自由金融制（6）
   {
     id: "pc_zhurj",
     regime: "fiscal",
-    name: "分税制与国企脱困",
-    who: "铁面首相 · 1994",
+    name: "分税制与国企改制",
+    who: "分税制改革 · 1994",
     pros: "全国税收 +16% · 多样性增强",
     cons: "设施维护 +10%",
     mods: { taxMult: 0.16, diversity: 0.0016, maint: 0.1 },
@@ -6379,7 +6379,7 @@ const POLICY_CARDS = [
     id: "pc_chenyun",
     regime: "fiscal",
     name: "平抑物价统收统支",
-    who: "建国掌柜 · 1950",
+    who: "财经统管 · 1950",
     pros: "维护 −16% · 治理 −16% · 储备 +20%",
     cons: "产出 −4%",
     mods: { maint: -0.16, adminMult: -0.16, reserveMult: 0.2, outputAll: -0.04 },
@@ -6387,7 +6387,7 @@ const POLICY_CARDS = [
   {
     id: "pc_hamilton",
     regime: "fiscal",
-    name: "联邦承债建制令",
+    name: "联邦承债建制法案",
     who: "汉密尔顿 · 1790",
     pros: "发债上限 +35% · 利率 −0.3%",
     cons: "行政治理 +10%",
@@ -6396,7 +6396,7 @@ const POLICY_CARDS = [
   {
     id: "pc_wilson",
     regime: "fiscal",
-    name: "美联储信用建制",
+    name: "央行储备信用体系",
     who: "威尔逊 · 1913",
     pros: "发债上限 +30% · 内需 +10%",
     cons: "利率 +0.15%",
@@ -6405,7 +6405,7 @@ const POLICY_CARDS = [
   {
     id: "pc_reagan",
     regime: "fiscal",
-    name: "供给学派减税令",
+    name: "供给侧减税法案",
     who: "里根 · 1981",
     pros: "建厂/升级 −20% · 产出 +8%",
     cons: "全国税收 −8%",
@@ -6414,18 +6414,18 @@ const POLICY_CARDS = [
   {
     id: "pc_thatcher",
     regime: "fiscal",
-    name: "市场松绑与私有化",
+    name: "市场松绑与民营化",
     who: "撒切尔 · 1980s",
     pros: "产出 +12% · 社保 −15%",
     cons: "宜居 −8",
     mods: { outputAll: 0.12, socialMult: -0.15, livFlat: -8 },
   },
-  // 🏭 产业基建制（6 · 中外超级实业大师）
+  // 产业基建制（6）
   {
     id: "pc_deng",
     regime: "industry",
-    name: "改革开放特区试验",
-    who: "南巡总师 · 1979",
+    name: "改革开放特区试点",
+    who: "特区条例 · 1979",
     pros: "供需边 +20% · 经济特区 +1",
     cons: "全国税收 −6%",
     mods: { supplyEdge: 0.2, zoneMax: 1, taxMult: -0.06 },
@@ -6433,8 +6433,8 @@ const POLICY_CARDS = [
   {
     id: "pc_ywu",
     regime: "industry",
-    name: "一五重工奠基工程",
-    who: "建国重工规划 · 1953",
+    name: "重工奠基建设纲要",
+    who: "工业化规划 · 1953",
     pros: "产值型 +14% · 重工能源 +12%",
     cons: "消费 −8%",
     mods: { outputPersonality: 0.14, heavyOut: 0.12, consumerOut: -0.08 },
@@ -6442,8 +6442,8 @@ const POLICY_CARDS = [
   {
     id: "pc_zhangzd",
     regime: "industry",
-    name: "洋务自强官督商办",
-    who: "张之洞 · 晚清",
+    name: "官督商办实业章程",
+    who: "张之洞 · 近代实业",
     pros: "建厂费 −16% · 重工 +10%",
     cons: "行政治理 +10%",
     mods: { buildCost: -0.16, heavyOut: 0.1, adminMult: 0.1 },
@@ -6451,7 +6451,7 @@ const POLICY_CARDS = [
   {
     id: "pc_libing",
     regime: "industry",
-    name: "大运河与水利通航",
+    name: "跨流域运河水利网",
     who: "李冰 / 郭守敬",
     pros: "水电供给 +30% · 施工 +20%",
     cons: "设施维护 +8%",
@@ -6475,12 +6475,12 @@ const POLICY_CARDS = [
     cons: "全国税收 −5%",
     mods: { cluster: 0.18, outputAll: 0.08, taxMult: -0.05 },
   },
-  // 🏥 福利民生制（6 · 中外顶级民生名臣）
+  // 福利民生制（6）
   {
     id: "pc_wen",
     regime: "welfare",
-    name: "废除农业税免学费",
-    who: "亲民总理 · 2006",
+    name: "农业免税与免费教育",
+    who: "城乡税改 · 2006",
     pros: "食品人口 +14% · 宜居 +12",
     cons: "税收 −8% · 社保 +8%",
     mods: { foodPopAdd: 0.14, livFlat: 12, taxMult: -0.08, socialMult: 0.08 },
@@ -6488,8 +6488,8 @@ const POLICY_CARDS = [
   {
     id: "pc_wanganshi",
     regime: "welfare",
-    name: "青苗募役惠农策",
-    who: "王安石 · 北宋",
+    name: "青苗信贷与募役法",
+    who: "王安石 · 变法",
     pros: "内需 +14% · 施工 +20%",
     cons: "行政治理 +10%",
     mods: { demand: 0.14, buildSpeed: 0.2, adminMult: 0.1 },
@@ -6497,8 +6497,8 @@ const POLICY_CARDS = [
   {
     id: "pc_weizheng",
     regime: "welfare",
-    name: "贞观轻徭薄赋",
-    who: "魏征 / 房玄龄 · 唐",
+    name: "均田减赋条例",
+    who: "魏征 / 房玄龄",
     pros: "宜居 +14 · 人口 +12% · 维护 −10%",
     cons: "全国税收 −8%",
     mods: { livFlat: 14, population: 0.12, maint: -0.1, taxMult: -0.08 },
@@ -6506,7 +6506,7 @@ const POLICY_CARDS = [
   {
     id: "pc_lky",
     regime: "welfare",
-    name: "组屋与公积金建制",
+    name: "公共组屋与公积金制",
     who: "李光耀 · 新加坡",
     pros: "宜居 +14 · 消费 +10% · 人口 +10%",
     cons: "行政治理 +12%",
@@ -6515,7 +6515,7 @@ const POLICY_CARDS = [
   {
     id: "pc_bismarck",
     regime: "welfare",
-    name: "社会保险建制令",
+    name: "社会保险法案",
     who: "俾斯麦 · 1883",
     pros: "宜居 +12 · 人物历练 +20%",
     cons: "公共服务 +16%",
@@ -6530,12 +6530,12 @@ const POLICY_CARDS = [
     cons: "全国税收 −6%",
     mods: { unlockCost: -0.25, cardExp: 0.25, taxMult: -0.06 },
   },
-  // 🚀 科创奇点制（6 · 大国重器与前沿巅峰）
+  // 科创奇点制（6）
   {
     id: "pc_twobomb",
     regime: "sci",
-    name: "两弹一星举国攻关",
-    who: "星海奠基总师 · 1964",
+    name: "战略科技专项攻关",
+    who: "重点科研专项 · 1964",
     pros: "Lv.3–4 高阶 +18% · 人物经验 +20%",
     cons: "设施维护 +12%",
     mods: { hiTechOut: 0.18, cardExp: 0.2, maint: 0.12 },
@@ -6552,8 +6552,8 @@ const POLICY_CARDS = [
   {
     id: "pc_kejiao",
     regime: "sci",
-    name: "科教兴国超级工程",
-    who: "世纪科教战略 · 1995",
+    name: "科教兴国专项工程",
+    who: "科教发展战略 · 1995",
     pros: "高阶 +12% · 架空 +14% · 施工队 +1",
     cons: "公共服务 +10%",
     mods: { hiTechOut: 0.12, ficOut: 0.14, buildSlots: 1, socialMult: 0.1 },
@@ -6561,7 +6561,7 @@ const POLICY_CARDS = [
   {
     id: "pc_songyx",
     regime: "sci",
-    name: "天工开物百工巧匠",
+    name: "天工工艺标准化",
     who: "宋应星 / 沈括",
     pros: "产业集群 +15% · 建厂费 −15%",
     cons: "",
@@ -6570,7 +6570,7 @@ const POLICY_CARDS = [
   {
     id: "pc_jfk",
     regime: "sci",
-    name: "阿波罗登月工程",
+    name: "阿波罗深空工程",
     who: "肯尼迪 · 1961",
     pros: "架空产出 +18% · 奇异资源 +12%",
     cons: "设施维护 +14%",
@@ -6579,8 +6579,8 @@ const POLICY_CARDS = [
   {
     id: "pc_singularity",
     regime: "sci",
-    name: "奇点深空理事宪章",
-    who: "星海理事会 · 2050",
+    name: "奇点算力与深空宪章",
+    who: "深空技术理事会 · 2050",
     pros: "全架空 +24% · 奇异资源 +18%",
     cons: "社保 +15% · 治理 +12%",
     mods: { ficOut: 0.24, exoticAdd: 0.18, socialMult: 0.15, adminMult: 0.12 },
@@ -6631,15 +6631,15 @@ function switchRegime(A, regId, now = Date.now()) {
   if (A.regime === regId) return UA("当前已是该体制");
   if (!isRegimeUnlocked(A, regId)) {
     const d = INSIGHT_DIRS[r.needDir];
-    return UA(`需主公调研积累 ${d.name} ${r.need} 点（当前 ${A.lord.insights[r.needDir] || 0}/${r.need}）`);
+    return UA(`需调研积累 ${d.name} ${r.need} 点（当前 ${A.lord.insights[r.needDir] || 0}/${r.need}）`);
   }
   if (A.regimeCdQ != null) {
     if ((A.quarter || 0) < A.regimeCdQ) {
-      return UA(`改制稳定期中，还需 ${A.regimeCdQ - (A.quarter || 0)} 个季度`);
+      return UA(`体制稳定期中，还需 ${A.regimeCdQ - (A.quarter || 0)} 个季度`);
     }
     A.regimeCd = 0;
   } else if (now < (A.regimeCd || 0)) {
-    return UA(`改制冷静期中，还要等 ${Vc(A.regimeCd - now)}`);
+    return UA(`体制稳定期中，还需等待 ${Vc(A.regimeCd - now)}`);
   }
   const cdMult = Math.max(0.25, 1 + (be(A).mods.adjustCooldown || 0)),
     cdQ = Math.max(2, Math.round(8 * cdMult));
@@ -6653,21 +6653,21 @@ function switchRegime(A, regId, now = Date.now()) {
     yt(A, "pol", 60);
   }
   bumpDailyQ(A, "gov", 1);
-  pe(A, `国家改制为「${r.name}」，内阁切换为本制专属名臣政策池。`, "gold");
-  return qe(`改制成功：「${r.name}」`);
+  pe(A, `国家体制已切换为「${r.name}」，专属政策池同步更新。`, "gold");
+  return qe(`已切换体制：「${r.name}」`);
 }
 function togglePolicyCard(A, cardId) {
   const regId = ensureRegime(A),
     p = POLICY_CARD_MAP[cardId];
   if (!p) return UA("未知政策");
-  if (p.regime !== regId) return UA("仅可装配当前体制下的专属名臣政策");
+  if (p.regime !== regId) return UA("仅可装配当前体制下的专属政策");
   const cap = getPolicySlotCap(A),
     idx = A.policyCards.indexOf(cardId);
   if (idx >= 0) {
     A.policyCards.splice(idx, 1);
     return qe(`已卸下「${p.name}」`);
   }
-  if (A.policyCards.length >= cap) return UA(`内阁政策槽已满（${cap}/${cap}），请先卸下一张`);
+  if (A.policyCards.length >= cap) return UA(`政策槽位已满（${cap}/${cap}），请先卸下一项`);
   A.policyCards.push(cardId);
   A.stats.pcSeen ?? (A.stats.pcSeen = []);
   if (!A.stats.pcSeen.includes(cardId)) {
@@ -6681,7 +6681,7 @@ function togglePolicyCard(A, cardId) {
     A.stats.pcDailySeen.length > 80 && A.stats.pcDailySeen.splice(0, A.stats.pcDailySeen.length - 80);
     bumpDailyQ(A, "gov", 1);
   }
-  pe(A, `启用本制名臣政策「${p.name}」（${p.who}）。`, "good");
+  pe(A, `已启用政策「${p.name}」（${p.who}）。`, "good");
   return qe(`已启用「${p.name}」（${A.policyCards.length}/${cap}）`);
 }
 function castBurstDecree() {
@@ -6728,7 +6728,7 @@ function addInsight(A, dir, n = 1) {
   A.lord.insights[dir] = next;
   const reg = REGIMES.find((r) => r.needDir === dir);
   if (reg && prev < reg.need && next >= reg.need) {
-    pe(A, `民情洞察达标，解锁基本体制「${reg.name}」：前往「治国与施政」即可改制。`, "gold");
+    pe(A, `调研洞察达标，已解锁体制「${reg.name}」，可前往「施政」面板切换。`, "gold");
     return reg;
   }
   return null;
@@ -6758,7 +6758,7 @@ const FIVE_YEAR_PLANS = [
     name: "科创奇点",
     brief: "高阶/架空 +22% · 历练 +40%",
     pros: "高阶/架空产出 +22% · 人物历练 +40%",
-    kpiDesc: "20 季内 GDP 增长 +18% 或主公调研/巡察 5 次",
+    kpiDesc: "20 季内 GDP 增长 +18% 或主公调研 5 次",
     rewardDesc: "国库 +2.2 季 GDP · ◇260 · 科创洞察 +3",
     dir: "sci",
     gems: 260,
@@ -6888,7 +6888,7 @@ function startFiveYearPlan(A, planId) {
     goodFiscalQ: 0,
     goodLivQ: 0,
   };
-  pe(A, `签发第 ${num} 个五年规划「${plan.name}」（20 季）：${plan.pros}。`, "gold");
+  pe(A, `已立项第 ${num} 轮五年规划「${plan.name}」（20 季）：${plan.pros}。`, "gold");
   return qe(`已启动「${plan.name}」`);
 }
 function checkFiveYearPlan(A, m) {
@@ -6925,14 +6925,14 @@ function checkFiveYearPlan(A, m) {
     };
     pe(
       A,
-      `第 ${f.num} 个五年规划「${plan.name}」达标！国库 +${fe(cash, 0)} 亿、星钻 ◇${gems}${ur ? `，并解锁基本体制「${ur.name}」` : ""}。`,
+      `第 ${f.num} 轮五年规划「${plan.name}」达标结项：国库 +${fe(cash, 0)} 亿、星钻 ◇${gems}${ur ? `，解锁体制「${ur.name}」` : ""}。`,
       "gold",
     );
     A.fyp = null;
   } else if (A.quarter >= f.endQ) {
     pe(
       A,
-      `第 ${f.num} 个五年规划「${plan.name}」届满结项（${Math.round(prog * 100)}%），可签发新一轮规划。`,
+      `第 ${f.num} 轮五年规划「${plan.name}」届满结项（进度 ${Math.round(prog * 100)}%），可重新立项。`,
       "info",
     );
     A.fyp = null;
@@ -7864,7 +7864,7 @@ function dt(A, e = Date.now()) {
         ge && ks(ge.q - y.q, ge.r - y.r) <= we && Xt.push({ label: "主公停留", value: st }));
       const Pr = (c.output ?? 0) + natOutAll;
       (Pr && Xt.push({ label: "全国加成", value: Pr }),
-        highCardOutBonus > 0 && Xt.push({ label: "群贤毕至", value: highCardOutBonus }),
+        highCardOutBonus > 0 && Xt.push({ label: "精英密度", value: highCardOutBonus }),
         effRdOut > 0 && Xt.push({ label: "科研预算", value: effRdOut }),
         welOut > 0 && Xt.push({ label: "民生预算", value: welOut }),
         achB > 0 && Xt.push({ label: "成就光环", value: achB }),
@@ -7989,7 +7989,7 @@ function dt(A, e = Date.now()) {
       isWaterInd && DA("临海涉水加成", f.waterIndOut),
       isMineSmelt && DA("采掘冶炼专精", f.mineSmeltOut),
       utilSurplusBonus > 0 && DA("管网盈余转化", utilSurplusBonus),
-      highCardOutBonus > 0 && DA("群贤毕至", highCardOutBonus),
+      highCardOutBonus > 0 && DA("精英密度", highCardOutBonus),
       R.consumer && DA("内需", Ce),
       DA("政令与事件", l(y, "output", R)),
       DA("全国加成", natOutAll),
@@ -8396,7 +8396,7 @@ function e7(A, e, t = Date.now(), opts = null) {
   const o = n.resource ? ke[n.resource] : null;
   return (
     o && o.tier >= 3
-      ? pe(A, `开拓${Ge[n.terrain].name}，发现${Ke[o.tier]}色资源「${o.name}」！${insNote}`, "gold")
+      ? pe(A, `开拓${Ge[n.terrain].name}，发现${Ke[o.tier]}色资源「${o.name}」${insNote}`, "gold")
       : pe(A, `开拓一块${Ge[n.terrain].name}${o ? `，发现${o.name}` : ""}${insNote}。`),
     qe(void 0, n.resource)
   );
@@ -8768,7 +8768,7 @@ function f7(A, e) {
     if (wGem > 0) A.gems = (A.gems || 0) + wGem;
     pe(
       A,
-      `「${pDef.name}」落成开放${wGem > 0 ? `，盛世地标赐星钻 ◇${wGem}` : ""}。`,
+      `「${pDef.name}」建成投用${wGem > 0 ? `，地标工程奖励 ◇${wGem}` : ""}。`,
       wGem > 0 ? "gold" : "good",
     );
     return pDef.name;
@@ -9283,7 +9283,7 @@ function ia(A, e, g = !1) {
   yt(A, "cha", 40 * starGain);
   const resMsg =
     usedCopy && n.tier >= 3
-      ? `${rn(n)} 同名共鸣突破 +${starGain} 星！上限升至 Lv.${newCap}，获赠 ◇${bonusGems} 与 ${bonusExp} 历练（现 Lv.${t.level}）`
+      ? `${rn(n)} 同名突破 +${starGain} 星：上限升至 Lv.${newCap}，返还 ◇${bonusGems} 与 ${bonusExp} 经验（现 Lv.${t.level}）`
       : `${rn(n)} 突破成功，等级上限提升到 Lv.${newCap}`;
   pe(A, `${resMsg}。`, usedCopy && n.tier >= 3 ? "gold" : "card");
   return qe(resMsg, { starGain, bonusGems, bonusExp, level: t.level, cap: newCap });
@@ -9315,7 +9315,7 @@ function i4(A, e) {
   t.cumPaid == null && (t.cumPaid = estimateTileCumPaid(t));
   ((A.treasury -= s), (t.cumPaid += s), (t.exclusive = !0));
   const f = se[t.card];
-  return (pe(A, `${rn(f)} 的专属产业「${f.exclusive.name}」落成！`, "gold"), qe());
+  return (pe(A, `${rn(f)} 专属产业「${f.exclusive.name}」建成投产。`, "gold"), qe());
 }
 function h0(A, e) {
   return Math.round(O.prospectCost * Math.max(0.3, 1 + C0(A, e.id, "prospectCost")));
@@ -9439,7 +9439,7 @@ function P7(A, e, t) {
     tile: null,
     obtained: A.stats.pulls + (t ? t.int(1e3) : 0),
   };
-  n.tier >= 3 && pe(A, `获得${Ke[n.tier]}卡「${rn(n)}」！`, "gold");
+  n.tier >= 3 && pe(A, `获得${Ke[n.tier]}卡「${rn(n)}」。`, "gold");
   return { card: e, isNew: !0, refund: 0 };
 }
 function getRecruitCost(A, e) {
@@ -9500,12 +9500,12 @@ const ACH_CATS = [
   { id: "legend", name: "传奇勋章" },
 ];
 const ACH_RANKS = [
-  { pts: 0, name: "初创城邦" },
-  { pts: 120, name: "新兴郡国" },
-  { pts: 280, name: "繁盛邦联" },
-  { pts: 500, name: "现代强权" },
-  { pts: 800, name: "超级大国" },
-  { pts: 1200, name: "文明灯塔" },
+  { pts: 0, name: "初创经济体" },
+  { pts: 120, name: "区域经济体" },
+  { pts: 280, name: "工业共同体" },
+  { pts: 500, name: "现代经济体" },
+  { pts: 800, name: "全球经济体" },
+  { pts: 1200, name: "星际经济体" },
 ];
 const EXTRA_ACHS = [
   {
@@ -9662,7 +9662,7 @@ const EXTRA_ACHS = [
   },
   {
     id: "ach_pol",
-    name: "治国良相",
+    name: "制度架构",
     desc: "主公政治等级达到 Lv.5",
     cat: "lord",
     tier: 2,
@@ -9673,7 +9673,7 @@ const EXTRA_ACHS = [
   },
   {
     id: "ach_cha",
-    name: "德高望重",
+    name: "公共声望",
     desc: "主公魅力等级达到 Lv.5",
     cat: "lord",
     tier: 2,
@@ -9684,7 +9684,7 @@ const EXTRA_ACHS = [
   },
   {
     id: "ach_bt",
-    name: "破境成才",
+    name: "星级突破",
     desc: "完成 1 次人物星级突破",
     cat: "lord",
     tier: 1,
@@ -9695,7 +9695,7 @@ const EXTRA_ACHS = [
   },
   {
     id: "ach_daily7",
-    name: "勤政典范",
+    name: "全勤记录",
     desc: "累计完成 15 项每日委托",
     cat: "lord",
     tier: 3,
@@ -9857,8 +9857,8 @@ function getDailyQuests(A, now = Date.now()) {
       id: "dq_visit",
       key: "visit",
       ico: "pin",
-      name: `亲临视察「${tgName}」`,
-      desc: `让主公飞抵并巡察「${tgName}」所在地块`,
+      name: `定点调研「${tgName}」`,
+      desc: `前往并抵达「${tgName}」所在地块`,
       target: 1,
       reward: 70,
       prog: Math.min(1, dq.prog.visit ?? 0),
@@ -9870,7 +9870,7 @@ function getDailyQuests(A, now = Date.now()) {
       key: "survey",
       ico: "flag",
       name: "实地调研",
-      desc: "今日主公完成 2 次调研掷骰",
+      desc: "完成 2 次调研移动",
       target: 2,
       reward: 60,
       prog: Math.min(2, dq.prog.survey ?? 0),
@@ -9880,7 +9880,7 @@ function getDailyQuests(A, now = Date.now()) {
       id: "dq_act",
       key: "act",
       ico: "sparkles",
-      name: "勤政爱民",
+      name: "现场调度",
       desc: "今日完成 1 次人才指点或工程督办",
       target: 1,
       reward: 60,
@@ -9891,7 +9891,7 @@ function getDailyQuests(A, now = Date.now()) {
       id: "dq_gov",
       key: "gov",
       ico: "stamp",
-      name: "施政兴邦",
+      name: "宏观运作",
       desc: "今日完成 1 次政令、贸易、建造或升级",
       target: 1,
       reward: 60,
@@ -9902,7 +9902,7 @@ function getDailyQuests(A, now = Date.now()) {
       id: "dq_fiscal",
       key: "fiscal",
       ico: "coins",
-      name: "国泰民安",
+      name: "财政稳健",
       desc: "在非债务预警下稳健运转 2 个季度",
       target: 2,
       reward: 50,
@@ -9915,7 +9915,7 @@ function claimDailyQ(A, id, now = Date.now()) {
   const dq = ensureDailyQ(A, now),
     q = getDailyQuests(A, now).find((x) => x.id === id);
   if (!q) return UA("未知委托");
-  if (dq.claimed.includes(id)) return UA("今天已经领过啦");
+  if (dq.claimed.includes(id)) return UA("今日该项已领取");
   if (q.prog < q.target) return UA("尚未完成");
   (dq.claimed.push(id), (A.gems += q.reward), (A.stats.dailyDone = (A.stats.dailyDone ?? 0) + 1));
   return qe(`每日委托「${q.name}」：获得 ◇${q.reward}`);
@@ -9923,10 +9923,10 @@ function claimDailyQ(A, id, now = Date.now()) {
 function claimDailyBonus(A, now = Date.now()) {
   const dq = ensureDailyQ(A, now),
     qs = getDailyQuests(A, now);
-  if (dq.bonusClaimed) return UA("今日勤政宝箱已领取");
+  if (dq.bonusClaimed) return UA("今日全勤补给已领取");
   if (qs.filter((x) => x.prog >= x.target).length < qs.length) return UA("完成全部 5 项每日委托即可开启");
   ((dq.bonusClaimed = !0), (A.gems += 150), yt(A, "pol", 20), yt(A, "cha", 20));
-  return qe("开启今日勤政宝箱：◇150 + 政治/魅力经验各 +20");
+  return qe("领取全勤补给：◇150 + 政治/魅力经验各 +20");
 }
 function totalClaimableTasks(A, m) {
   enrichAchievements();
@@ -10226,7 +10226,7 @@ const je = (A) => ({ t: "money", gdp: A }),
     [
       "社区义诊日",
       ["pub:med"],
-      "三甲医院与社区医护开展大型便民义诊，市民赞不绝口。",
+      "医疗中心与社区网点联合开展公共健康筛查。",
       "增拨义诊经费",
       [LA("nation", "livability", 0.16, 6), inE("welfare", 1)],
       "表彰一线医护",
@@ -10253,8 +10253,8 @@ const je = (A) => ({ t: "money", gdp: A }),
     [
       "公园晨练盛景",
       ["pub:eco"],
-      "清晨园林绿道游人如织，市民热情邀主公同行。",
-      "与民同乐巡游",
+      "城市生态绿道投入使用，周边片区通勤与居住环境改善。",
+      "开展社区调研",
       [Xg(1), inE("welfare", 1)],
       "扩建林荫步道",
       [LA("nation", "livability", 0.16, 6), _A("cha", 50)],
@@ -10262,8 +10262,8 @@ const je = (A) => ({ t: "money", gdp: A }),
     [
       "剧院首演大幕",
       ["pub:culture"],
-      "大剧院与主场馆迎来重量级开幕首演，一票难求。",
-      "亲临开幕揭幕",
+      "城市文化场馆举办首季展演，带动周边商业客流。",
+      "支持商业展演",
       [LA("nation", "demand", 0.12, 6), _A("cha", 60)],
       "面向市民惠民票",
       [LA("nation", "livability", 0.18, 6), inE("welfare", 1)],
@@ -10308,7 +10308,7 @@ const je = (A) => ({ t: "money", gdp: A }),
       "沿海保税清关",
       ["water", "pub:infra"],
       "外贸货轮密集靠泊，海关提议试行极速清关。",
-      "秒批快速通航",
+      "开通快速清关",
       [LA("near", "output", 0.2, 6), inE("fiscal", 1)],
       "加征港务调节费",
       [je(0.6), _A("pol", 50)],
@@ -10325,8 +10325,8 @@ const je = (A) => ({ t: "money", gdp: A }),
     [
       "夜间工地灯火",
       ["building"],
-      "重点工程夜间灯火通明，建设者干劲十足。",
-      "主公现场督工",
+      "重点基础设施项目进入夜间连续施工阶段。",
+      "协调施工调度",
       [u7(1), _A("mgmt", 55)],
       "加发夜班津贴",
       [_A("cha", 55), LA("nation", "livability", 0.12, 6)],
@@ -10435,7 +10435,7 @@ const je = (A) => ({ t: "money", gdp: A }),
     [
       "新消费国潮兴起",
       ["consumer"],
-      "居民收入提升，国潮文创与智能家居销量井喷。",
+      "居民可支配收入增长，消费电子与文创产品需求上升。",
       "鼓励新消费场景",
       [LA("consumer", "output", 0.2, 8), inE("welfare", 1)],
       "规范平台税务",
@@ -10456,7 +10456,7 @@ const je = (A) => ({ t: "money", gdp: A }),
       "诺奖大师讲坛",
       ["pub:edu", "capital"],
       "数位享誉全球的学术泰斗应邀来访大学城。",
-      "礼聘入驻智库",
+      "签约首席顾问",
       [o0(2, 3)],
       "全国直播公开课",
       [LA("nation", "cardExp", 0.55, 12), inE("sci", 2)],
@@ -10473,7 +10473,7 @@ const je = (A) => ({ t: "money", gdp: A }),
     [
       "数字政务零跑腿",
       ["pub:gov", "capital"],
-      "全国政务大脑上线，企业与市民实现秒级审批。",
+      "数字政务系统并网运行，企业注册与审批流程缩短。",
       "全面上线一网通办",
       [LA("nation", "maint", -0.2, 12), _A("pol", 180), inE("fiscal", 2)],
       "降费让利中小微",
@@ -10482,7 +10482,7 @@ const je = (A) => ({ t: "money", gdp: A }),
     [
       "奇异星脉共振",
       ["exotic", "fictional"],
-      "奇异资源矿脉出现高能级谐振，仪器读数飙升！",
+      "外环奇异矿脉监测到高能级谐振，采样读数上升。",
       "引导超导并网",
       [LA("tile", "output", 0.55, 12), inE("sci", 2)],
       "采集高纯晶样",
@@ -10545,7 +10545,7 @@ const je = (A) => ({ t: "money", gdp: A }),
     [
       "卡脖子工艺突围",
       ["tech", "output"],
-      "科研攻关组历经千日终于突破核心光刻与材料瓶颈！",
+      "联合研发团队完成核心光刻与关键材料工艺验证。",
       "全线量产升级",
       [l7, inE("sci", 2)],
       "重奖功勋团队",
@@ -10554,36 +10554,36 @@ const je = (A) => ({ t: "money", gdp: A }),
   ],
   Q4 = [
     [
-      "奇观御览 · 国家大典",
+      "地标工程运行评估",
       ["wonder"],
-      "主公亲临国家奇观地标检阅落成盛景，万众欢腾！",
-      "全球直播盛典",
+      "国家级地标工程进入满负荷运行阶段，区域辐射指标达标。",
+      "开放全球转播",
       [LA("nation", "output", 0.15, 16), LA("nation", "livability", 0.3, 16), Ui(260)],
-      "大赦惠民同庆",
+      "发放公共消费补贴",
       [LA("nation", "demand", 0.3, 16), LA("nation", "population", 0.15, 16), _A("cha", 260)],
     ],
     [
-      "紫禁国宝特展盛会",
+      "国家数字馆藏特展",
       ["wonder", "pub:culture"],
-      "传世国宝与文明典籍齐聚殿堂，各国使节云集。",
-      "万邦文化外交",
+      "国家级馆藏档案完成数字化开放，多国机构接入交流。",
+      "开放跨国文化授权",
       [LA("nation", "tax", 0.18, 16), Ui(240), inE("fiscal", 2)],
-      "全民免费瞻仰",
+      "实行公共免费开放",
       [LA("nation", "livability", 0.35, 16), Xg(2), inE("welfare", 2)],
     ],
     [
       "曲率引擎点火试车",
       ["fictional", "wonder", "exotic"],
-      "星际曲率实验堆发出蔚蓝光晕，空间曲率首次偏转！",
+      "曲率实验反应堆完成首次满功率点火与空间偏转测试。",
       "全功率跃迁测试",
       [LA("nation", "output", 0.18, 16), inE("sci", 2)],
-      "礼聘星际总师",
+      "引进首席总师",
       [o0(3, 4)],
     ],
     [
-      "百年宪政财政峰会",
+      "国际主权财政峰会",
       ["capital", "finance", "wonder"],
-      "全球财长齐聚首都，盛赞本国现代公共财政典范。",
+      "多国财政机构代表在首都召开主权信用与清算机制会议。",
       "发行百年超长债",
       [je(3.0), inE("fiscal", 2)],
       "立永久主权基金",
@@ -10592,7 +10592,7 @@ const je = (A) => ({ t: "money", gdp: A }),
     [
       "人造太阳百秒稳态",
       ["ind:X003", "ind:201010", "wonder"],
-      "聚变反应堆刷新高约束稳态运行世界纪录！",
+      "可控核聚变实验堆刷新高约束稳态运行时间纪录。",
       "接入骨干电网",
       [l7, LA("nation", "maint", -0.25, 16)],
       "输出聚变标准",
@@ -10604,13 +10604,13 @@ const je = (A) => ({ t: "money", gdp: A }),
       "世界经贸博览会在本国隆重开幕，万商云集。",
       "签万亿供应长单",
       [LA("nation", "supply", 0.3, 16), je(2.4)],
-      "延揽跨国巨擘",
+      "引进跨国高管",
       [o0(3, 4)],
     ],
     [
       "零点生命奇点黎明",
       ["exotic", "pub:med", "fictional"],
-      "结合奇异生命源质的再生疗法取得史诗级突破！",
+      "基于奇异活性样本的细胞再生临床试验取得阶段成果。",
       "全面提升国民寿限",
       [LA("nation", "population", 0.18, 16), LA("nation", "livability", 0.3, 16)],
       "建立奇异开采站",
@@ -10619,27 +10619,27 @@ const je = (A) => ({ t: "money", gdp: A }),
     [
       "超级工程贯通全国",
       ["pub:infra", "wonder", "building"],
-      "跨海大桥与高铁干线全面贯通，天堑变通途！",
+      "跨海通道与高速干线网完成全线贯通联调。",
       "全国工期大提速",
       [LA("nation", "buildTime", -0.35, 16), u7(2), inE("industry", 2)],
-      "拓土开疆建新港",
+      "扩建外围港区",
       [a4, _A("amb", 260)],
     ],
   ],
   l4 = [
     [
-      "文明奇点 · 星海启航",
+      "深空技术奇点验证",
       ["wonder", "fictional", "exotic"],
-      "人类文明正式跨入星际纪元，深空灯塔点亮苍穹！",
+      "深空导航阵列与轨道基地完成并网，进入星际开发阶段。",
       "宣告星海坐标",
       [LA("nation", "output", 0.25, 24), Ui(450), inE("sci", 2)],
-      "迎请传说宗师",
+      "引进顶尖学者",
       [o0(4, 4)],
     ],
     [
-      "经世济国 · 万国峰会",
+      "全球贸易与清算峰会",
       ["capital", "wonder"],
-      "百国元首齐聚首都共商全球治理新章。",
+      "多边贸易与货币清算协定在首都完成签署。",
       "主导全球新秩序",
       [LA("nation", "tax", 0.28, 24), je(4.0)],
       "缔结共荣共同体",
@@ -10650,54 +10650,54 @@ const je = (A) => ({ t: "money", gdp: A }),
       ],
     ],
     [
-      "天外零点以太陨落",
+      "零点以太样本捕获",
       ["any"],
-      "一颗蕴含纯净零点以太晶的稀有天体温和坠落境内！",
+      "监测网在境内回收高纯度零点以太陨石样本。",
       "建立零点奇异矿场",
       [_r("aether"), Ui(350)],
       "全球科学共享",
       [LA("nation", "cardExp", 0.8, 24), inE("sci", 2)],
     ],
     [
-      "黄金百年 · 全盛大典",
+      "宏观景气周期峰值",
       ["any"],
-      "国泰民安、百业兴旺，史家盛赞当代为黄金盛世！",
+      "全要素生产率、财政盈余与居民消费同步达到周期峰值。",
       "开启全民黄金季",
       [LA("nation", "output", 0.28, 24), LA("nation", "demand", 0.3, 24), Xg(3)],
       "充盈国库跨越腾飞",
       [je(4.5), LA("nation", "maint", -0.35, 24)],
     ],
     [
-      "天工开物 · 奇迹升阶",
+      "模块化工程标准迭代",
       ["industry", "wonder", "public"],
-      "举国巧匠合力创下建筑与工程史上的不朽丰碑！",
-      "御笔敕封免费升阶",
+      "新一代超大型工业与建筑模块化标准通过工程验收。",
+      "执行标准升级",
       [l7, LA("nation", "supply", 0.3, 24)],
-      "延揽绝世巨匠",
+      "引进首席工程师",
       [o0(4, 4)],
     ],
     [
-      "远洋星际大开拓",
+      "外环资源带深勘",
       ["frontier", "outer", "water", "ice"],
-      "拓荒舰队在最外环疆域发现惊世战略宝库！",
-      "御驾亲征拓土",
+      "远征勘测队在外环区域定位到高丰度战略资源带。",
+      "建立外环节点",
       [a4, LA("nation", "unlockCost", -0.4, 24), Ui(350)],
-      "探明绝世氦-3矿",
+      "锁定氦-3富集矿",
       [_r("helium3"), inE("industry", 2)],
     ],
     [
-      "长生康宁 · 健康纪元",
+      "公共医疗体系升级",
       ["pub:med", "wonder", "capital"],
-      "本国全民医疗与生命科技体系成为全人类样板！",
+      "全民预防医疗与生命科学临床网络完成全境覆盖。",
       "全面普惠免单",
       [LA("nation", "population", 0.25, 24), LA("nation", "livability", 0.45, 24), inE("welfare", 2)],
       "设国际医学大奖",
       [Ui(450), _A("cha", 350)],
     ],
     [
-      "世纪主权信用巅峰",
+      "主权信用最高评级",
       ["finance", "capital", "pub:gov"],
-      "本国主权信用获全球永久 AAA+ 最高评价！",
+      "国际清算机构上调本国长期主权信用至最高评级。",
       "全球资本涌入",
       [je(5.0), LA("nation", "tax", 0.22, 24)],
       "全面减负腾飞",
@@ -10730,12 +10730,12 @@ const REGIME_EVENTS = [
     [LA("nation", "maint", -0.15, 12), ins("fiscal", 2)],
   ],
   [
-    "盐铁专营之辩",
+    "战略资源专营评估",
     ["extract", "tax", "industry"],
-    "朝野就战略资源应归国营还是放开民商展开激辩。",
-    "官营充库",
+    "就基础战略资源采掘权实行国营统配或市场准入进行审议。",
+    "实行国营统配",
     [LA("nation", "tax", 0.15, 12), ins("fiscal", 2)],
-    "放活民商",
+    "开放市场准入",
     [LA("nation", "output", 0.1, 12), ins("industry", 2)],
   ],
   [
@@ -10793,10 +10793,10 @@ const REGIME_EVENTS = [
     [LA("nation", "demand", 0.18, 12), ins("welfare", 2)],
   ],
   [
-    "田间免赋巡察",
+    "农业税负与教育评估",
     ["plain", "valley", "forest", "consumer"],
-    "主公下乡体察粮农收成与基层学堂经费。",
-    "减免农赋助学",
+    "复核基础农业片区税负水平与基层公共教育经费。",
+    "减免农业税费",
     [LA("nation", "population", 0.15, 12), ins("welfare", 2)],
     "兴修农田水利",
     [je(0.8), ins("welfare", 2)],
@@ -11694,7 +11694,7 @@ function p7(A, e, t = A.lord.tile) {
 function O4(A, e = Date.now()) {
   const t = A.lord;
   if (t.pendingEvent) return UA("先处理眼前的事件");
-  if (t.roll) return UA(`已经掷出 ${t.roll} 点，先让主公飞完`);
+  if (t.roll) return UA(`已掷出 ${t.roll} 点，请先选择落点`);
   if ((so(A, e), Tt(A, "survey", e).block)) return UA("体力不足，稍后再来");
   E0(A, "survey", e);
   const s = new tn(A.rng),
@@ -11732,7 +11732,7 @@ function y4(A, e, t) {
   }
   if (wh.industry && !wh.build) {
     const s = Math.max(3, (((n = t.tiles[wh.id]) == null ? void 0 : n.gdp) ?? 0) * 0.65 + t.gdp * 0.03);
-    return ((A.treasury += s), `路过「${HA[wh.industry].short}」：顺手收了 ${s.toFixed(0)} 亿`);
+    return ((A.treasury += s), `途经「${HA[wh.industry].short}」：国库 +${s.toFixed(0)} 亿`);
   }
   return (yt(A, "amb", 8 + cl * 2), `路过空地：野心经验 +${8 + cl * 2}`);
 }
@@ -11742,7 +11742,7 @@ function U4(A, e, t = Date.now()) {
   const s = p7(A, n.roll);
   let f = [];
   if (e === n.tile) {
-    if (s.size) return UA("掷了骰子就得走：选一块亮起的地");
+    if (s.size) return UA("请选择一处高亮可达地块");
   } else {
     const B = s.get(e);
     if (!B) return UA(`这块地超出了 ${n.roll} 格`);
@@ -11768,7 +11768,7 @@ function U4(A, e, t = Date.now()) {
     insDir = tileInsightDir(A, o),
     insAmt = isHot ? 2 : 1,
     ulReg = addInsight(A, insDir, insAmt),
-    insTag = `${INSIGHT_DIRS[insDir].icon}${INSIGHT_DIRS[insDir].short}洞察+${insAmt}${ulReg ? ` · 解锁「${ulReg.name}」!` : ""}`;
+    insTag = `${INSIGHT_DIRS[insDir].icon}${INSIGHT_DIRS[insDir].short}洞察+${insAmt}${ulReg ? ` · 解锁「${ulReg.name}」` : ""}`;
   (yt(A, c, O.patrolExp), (n.pendingEvent = m4(A, rawO, r, t)), (n.hotspots = []));
   let g = null;
   if (!n.pendingEvent) {
@@ -11778,7 +11778,7 @@ function U4(A, e, t = Date.now()) {
       if (pd.cat === "eco" || pd.cat === "culture") {
         ((n.stamina = Math.min($n(A) + 2, n.stamina + 1)),
           yt(A, "cha", 50),
-          (g = `与民同乐「${pd.name}」：主公体力 +1 · 魅力 +50 · ${insTag}`));
+          (g = `视察「${pd.name}」：体力 +1 · 魅力 +50 · ${insTag}`));
       } else if (pd.cat === "edu") {
         for (const k of Object.keys(A.cards)) A.cards[k].exp += 40;
         (yt(A, "tech", 50), (g = `视察「${pd.name}」讲学：全员人物历练 +40 · ${insTag}`));
@@ -11903,7 +11903,7 @@ function G4(A, e, t = Date.now()) {
         !(rawTile.public && it[rawTile.public] && it[rawTile.public].wonder)
           ? ((rawTile.resource = B.id),
             c.lines.push(`本格资源变为「${ke[B.id].name}」`),
-            pe(A, `${rawTile.terrain === "water" ? "海湾" : "地块"}发现「${ke[B.id].name}」！`, "gold"))
+            pe(A, `${rawTile.terrain === "water" ? "海湾" : "地块"}探明「${ke[B.id].name}」。`, "gold"))
           : (() => {
               const fb = i * 1.5 * floorMult;
               ((A.treasury += fb), c.lines.push(`地形不适合开采，改为国库 +${fb.toFixed(0)} 亿`));
@@ -12159,10 +12159,10 @@ function batchBreakthroughCopies(A) {
       bonusGems: sim.bonusGems,
     });
   }
-  if (!cardCount) return UA("当前没有可用同名卡直接突破的名士");
+  if (!cardCount) return UA("当前没有可用同名卡直接突破的人物");
   A.stats.hadBreakthrough = (A.stats.hadBreakthrough ?? 0) + totalStars;
   yt(A, "cha", 40 * totalStars);
-  const msg = `一键同名突破完成：${cardCount} 位名士共晋升 +${totalStars} 星${totalBonusGems > 0 ? `，获赠 ◇${totalBonusGems}` : ""}`;
+  const msg = `一键同名突破完成：${cardCount} 位人物共晋升 +${totalStars} 星${totalBonusGems > 0 ? `，返还 ◇${totalBonusGems}` : ""}`;
   pe(A, `${msg}。`, totalBonusGems > 0 ? "gold" : "card");
   return qe(msg, { cardCount, totalStars, bonusGems: totalBonusGems, items });
 }
@@ -12457,7 +12457,7 @@ function previewAutoDeploy(A, mode = "rebalance") {
 function applyAutoDeploy(A, mode = "rebalance") {
   const prev = previewAutoDeploy(A, mode);
   if (!prev || prev.movesCount === 0) {
-    return UA("当前名士驻守已是该模式下的最优配置，无需调动");
+    return UA("当前人员配置已是该模式下的最优方案，无需调动");
   }
   const nonLockedSet = new Set(prev.assignment.map(([tid]) => tid)),
     firstExp = 15 + (be(A).mods.firstDeployChaExp || 0);
@@ -12513,7 +12513,7 @@ function X4(A, e, t = Date.now()) {
     s = [],
     f = (v) => n.hidden.includes(v),
     o = (v) => {
-      f(v) || (n.hidden.push(v), s.push(s0[v].name), pe(A, `主公获得隐藏性格「${s0[v].name}」！`, "gold"));
+      f(v) || (n.hidden.push(v), s.push(s0[v].name), pe(A, `解锁隐藏特质「${s0[v].name}」。`, "gold"));
     };
   (A.tiles.filter((v) => v.industry && ["151010", "151011", "151012", "111012"].includes(v.industry))
     .length >= 10 && o("h_estate"),
@@ -12549,7 +12549,7 @@ function S4(A, e, t = Date.now()) {
       o.pendingEvent &&
       s({
         id: "event",
-        text: "主公巡察时遇到了一件事，等你定夺",
+        text: "调研途中触发待处理事件",
         cta: "去看看",
         kind: "gold",
         action: { type: "event" },
@@ -12834,7 +12834,7 @@ function S4(A, e, t = Date.now()) {
     if (emptySlotsAdv > 0) {
       s({
         id: "pol-card-empty",
-        text: `内阁尚有 ${emptySlotsAdv} 个「名臣政策」空槽（免体力零开销），装配即享全国加成`,
+        text: `尚有 ${emptySlotsAdv} 个「体制政策」空槽未装配（零消耗常驻加成）`,
         cta: "去装配",
         kind: "gold",
         action: { type: "panel", panel: "policy", govTab: "cabinet" },
@@ -12844,7 +12844,7 @@ function S4(A, e, t = Date.now()) {
     if (!A.fyp && (e.built >= 1 || e.unlocked >= 2)) {
       s({
         id: "fyp-empty",
-        text: "《五年规划》尚未立项：零开销开启 20 季国策增益，达标赢数季 GDP 与星钻",
+        text: "《五年规划》尚未立项：零成本激活 20 季全局增益，达标结算 GDP 与星钻",
         cta: "去立项",
         kind: "gold",
         action: { type: "panel", panel: "policy", govTab: "cabinet" },
@@ -12860,7 +12860,7 @@ function S4(A, e, t = Date.now()) {
     if (readyRegsAdv.length > 0) {
       s({
         id: "regime-ready",
-        text: `民情洞察已满！可改制为「${readyRegsAdv[0].name}」等现代国体并解锁专属名臣池`,
+        text: `调研洞察已达标，可切换为「${readyRegsAdv[0].name}」并解锁对应政策池`,
         cta: "去改制",
         kind: "gold",
         action: { type: "panel", panel: "policy", govTab: "cabinet" },
@@ -28006,7 +28006,7 @@ function explainGdpDelta(A, m) {
           : "融资分期还清：恢复 100% 满额产能",
       );
     if (Math.abs(cur.cardScore - base.cardScore) >= 0.005)
-      reasons.push(pct >= 0 ? "名士成长/调配：在岗人物升级突破或优化派驻" : "名士岗位变动：调离或更换在岗人物");
+      reasons.push(pct >= 0 ? "人才成长/调配：在岗人物升级突破或优化派驻" : "人才岗位变动：调离或更换在岗人物");
     if (
       cur.aust !== base.aust ||
       cur.rdGear !== base.rdGear ||
@@ -28095,7 +28095,7 @@ function N8(A, e = Date.now()) {
       if (c.level >= P) {
         c.exp = 0;
         const B = c.stars >= Is[g.tier];
-        pe(A, B ? `${rn(g)} 已满级！` : `${rn(g)} 到达 Lv.${P}，可用同名卡或星钻突破。`, B ? "gold" : "card");
+        pe(A, B ? `${rn(g)} 已升至满级。` : `${rn(g)} 到达 Lv.${P}，可用同名卡或星钻突破。`, B ? "gold" : "card");
       }
     }
   }
@@ -28706,7 +28706,7 @@ const CloudLadder = {
       this.saveCache.set(this.pid, payload.save_json);
       await this.fetchRemote(!0);
       typeof ie < "u" &&
-        ie.toast(`「${payload.nation_name}」已上传至全球天梯（GDP ${fe(payload.gdp)} 亿）！`, "gold");
+        ie.toast(`「${payload.nation_name}」已同步至全球天梯（GDP ${fe(payload.gdp)} 亿）`, "gold");
       return { ok: !0 };
     } catch (err) {
       this.error = String((err && err.message) || err);
@@ -29133,7 +29133,7 @@ class fp {
       Ht("stamp");
       this.pulse++;
       this.toast(
-        res.msg || `主权债务重组生效：核销国债 ${fe(res.forgiven || 0)} 亿，未来 12 季免息！`,
+        res.msg || `主权债务重组已执行：核销国债 ${fe(res.forgiven || 0)} 亿，未来 12 季免息`,
         "gold",
       );
       this.refresh();
@@ -29772,13 +29772,13 @@ function op() {
       s > 0 &&
         w("button", {
           class: "crew idle",
-          title: "有施工队闲着。点一下，把空地都拎起来给你挑",
+          title: "点击高亮全国可建设空地",
           onClick: f,
           children: [
             w(NA, { node: Ae.hammer, size: 14 }),
             w("span", {
               class: "crew-text",
-              children: [w("b", { children: [s, " 支空闲"] }), w("small", { children: "点我找空地" })],
+              children: [w("b", { children: [s, " 支空闲"] }), w("small", { children: "定位空地" })],
             }),
           ],
         }),
@@ -30231,13 +30231,13 @@ const Jr = [0, 1, 2, 3, 4],
   }),
   Nv = () => ({
     q: "星钻有哪些获取途径？",
-    a: `星钻全部通过治国经营获取：包括每日委托与勤政宝箱、69 项国家成就、每日签到（◇${O.dailyGems}）、五年规划达标大奖、国家奇观落成（魅力线「盛世地标」+◇200）、主公走格子随机奇遇以及满星名士溢出转化。`,
+    a: `星钻全部通过经营与目标达成获取：包括每日委托与全勤补给、69 项国家成就、每日签到（◇${O.dailyGems}）、五年规划达标结项、国家奇观落成（魅力线「地标工程」+◇200）、主公调研随机事件以及满星人物溢出转化。`,
   }),
   w9 = (A) => {
     const e = Tt(A, "govern");
     return {
-      q: "政令怎么颁布？哪些治国操作不耗体力？",
-      a: `在「治国与施政」中点选政令牌、确认目标地块即可颁布：每次消耗 ${e.cost} 点体力、不限每日颁布次数（各政令按季度独立冷却），并按当前 GDP 支付国库（首都首长管理越高越省钱）。国家改制、装配内阁名臣政策卡、调节三轨预算与签发五年规划均不消耗主公体力！`,
+      q: "政令怎么颁布？哪些施政操作不耗体力？",
+      a: `在「施政」面板中点选政令并确认目标地块即可颁布：每次消耗 ${e.cost} 点体力、不限每日次数（各政令按季度独立冷却），并按当前 GDP 支付国库费用（首都驻守人物管理属性可降低开销）。切换体制、装配体制政策、调节三轨预算与立项五年规划均不消耗体力。`,
     };
   },
   D9 = () => ({
@@ -30246,7 +30246,7 @@ const Jr = [0, 1, 2, 3, 4],
   }),
   hg = () => ({
     q: "人物品质、行业匹配与地块等级上限有什么关系？",
-    a: `无人驻守的产业只能以 Lv.1 运转（撤走人物降回 Lv.1 时，维护费也同步按 Lv.1 收取）。驻守人物品质决定基础等级上限：${Jr.map((A) => `${Ke[A]} Lv.${to[A]}`).join("、")}；若人物与驻地达成「行业匹配」，驻地等级上限额外 +1（魅力线终极「天下归心·名士阁」再赋 +1 虚拟星级与上限，最高 Lv.6）！`,
+    a: `无人驻守的产业只能以 Lv.1 运转（撤走人物降回 Lv.1 时，维护费同步按 Lv.1 收取）。驻守人物品质决定基础等级上限：${Jr.map((A) => `${Ke[A]} Lv.${to[A]}`).join("、")}；若人物与驻地达成「行业匹配」，驻地等级上限额外 +1（魅力线终极「全局人才网络」再提供 +1 虚拟星级与上限，最高 Lv.6）。`,
   });
 function If(A, e, t, n = {}) {
   switch (A) {
@@ -30258,21 +30258,21 @@ function If(A, e, t, n = {}) {
       return [
         {
           q: "一次勘探能找到几种资源？",
-          a: `最多给出 ${O.prospectOptions} 种互不相同、且不同于当前地块已有矿藏的候选，可任选其一落锤或放弃。${s ? `「${Ge[s.terrain].name}」地形共可产出 ${r.length} 种资源：${r.map((i) => i.name).join("、")}。` : ""}`,
+          a: `最多给出 ${O.prospectOptions} 种互不相同、且不同于当前地块已有矿藏的候选，可任选其一采用或放弃。${s ? `「${Ge[s.terrain].name}」地形共可产出 ${r.length} 种资源：${r.map((i) => i.name).join("、")}。` : ""}`,
         },
         {
           q: "资源品质与“奇异资源”怎么出？",
-          a: `基础品质权重为：${Jr.map((i) => `${Ke[i]} ${Math.round((f[i] / o) * 100)}%`).join("、")}；驻守人物技术属性与主公技术线「勘探改良」技能均会抬升紫橙红高阶概率。首都升至 Lv.5 放开外环 48 块边疆与高阶勘探后，还能发现 6 种红品奇异资源（氦-3、室温超导矿、振金、活性孢子、暗物质结晶、以太晶核），大幅赋能终局架空产业！`,
+          a: `基础品质权重为：${Jr.map((i) => `${Ke[i]} ${Math.round((f[i] / o) * 100)}%`).join("、")}；驻守人物技术属性与主公技术线「勘探改良」技能均会抬升紫橙红高阶概率。首都升至 Lv.5 放开外环 48 块边疆与高阶勘探后，可勘探出 6 种红品奇异资源（氦-3、室温超导矿、振金、活性孢子、暗物质结晶、以太晶核），用于支撑高阶架空产业。`,
         },
         {
           q: "急缺原料更容易勘探出来吗？",
-          a: "会。国内尚未产出、且已有下游产业亟需的原料矿藏，抽中权重是同品质普通资源的 3 倍。",
+          a: "会。国内尚未产出、且已有下游产业所需的原料矿藏，抽中权重为同品质常规资源的 3 倍。",
         },
         {
           q: "矿藏品质有什么加成？",
           a: `高品质矿藏直接提升本地开采与关联产出：${Jr.filter((i) => Ms[i] > 0)
             .map((i) => `${Ke[i]} +${SA(Ms[i])}`)
-            .join("、")}（技术线终极「技术奇点飞升」与「科创奇点制」还能进一步放大奇异资源收益）。`,
+            .join("、")}（技术线终极「技术奇点架构」与「科创奇点制」可进一步放大奇异资源收益）。`,
         },
         {
           q: "勘探花费与替换规则？",
@@ -30285,23 +30285,23 @@ function If(A, e, t, n = {}) {
       return [
         {
           q: "卡片右上角的数字代表什么？",
-          a: "代表建成后全国每季总 GDP 的真实净增量（已包含对邻格供需边、集群与下游解锁的联动带动；国家奇观更会完整预演三格全部外圈邻居的带动收益），下方硬币数字为建成后每季财政净结余变化。",
+          a: "代表建成后全国每季总 GDP 的真实净增量（已包含对邻格供需边、集群与下游解锁的联动带动；国家奇观同步预演三格全部外圈邻居的带动收益），下方数值为建成后每季财政净结余变化。",
         },
         {
           q: "产业、市政设施与国家奇观有什么区别？",
-          a: `75 种「产业」分五级（造价 ${Li(O.buildCost)} 亿，工期 ${Li(O.buildTime)} 季，开国前 ${O.foundingBuilds} 次建设半价${jo(e) > 0 ? `，还剩 ${jo(e)} 次` : ""}）；24 种「市政设施」占 1 格、每种全国限建 3 座、可升至 Lv.3；8 座「国家奇观」为唯一巨构，需相连 3 格空地三角（沙盘金色三角框高亮，点击任意合法角即可自动对齐锚点并拉平三格联合台基），最高可升至 Lv.5。`,
+          a: `75 种「产业」分五级（造价 ${Li(O.buildCost)} 亿，工期 ${Li(O.buildTime)} 季，开国前 ${O.foundingBuilds} 次建设半价${jo(e) > 0 ? `，还剩 ${jo(e)} 次` : ""}）；24 种「市政设施」占 1 格、每种全国限建 3 座、可升至 Lv.3；8 座「国家奇观」为唯一巨构，需相连 3 格空地三角（地图金色三角框高亮，点击任意合法角自动对齐锚点），最高可升至 Lv.5。`,
         },
         {
           q: "施工队上限怎么增加？怎么加快工期？",
-          a: `施工队基础为「1 + 首都等级」，升级基建预算档位、建造市政「工程建设总署」、签发「奇观市政 / 边疆开拓」五年规划或点出管理线「满载调度」均可增加施工队（当前共 ${t.buildSlots} 支，${t.buildsActive} 支施工中）。想缩短工期可派主公「督办」、调高基建预算或颁布政令「基建提速」。`,
+          a: `施工队基础为「1 + 首都等级」，提高基建预算档位、建造市政「工程建设总署」、立项「奇观市政 / 边疆开拓」五年规划或学习管理线「满载调度」均可增加施工队（当前共 ${t.buildSlots} 支，${t.buildsActive} 支施工中）。缩短工期可通过主公「督办」、提高基建预算或颁布政令「基建提速」。`,
         },
         {
           q: "国库不够时怎么融资或跨零举债？拆迁退多少钱？",
-          a: `产业建设可用「融资」（首付 ${SA(O.financeDown)}，建成后在还款期内按 ${SA(O.financeUtil)} 产能运转还清，上限为首都融资额度 ${t.creditLimit}）；若直接动工将跨过 0 国库线进入主权负债，系统会弹出举债警示确认。拆除任何建筑或奇观默认退还累计实付净投入的 50%（管理线终极「全链柔性帝国」可将产业拆迁返还提升至 85%），方便中后期重构布局！`,
+          a: `产业建设可用「融资」（首付 ${SA(O.financeDown)}，建成后在还款期内按 ${SA(O.financeUtil)} 产能运转还清，上限为首都融资额度 ${t.creditLimit}）；若直接动工跨过 0 国库线进入主权负债，系统会弹出举债确认。拆除建筑或奇观默认退还累计实付净投入的 50%（管理线终极「全链柔性协同」可将产业拆迁返还提升至 85%）。`,
         },
         {
-          q: "选址有哪些黄金法则？",
-          a: `适宜地形 +${SA(O.terrainBonus)}；与上下游相邻结成供需边每条 +${SA(O.supplyEdge)}（配套型参与 +${SA(O.supplyEdgeSupport)}，单格最多计 ${O.supplyEdgeMax} 条，升级连接道路至 Lv.3 倍增收益）；同行业 3 连格集群 +${SA(O.clusterBonus[0])}、6 连格 +${SA(O.clusterBonus[1])}（特色园区与超级产业集群可进一步强化集群并免除全国拥挤）。每多点亮一种新产业可获全国多样性加成。`,
+          q: "选址有哪些核心规则？",
+          a: `适宜地形 +${SA(O.terrainBonus)}；与上下游相邻结成供需边每条 +${SA(O.supplyEdge)}（配套型参与 +${SA(O.supplyEdgeSupport)}，单格最多计 ${O.supplyEdgeMax} 条，升级连接道路至 Lv.3 倍增收益）；同行业 3 连格集群 +${SA(O.clusterBonus[0])}、6 连格 +${SA(O.clusterBonus[1])}（特色园区与超级产业集群可进一步强化集群并免除拥挤减产）。每多点亮一种新产业可获全国多样性加成。`,
         },
         Cg(),
       ];
@@ -30309,16 +30309,16 @@ function If(A, e, t, n = {}) {
       return [
         {
           q: "“本地”与“原岗位”差值怎么看？",
-          a: "“本地”是派驻后该地块每季新增的 GDP，“原岗位”是该人物离开原驻地造成的产值回落；系统默认按两者净收益最高排序推荐。也可在人才库点击「智能调派」一键预览全局最优配置！",
+          a: "“本地”是派驻后该地块每季新增的 GDP，“原岗位”是该人物离开原驻地造成的产值回落；系统默认按两者净收益最高排序推荐。也可在人才库点击「智能调派」预览全局最优配置。",
         },
         {
-          q: "「行业匹配」有哪三重红利？",
-          a: `当人物擅长行业包含驻地产业时：① 管理产出加成 ×${O.matchMult}；② 每季经验成长速度 ×${O.expMatchMult}；③ 驻地等级上限额外 +1（最高 Lv.6）！`,
+          q: "「行业匹配」有哪三重加成？",
+          a: `当人物适配行业包含驻地产业时：① 管理产出加成 ×${O.matchMult}；② 每季经验成长速度 ×${O.expMatchMult}；③ 驻地等级上限额外 +1（最高 Lv.6）。`,
         },
         hg(),
         {
-          q: "派驻到「首都」的首长管什么？",
-          a: "首都首长统领中枢四项大权：管理属性降低政令费用并削减全国行政治理开支；政治属性提高全国税率、融资额度，并同步放大「主权发债上限」与「国库储备上限」（政治线「内阁扩编」再强化 +35%）；魅力属性提升全国宜居度。可将核心岗位设为「锁定驻守」，防止智能调派更动。",
+          q: "派驻到「首都」的人物承担什么职能？",
+          a: "首都驻守人物提供四项全局加成：管理属性降低政令费用并削减全国行政治理开支；政治属性提高全国税率、融资额度，并同步放大「主权发债上限」与「国库储备上限」（政治线「中枢扩容」再强化 +35%）；魅力属性提升全国宜居度。可将核心岗位设为「锁定驻守」，避免智能调派更动。",
         },
       ];
     case "govern":
@@ -30327,26 +30327,26 @@ function If(A, e, t, n = {}) {
         D9(),
         {
           q: "政令生效时长与季度冷却怎么算？",
-          a: "全部政令统一采用清晰直观的「季度」结算：常规政令持续 6 个季度，冷却 8 ~ 16 个季度（设立特区与调整税制永久生效，冷却 8 个季度）。点出政治线「政令简化（冷却 −20%、费用 −15%）」与「政策延续（持续时长 +25%）」可大幅提升政令覆盖率！",
+          a: "全部政令统一按「季度」结算：常规政令持续 6 个季度，冷却 8 ~ 16 个季度（设立特区与调整税制永久生效，冷却 8 个季度）。学习政治线「政令简化（冷却 −20%、费用 −15%）」与「政策延续（持续时长 +25%）」可提高政令覆盖率。",
         },
         {
           q: "落点地块可以自选吗？费用怎么定？",
-          a: "地块类政令默认自动锁定收益最高的目标格，也可点「换一块地」在沙盘自选；全国政令占用全国生效槽位（政治线终极「中枢铁腕宏调」+1 全国政令槽）。国库费用随当前 GDP 温和缩放，首都首长管理越高折扣越大。",
+          a: "地块类政令默认锁定收益最高的目标格，也可点「换一块地」在地图自选；全国政令占用全国生效槽位（政治线终极「宏观统筹中枢」+1 全国政令槽）。国库费用随当前 GDP 缩放，首都驻守人物管理属性越高折扣越大。",
         },
       ];
     case "event":
       return [
         {
           q: "随机事件是怎么触发的？",
-          a: `主公每次「调研」飞抵终点地块时，有 ${SA(O.eventChance)} 基础概率触发治国或民生事件（共五档稀有度，野心线「天选奇遇」可大幅抬升橙红奇遇概率）。`,
+          a: `主公每次「调研」抵达终点地块时，有 ${SA(O.eventChance)} 基础概率触发随机事件（共五档稀有度，野心线「高频采样」可提升高阶事件概率）。`,
         },
         {
           q: "怎样提前预览每个选项的后果？",
-          a: "点出政治线技能「民意调查」，或开局选择「多疑」性格（自带免费选项结果预览与正收益 +20% 兜底；若两者兼备，事件正收益再额外 +10%），即可在拍板前看清全部得失。",
+          a: "学习政治线技能「民意调查」，或开局选择「多疑」性格（自带选项结果预览与正收益 +20% 保底；若两者兼备，事件正收益再额外 +10%），即可在选择前查看具体数值。",
         },
         {
           q: "暂时不想选可以先关掉吗？",
-          a: "可以。关闭弹窗不会丢失事件，随时选中主公所在地块点击「处理事件」即可继续裁决。",
+          a: "可以。关闭弹窗不会丢失事件，随时选中主公所在地块点击「处理事件」即可继续。",
         },
       ];
     case "recruit":
@@ -30356,15 +30356,15 @@ function If(A, e, t, n = {}) {
           a: `基础概率：${[...Jr]
             .reverse()
             .map((s) => `${Ke[s]} ${na[s]}%`)
-            .join("、")}（魅力线「伯乐识才」提升橙红高阶权重 +25%）。单抽 ◇${O.pullCost}，十连 ◇${getRecruitCost(e, 10)}（基础九折，魅力线「礼贤下士」再减 10%）。连续 ${O.pityOrange} 抽必出橙卡及以上（还差 ${O.pityOrange - e.pity.orange} 抽），连续 ${O.pityRed} 抽必出红卡（还差 ${O.pityRed - e.pity.red} 抽）。`,
+            .join("、")}（魅力线「高阶寻访」提升橙红高阶权重 +25%）。单次 ◇${O.pullCost}，十连 ◇${getRecruitCost(e, 10)}（基础九折，魅力线「定向招募」再减 10%）。连续 ${O.pityOrange} 抽必出橙卡及以上（还差 ${O.pityOrange - e.pity.orange} 抽），连续 ${O.pityRed} 抽必出红卡（还差 ${O.pityRed - e.pity.red} 抽）。`,
         },
         {
-          q: "抽到重复红卡/橙卡有什么超值回馈？没抽到重复会卡等级吗？",
-          a: "绝不卡关！人物每 10 级关口支持「同名卡或星钻猎头双轨突破」，在人才库还可点击「一键同名突破」零星钻消耗批量完成全部同名卡晋升！消耗 1 张真·同名红卡突破可直接连破 2 星 + 赠 ◇800 星钻 + 直灌 5,000 经验（差 1 星满星时赠 ◇2,400 + 5,000 经验），同名橙卡突破赠 ◇400 + 2,000 经验；满星溢出重复卡自动高额返钻（紫 ◇240 / 橙 ◇800 / 红 ◇2,400）。",
+          q: "重复红卡/橙卡与星级突破规则是什么？",
+          a: "人物每 10 级关口支持「同名卡或星钻猎头双轨突破」，在人才库可点击「一键同名突破」零星钻消耗批量完成同名卡升星。消耗 1 张同名红卡突破可直接升 2 星并返还 ◇800 星钻与 5,000 经验（差 1 星满星时返还 ◇2,400 与 5,000 经验），同名橙卡突破返还 ◇400 与 2,000 经验；满星溢出重复卡自动转化为星钻（紫 ◇240 / 橙 ◇800 / 红 ◇2,400）。",
         },
         {
-          q: "为什么同一历史或商业原型有多张独立卡？",
-          a: "传奇人物在不同时代有各自独立的巅峰篇章（品质、五维专长与匹配行业各异），可同时上阵驻守不同产业；现当代商业人物采用致敬化名，历史先贤与科学巨匠保留本名致敬。",
+          q: "为什么同一原型有多张独立人物卡？",
+          a: "部分人物在不同发展时期具有独立的属性专长与适配行业，可同时派驻于不同地块；近现代商业人物采用化名，历史学者与科学家保留原名。",
         },
         Nv(),
       ];
@@ -30376,55 +30376,55 @@ function If(A, e, t, n = {}) {
         },
         {
           q: "「同名卡或星钻猎头突破」怎么运作？",
-          a: `每 10 级为一道星级关口，既可消耗同名卡突破（人才库支持「一键同名突破」，绝不误扣星钻），也可在无同名卡时支付星钻猎头费突破（白 ◇120 / 蓝 ◇240 / 紫 ◇480 / 橙 ◇960 / 红 ◇1,600）。各品质满级上限：${Jr.map((s) => `${Ke[s]} Lv.${Zn(s)}`).join("、")}。`,
+          a: `每 10 级为一道星级关口，既可消耗同名卡突破（人才库支持「一键同名突破」，不扣星钻），也可在无同名卡时支付星钻突破（白 ◇120 / 蓝 ◇240 / 紫 ◇480 / 橙 ◇960 / 红 ◇1,600）。各品质满级上限：${Jr.map((s) => `${Ke[s]} Lv.${Zn(s)}`).join("、")}。`,
         },
         {
           q: "人物如何快速升级？",
-          a: `派驻首都或运转产业每季自动获经验（行业匹配 ×${O.expMatchMult}，停产产业仅 ${SA(O.expIdleMult)}），技术线「科教转化」、科研预算与主公「指点」（魅力线终极「天下归心·名士阁」经验翻倍）均可大幅提速。`,
+          a: `派驻首都或运转产业每季自动获经验（行业匹配 ×${O.expMatchMult}，停产产业仅 ${SA(O.expIdleMult)}），技术线「科教转化」、科研预算与主公「指点」（魅力线终极「全局人才网络」经验翻倍）均可加速成长。`,
         },
         hg(),
         {
           q: "什么是「满级专属」进阶？",
-          a: `带“专”字的人物升至满级、驻守在指定运转产业且全国凑齐所需前置产品后，可在地块抽屉支付 ${O.exclusiveCostMult} 倍造价进阶为专属传奇企业，解锁巨额独立倍率！`,
+          a: `带“专”字的人物升至满级、驻守在指定运转产业且全国凑齐所需前置产品后，可在地块抽屉支付 ${O.exclusiveCostMult} 倍造价进阶为专属企业，解锁独立产值倍率。`,
         },
       ];
     case "industry":
       return [
         {
           q: "“开工需要”与涉水要求怎么看？",
-          a: "标红项代表当前缺失：同一行多种原料满足其一即可；“本地矿藏”需脚下地块具备该资源（靠开拓或勘探获取），其余产品只需全国任一处正常产出即可共享（注意化工、钢材、半导体、饮料等 11 个涉水产业需全国具备「供水」）。点击任意原料可跳转对应上游产业。",
+          a: "标红项代表当前缺失：同一行多种原料满足其一即可；“本地矿藏”需脚下地块具备该资源（靠开拓或勘探获取），其余产品只需全国任一处正常产出即可共享（化工、钢材、半导体、饮料等 11 个涉水产业需全国具备「供水」）。点击任意原料可跳转对应上游产业。",
         },
         {
           q: "产值型、税源型、配套型有什么定位差异？",
-          a: `${Oi.output}：GDP ×${O.personality.output.gdp}、税 ×${O.personality.output.tax}（冲榜主力）；${Oi.tax}：GDP ×${O.personality.tax.gdp}、税 ×${O.personality.tax.tax}（国库奶牛）；${Oi.support}：自身 GDP ×${O.personality.support.gdp}，但参与的每条供需边加成高达 +${SA(O.supplyEdgeSupport)}（普通为 +${SA(O.supplyEdge)}）。`,
+          a: `${Oi.output}：GDP ×${O.personality.output.gdp}、税 ×${O.personality.output.tax}（拉升总产值）；${Oi.tax}：GDP ×${O.personality.tax.gdp}、税 ×${O.personality.tax.tax}（提供财政现金流）；${Oi.support}：自身 GDP ×${O.personality.support.gdp}，但参与的每条供需边加成达 +${SA(O.supplyEdgeSupport)}（常规为 +${SA(O.supplyEdge)}）。`,
         },
         {
-          q: "“面向居民”的消费产业后期强吗？",
-          a: `非常强！全国人口 1,500 万以内每 100 万人提供 +${SA(O.demandPer100)} 内需（达 +75%）；突破 1,500 万人后激活无硬顶对数超级内需（75% + 22% × ln(人口万 / 1500)），配合世博穹顶、紫禁宫殿与满储分红，亿级人口大国消费产值直冲云霄！`,
+          q: "“面向居民”的消费产业后期成长性如何？",
+          a: `全国人口 1,500 万以内每 100 万人提供 +${SA(O.demandPer100)} 内需（达 +75%）；突破 1,500 万人后进入对数增长区间（75% + 22% × ln(人口万 / 1500)），配合市政奇观与满储分红可持续放大消费类产业产出。`,
         },
         Cg(),
         {
           q: "15 个架空终局产业怎么解锁？",
-          a: `需首都升至 Lv.${O.fictionCapital}、国内拥有至少 ${O.fictionDiversity} 种运转产业，并备齐该产业所需的上游产物或边疆奇异资源。`,
+          a: `需首都升至 Lv.${O.fictionCapital}、国内拥有至少 ${O.fictionDiversity} 种运转产业，并备齐该产业所需的上游产物或外环奇异资源。`,
         },
       ];
     case "economy":
       return [
         {
           q: "全国 GDP 与民生人力资本怎么计算？",
-          a: `单格产值 = 基础产出 × 等级倍率（Lv.1–6：${Li(O.levelMult)}）× 行业性格 × 民生预算人力资本乘数（最高 ×1.12，预算乘数可再放大）×（1 + 地形/供需边/集群/多样性/内需/国体/爵位光环等加成）。当前多样性实享 +${SA(t.diversityBonus ?? 0, 1)}。`,
+          a: `单格产值 = 基础产出 × 等级倍率（Lv.1–6：${Li(O.levelMult)}）× 行业性格 × 民生预算人力资本乘数（最高 ×1.12，预算乘数可再放大）×（1 + 地形/供需边/集群/多样性/内需/体制/成就加成等）。当前多样性实享 +${SA(t.diversityBonus ?? 0, 1)}。`,
         },
         {
           q: "六项财政收支与「Q40–Q88 十二年平滑退坡」是什么？",
-          a: "每季净收入 = 产业税收 + 水电管网津贴 −（设施维护 + 行政治理 + 公共服务 + 三轨预算税耗 + 主权债息）。开国前 40 季（10 年）享全额新政红利（税率翻倍、治理与公共服务大幅减免），第 41 至 88 季（12 年间）线性平滑退坡至常态，绝无断崖赤字！",
+          a: "每季净收入 = 产业税收 + 水电管网津贴 −（设施维护 + 行政治理 + 公共服务 + 三轨预算税耗 + 主权债息）。前 40 季（10 年）享开国扶持（税率加成、治理与公共服务减免），第 41 至 88 季线性退坡至常规水平。",
         },
         {
           q: "主权负债、信用评级与「主权债务重组」怎么用？",
-          a: "国库可在主权发债上限内跨零举债建设，信用评级（AAA → C）随负债率动态评定并影响债息。若不慎陷入高息紧缩泥潭，可在经济面板执行「主权债务重组」：当场核销 50% 主权债务并开启 12 季免息保护期（期间禁止新赤字举债，冷却 48 季），助你绝境翻盘！",
+          a: "国库可在主权发债上限内跨零举债建设，信用评级（AAA → C）随负债率动态评定并影响债息。若负债过重触发紧缩，可在经济面板执行「主权债务重组」：当场核销 50% 主权债务并开启 12 季免息保护期（期间禁止新赤字举债，冷却 48 季）。",
         },
         {
           q: "国库满了会浪费吗？什么是 1.5× 柔性超储缓冲？",
-          a: "不会白白蒸发！国库超过储备上限后最高可暂存至 1.5× 储备上限，每季仅将超出部分的 25% 柔性转化为「满储国民分红」，直接拉动全国消费内需。",
+          a: "国库超过储备上限后最高可暂存至 1.5× 储备上限，每季将超出部分的 25% 转化为「满储国民分红」，直接计入全国消费内需加成。",
         },
         {
           q: "首都等级如何阶梯解锁 217 格国土上限？",
@@ -30436,15 +30436,15 @@ function If(A, e, t, n = {}) {
       return [
         {
           q: "三种卡片状态分别代表什么？",
-          a: "高亮显示已建成的产业及处数；带绿点代表上游前置已齐备、现在就能选址动工；灰色代表仍缺前置条件。",
+          a: "高亮显示已建成的产业及处数；带绿点代表上游前置已齐备、可直接选址动工；灰色代表仍缺前置条件。",
         },
         {
           q: "全图鉴共有多少产业与板块？",
-          a: `共 75 个产业：包含分属 ${hf.length} 大板块的 ${Ee.filter((s) => s.source !== "架空").length} 个现实产业，以及 ${Ee.filter((s) => s.source === "架空").length} 个高阶架空终局产业。`,
+          a: `共 75 个产业：包含分属 ${hf.length} 大板块的 ${Ee.filter((s) => s.source !== "架空").length} 个现实产业，以及 ${Ee.filter((s) => s.source === "架空").length} 个高阶架空产业。`,
         },
         {
-          q: "怎样一眼看清完整上下游链条？",
-          a: "强烈推荐点击面板顶部的「建筑树」按钮打开《产业链建筑树（Lv.0 → Lv.4）》全景视图：支持按板块过滤、搜产物名、悬停高亮青色上游输入链与金色下游衍生链，并直接一键选址建设！",
+          q: "怎样查看完整上下游链条？",
+          a: "点击面板顶部的「建筑树」按钮可打开《产业链建筑树（Lv.0 → Lv.4）》全景视图：支持按板块过滤、搜索产物名、悬停高亮青色上游输入链与金色下游衍生链，并可直接选址建设。",
         },
       ];
     case "techtree":
@@ -30456,7 +30456,7 @@ function If(A, e, t, n = {}) {
         },
         {
           q: "节点右上角的徽标怎么看？",
-          a: "绿色「×N」表示国内已建成 N 处；青色「可建」表示全国上游产物已齐备（点底部「去选址建设」即可在沙盘高亮落位）；灰色「锁」表示仍缺上游原料或架空时代门槛。",
+          a: "绿色「×N」表示国内已建成 N 处；青色「可建」表示全国上游产物已齐备（点底部「去选址建设」即可在地图高亮落位）；灰色「锁」表示仍缺上游原料或架空时代门槛。",
         },
         {
           q: "有哪些快捷检索技巧？",
@@ -30467,15 +30467,15 @@ function If(A, e, t, n = {}) {
       return [
         {
           q: "「智能调派」与岗位驻守锁定怎么用？",
-          a: "点击人才库顶部的「智能调派」可选择「仅补齐空岗」或「全局最优重排」：引擎会在零改动的模拟副本中综合评估首都中枢收益、产业等级上限解锁、专属倍率、供需边与名士羁绊，精确预览调动前后的季度 GDP 与财政净结余差值，确认后方才生效！若某地块不想被自动调换，在地块抽屉或调派页点击「🔒 锁定驻守」即可。",
+          a: "点击人才库顶部的「智能调派」可选择「仅补齐空岗」或「全局最优重排」：引擎在模拟副本中综合评估首都中枢收益、产业等级上限解锁、专属倍率、供需边与人物羁绊，预览调动前后的季度 GDP 与财政净结余差值，确认后生效。若某地块不希望被自动调换，可在地块抽屉或调派页点击「锁定驻守」。",
         },
         {
           q: "「一键同名突破」会消耗星钻吗？",
-          a: "绝不消耗一分星钻！「一键同名突破」严格只消耗已拥有的同名卡副本（自动计算红卡连破 2 星及橙红卡赠送的星钻与历练升级），无同名卡的角色不会被扣钻猎头。",
+          a: "不消耗星钻。「一键同名突破」仅消耗已持有的同名卡副本（自动计算红卡升 2 星及橙红卡返还的星钻与经验），无同名卡的角色不会扣除星钻。",
         },
         {
           q: "229 位人物如何快速检索与收集？",
-          a: "顶部搜索框支持搜人名、专属企业或「芯片」「电力」「银行」等行业关键词，并可按未拥有或特定板块筛选目标名士。",
+          a: "顶部搜索框支持搜人名、专属企业或「芯片」「电力」「银行」等行业关键词，并可按未拥有或特定板块筛选目标人才。",
         },
         hg(),
         Nv(),
@@ -30484,34 +30484,34 @@ function If(A, e, t, n = {}) {
       return [
         {
           q: "五项主公行动与「自然充能池」怎么运作？",
-          a: `五项行动共用体力池，每 15 分钟自然回复 1 点体力（当前上限 ${$n(e)} 点，每年春季额外 +1、首都升级瞬间回满）：调研（${O.lordActs.survey.cost} 体力，不限次数）、施政（${O.lordActs.govern.cost} 体力，不限次数）、指点（${O.lordActs.mentor.cost} 体力，8 格充能 / 40 分钟充 1 次）、督办（${O.lordActs.supervise.cost} 体力，6 格充能 / 60 分钟充 1 次）、贸易（${O.lordActs.trade.cost} 体力，基础 4 格充能 / 3 小时充 1 次）。告别午夜刷次数焦虑，随攒随用！`,
+          a: `五项行动共用体力池，每 15 分钟自然回复 1 点体力（当前上限 ${$n(e)} 点，每年春季额外 +1、首都升级回满）：调研（${O.lordActs.survey.cost} 体力，不限次数）、施政（${O.lordActs.govern.cost} 体力，不限次数）、指点（${O.lordActs.mentor.cost} 体力，8 格充能 / 40 分钟充 1 次）、督办（${O.lordActs.supervise.cost} 体力，6 格充能 / 60 分钟充 1 次）、贸易（${O.lordActs.trade.cost} 体力，基础 4 格充能 / 3 小时充 1 次）。`,
         },
         {
-          q: "5×12 双分支专精树与「重塑纲领」怎么玩？",
-          a: `管理、技术、政治、野心、魅力每条路线最高 Lv.${typeof SKILL_MAX_LV == "number" ? SKILL_MAX_LV : 8}（共 8 点专精点，五线合计最高 Lv.40）：第 1~2 层为 4 项必修根基，第 3~5 层与第 6 层终极奥义均为「A / B 二选一」互斥流派分支！若想切换流派，每条路线享有 1 次免费「重塑纲领」（之后每次 ◇180，冷却 12 季）。`,
+          q: "5×12 双分支专精树与「重塑纲领」怎么运作？",
+          a: `管理、技术、政治、野心、魅力每条路线最高 Lv.${typeof SKILL_MAX_LV == "number" ? SKILL_MAX_LV : 8}（共 8 点专精点，五线合计最高 Lv.40）：第 1~2 层为 4 项基础节点，第 3~5 层与第 6 层终极节点均为「A / B 二选一」互斥分支。每条路线享有 1 次免费「重塑纲领」（之后每次 ◇180，冷却 12 季）。`,
         },
         {
-          q: "15 款主公与帝国衣橱装扮怎么解锁？",
-          a: "衣橱装扮与技能点彻底解耦，不占用任何专精强度！随着五维总等级从 Lv.2 提升至 Lv.40，自动永久解锁商务装、琥珀/极光流光、节庆彩灯、机器人工厂、新古典/赛博首都、全息巨幕与未来之城等 15 款视觉外观，随时在衣橱自由开关。",
+          q: "15 款主公与城市外观如何解锁？",
+          a: "外观系统与技能点完全解耦，不影响数值强度。随着五维总等级从 Lv.2 提升至 Lv.40，自动解锁商务装、琥珀/极光流光、节庆装饰、机器人工厂、新古典/赛博首都、全息广告牌与未来之城等 15 款视觉主题，可在衣橱自由开关。",
         },
         {
           q: "「调研」「督办」「指点」「贸易」各有什么核心收益？",
-          a: `调研掷出 1–${O.diceMax} 点（大图自动享机动步数补偿），沿途收获国库经验，终点积累「财税 / 产业 / 民生 / 科创」四向洞察（满 24 点解锁现代国体）；督办砍掉工程剩余工期的 ${Math.round(O.superviseCut * 100)}%（雄心壮志强化至 90%）；指点直升等级并有机会一步冲顶关口；贸易置换同品质矿藏并即时赚取外汇入库！`,
+          a: `调研掷出 1–${O.diceMax} 点，沿途获取国库与经验收益，终点积累「财税 / 产业 / 民生 / 科创」四向洞察（满 24 点解锁现代体制）；督办削减工程剩余工期的 ${Math.round(O.superviseCut * 100)}%（高压推进强化至 90%）；指点提升人物等级并有概率直接突破关口；贸易置换同品质矿藏并即时结算外汇入库。`,
         },
       ];
     case "policy":
       return [
         {
           q: "四大基础税制与经济特区什么时候开放？",
-          a: `无需消耗政治专精点解锁基础功能！首都升至 Lv.3 即自动开放「均衡 / 工业优先 / 消费优先 / 财政优先」全部四大税制与首个 7 格「经济特区」名额（减税 33%、产出 +${SA(O.zoneOutput)}、人口 +${SA(O.zonePop)}）。政治线与野心线专精则用于进一步强化税制正收益、减半特区税损、扩充特区上限乃至解锁「双轨复合税制」与「特区星链联邦」！`,
+          a: `首都升至 Lv.3 即自动开放「均衡 / 工业优先 / 消费优先 / 财政优先」四大税制与首个 7 格「经济特区」名额（减税 33%、产出 +${SA(O.zoneOutput)}、人口 +${SA(O.zonePop)}）。政治线与野心线专精可进一步强化税制正收益、降低特区税损、扩充特区上限并解锁「双轨复合税制」与「特区星链网络」。`,
         },
         {
-          q: "五大国体与 30 张历史名臣政策卡怎么玩？",
-          a: "通过主公调研积累四向洞察（任一方向达 24 点即可免体力改制为「自由金融制 / 产业基建制 / 福利民生制 / 科创奇点制」，首次采纳新国体获 +60 政治经验，改制后有 8 季制度稳定期）。首都 Lv.1 / 3 / 5 分别开放 1 / 2 / 3 个内阁政策槽。",
+          q: "五大体制与 30 项体制政策怎么配置？",
+          a: "通过主公调研积累四向洞察（任一方向达 24 点即可免体力切换为「自由金融制 / 产业基建制 / 福利民生制 / 科创奇点制」，首次采纳新体制获 +60 政治经验，切换后有 8 季制度稳定期）。首都 Lv.1 / 3 / 5 分别开放 1 / 2 / 3 个政策槽位。",
         },
         {
-          q: "《五年规划》与三轨国策预算怎么搭配？",
-          a: "每 20 季可签发一轮五年规划（重工强基 / 科创奇点 / 奇观市政 / 金融信用 / 边疆开拓），达标即发放数季 GDP、星钻与洞察大奖（中枢铁腕宏调可令达标奖励翻倍）！科研、民生、基建三轨预算随时免体力微调并实时预览净结余。",
+          q: "《五年规划》与三轨预算怎么配合？",
+          a: "每 20 季可立项一轮五年规划（重工强基 / 科创奇点 / 奇观市政 / 金融信用 / 边疆开拓 / 全民富裕），达标即结算数季 GDP、星钻与洞察奖励（宏观统筹中枢可使达标奖励翻倍）。科研、民生、基建三轨预算可随时免体力调整并实时预览净结余。",
         },
         w9(e),
         D9(),
@@ -30519,15 +30519,15 @@ function If(A, e, t, n = {}) {
     case "tasks":
       return [
         {
-          q: "每日委托与勤政宝箱给什么？",
+          q: "每日委托与全勤补给包含什么？",
           a:
-            "每日刷新轻量治国委托（调研落点、建设升级、内阁施政等），完成单条即领星钻与经验，攒满进度条可开启勤政宝箱领取额外星钻与主公经验补给；另有每日签到（◇" +
+            "每日刷新 5 项日常运营指标（定点调研、移动频次、现场调度、宏观运作、财政稳健），完成单条领取星钻，全部完成后开启全勤补给领取额外星钻与主公经验；另有每日签到（◇" +
             O.dailyGems +
             "）。",
         },
         {
-          q: "69 项国家成就与 6 阶爵位光环有什么用？",
-          a: "达成疆域、产业链、主权信用、国家奇观与天梯龙头里程碑不仅奖励大量星钻，还会累积成就点晋升 6 阶国家爵位，最高提供全国全产业产出 +15% 的永久光环！",
+          q: "69 项国家成就与发展评级加成有什么用？",
+          a: "达成疆域、产业链、主权信用、国家奇观与天梯龙头里程碑可获得星钻，并累积成就点提升 6 阶国家发展评级，每 100 点永久提供全国全产业产出 +1%（上限 +15%）。",
         },
         Nv(),
       ];
@@ -30539,7 +30539,7 @@ function If(A, e, t, n = {}) {
         },
         {
           q: "榜上的其他国家是真人还是 AI？",
-          a: "云端真人与 AI 混合同台！连接全球云端天梯后实时拉取全服真人帝国快照（点任意真人可由引擎实时验算参观并下载存档副本）；同时内置 1,999 个采用「90 亿 ~ 20 万亿固定实力梯度 + 每自然周 ±8% 景气微轮动」的经典竞争国，发展至终局即可凭真本事登顶世界第一！",
+          a: "云端真人与 AI 混合同榜：连接全球云端天梯后实时拉取全服真人存档快照（点击可由引擎实时验算参观并导出副本）；同时内置 1,999 个采用「90 亿 ~ 20 万亿固定实力梯度 + 每自然周 ±8% 周期波动」的基准竞争体。",
         },
       ];
     case "clock":
@@ -30550,7 +30550,7 @@ function If(A, e, t, n = {}) {
         },
         {
           q: "主公体力与行动充能离线也会恢复吗？",
-          a: "会！主公体力（每 15 分钟 +1）以及指点、督办、贸易三项充能池均基于真实时间戳自然恢复，离线归来即可满状态施政巡察。",
+          a: "会。主公体力（每 15 分钟 +1）以及指点、督办、贸易三项充能池均基于真实时间戳自然恢复。",
         },
       ];
     case "settings":
@@ -31295,7 +31295,7 @@ function CloudConfigModal() {
     try {
       if (!navigator.clipboard || !navigator.clipboard.writeText) throw new Error("no_clipboard");
       await navigator.clipboard.writeText(SUPABASE_LADDER_SQL);
-      A.toast("建表 SQL 已复制！去 Supabase SQL Editor 粘贴运行即可", "good");
+      A.toast("建表 SQL 已复制，可粘贴至 Supabase SQL Editor 执行", "good");
     } catch {
       setShowSqlBox(!0);
       setTimeout(() => {
@@ -31335,7 +31335,7 @@ function CloudConfigModal() {
         onOk: () => {
           CloudLadder.setPid(pid);
           A.replaceState(parsed);
-          A.toast("已从云端恢复存档！", "gold");
+          A.toast("已从云端恢复存档", "gold");
         },
       });
     } catch (ex) {
@@ -31411,7 +31411,7 @@ function CloudConfigModal() {
             w("p", {
               class: "fine",
               children:
-                "2. 进入 Project Settings → API，把 Project URL 和 Publishable / anon public key 粘到上方保存即可全服联机！",
+                "2. 进入 Project Settings → API，将 Project URL 和 Publishable / anon public key 粘贴至上方保存即可接入云端天梯。",
             }),
           ],
         }),
@@ -31892,7 +31892,7 @@ function DebtConfirmModal({ m }) {
             w("span", {
               children:
                 newInterest > Math.max(0, preDebtSurplus)
-                  ? `赤字失速警告：新增每季国债利息（−${fe(newInterest)} 亿）已超过当前财政偿付盈余（${fe(preDebtSurplus)} 亿），债务将按季滚雪球扩大！建议确认短期内有新税源投产再举债。`
+                  ? `赤字预警：新增每季国债利息（−${fe(newInterest)} 亿）已超过当前财政盈余（${fe(preDebtSurplus)} 亿），债务规模将持续扩大，请确认后续税源投产计划。`
                   : `财政赤字提示：举债后每季净收支为 ${fe(afterM.net)} 亿/季，请注意防范滑入 C 预警紧缩（负债 ≥90% 上限将自动冻结专项预算）。`,
             }),
           ],
@@ -31945,13 +31945,13 @@ function FypPreviewModal({ planId }) {
         : "";
   return w(Cn, {
     cls: "fyp-preview-modal",
-    title: `📜 《第 ${num} 轮五年规划立项书 · ${plan.name}》`,
-    sub: `规划周期：20 个季度（${Ng(st.quarter)} → ${Ng(st.quarter + 20)}） · 签署后国家增益即刻生效`,
+    title: `第 ${num} 轮五年规划 · ${plan.name}`,
+    sub: `规划周期：20 个季度（${Ng(st.quarter)} → ${Ng(st.quarter + 20)}） · 立项后全局增益即刻生效`,
     children: [
       w("div", {
         class: "fyp-doc-sec",
         children: [
-          w("h4", { children: "一、签署即享 · 三大国家级规划增益（持续 20 季）" }),
+          w("h4", { children: "一、规划期常驻增益（持续 20 季）" }),
           w("div", {
             class: "fyp-buff-grid",
             children: buffPills.map((bp, idx) =>
@@ -31963,7 +31963,7 @@ function FypPreviewModal({ planId }) {
       w("div", {
         class: "fyp-doc-sec",
         children: [
-          w("h4", { children: "二、二十季度考核目标与当前国情基线" }),
+          w("h4", { children: "二、考核指标与当前基线" }),
           w("p", { class: "fyp-kpi-main", children: plan.kpiDesc }),
           w("p", { class: "fyp-baseline", children: ["实时基线测算：", baseLineDesc] }),
         ],
@@ -31971,7 +31971,7 @@ function FypPreviewModal({ planId }) {
       w("div", {
         class: "fyp-doc-sec",
         children: [
-          w("h4", { children: "三、圆满结项国家赏格" }),
+          w("h4", { children: "三、达标结项奖励" }),
           w("div", {
             class: "fyp-rwd-row",
             children: [
@@ -31994,7 +31994,7 @@ function FypPreviewModal({ planId }) {
                 A.openModal(null);
               }
             },
-            children: `御笔签署 · 启动「${plan.name}」`,
+            children: `确认立项 · 启动「${plan.name}」`,
           }),
         ],
       }),
@@ -32013,13 +32013,13 @@ function FypCelebrateModal({ data }) {
           : "";
   return w(Cn, {
     cls: "fyp-celebrate-modal",
-    title: "🏅 五年规划圆满达成！",
-    sub: `第 ${d.num || 1} 轮五年规划「${d.name || (plan && plan.name) || "国家规划"}」提前高质量结项`,
+    title: "五年规划达标结项",
+    sub: `第 ${d.num || 1} 轮五年规划「${d.name || (plan && plan.name) || "国家规划"}」已完成全部考核指标`,
     children: [
       w("div", {
         class: "fyp-ribbon",
         children: [
-          w("span", { class: "fr-badge", children: "金榜结项" }),
+          w("span", { class: "fr-badge", children: "达标结项" }),
           w("strong", { children: `「${d.name || (plan && plan.name) || "五年规划"}」全项目标达成` }),
         ],
       }),
@@ -32029,22 +32029,22 @@ function FypCelebrateModal({ data }) {
           w("div", {
             class: "kpi",
             children: [
-              w("span", { children: "国库结项红利" }),
+              w("span", { children: "国库结算" }),
               w("strong", { class: "up", children: [`+${fe(d.cash || 0, 0)}`, w("small", { children: "亿" })] }),
             ],
           }),
           w("div", {
             class: "kpi",
             children: [
-              w("span", { children: "星钻嘉奖" }),
+              w("span", { children: "星钻奖励" }),
               w("strong", { style: "color:var(--violet)", children: `◇${d.gems || 0}` }),
             ],
           }),
           w("div", {
             class: "kpi",
             children: [
-              w("span", { children: "治国洞察" }),
-              w("strong", { class: "gold", children: insText || "国运昌隆" }),
+              w("span", { children: "调研洞察" }),
+              w("strong", { class: "gold", children: insText || "指标完成" }),
             ],
           }),
         ],
@@ -32052,12 +32052,12 @@ function FypCelebrateModal({ data }) {
       d.unlockedRegime &&
         w("p", {
           class: "hint ex-hint",
-          children: `✦ 民情洞察水到渠成，已正式解锁现代国体「${d.unlockedRegime.name || d.unlockedRegime}」！`,
+          children: `调研洞察达标，已解锁现代体制「${d.unlockedRegime.name || d.unlockedRegime}」。`,
         }),
       w("div", {
         class: "actions end",
         children: [
-          w("button", { class: "btn ghost", onClick: () => A.openModal(null), children: "继续经略" }),
+          w("button", { class: "btn ghost", onClick: () => A.openModal(null), children: "关闭" }),
           w("button", {
             class: "btn gold",
             onClick: () => {
@@ -32066,7 +32066,7 @@ function FypCelebrateModal({ data }) {
               A.panel = "policy";
               A.emit();
             },
-            children: "遴选下一轮五年规划 →",
+            children: "立项下一轮规划 →",
           }),
         ],
       }),
@@ -32110,7 +32110,7 @@ function AutoDeployModal() {
   return w(Cn, {
     wide: !0,
     cls: "auto-deploy-modal",
-    title: "⚡ 智能人员调派 · 全局边际寻优",
+    title: "智能人员调派 · 全局边际寻优",
     sub: "综合专属行业匹配、板块加成、地块等级基础产值及首都治理权重，实时试算全国宏观净收益（已锁岗地块绝不触碰）",
     onClose: () => A.openModal(null),
     children: [
@@ -32122,7 +32122,7 @@ function AutoDeployModal() {
             onClick: () => setMode("fill"),
             children: [
               w("b", { children: "方案 A · 仅补空岗" }),
-              w("small", { children: "不动任何在岗人物，仅派闲置名士填补空缺岗位" }),
+              w("small", { children: "保留现有在岗人物，仅派遣待命人才填补空缺岗位" }),
             ],
           }),
           w("button", {
@@ -32236,7 +32236,7 @@ function AutoDeployModal() {
           })
         : w("p", {
             class: "empty ad-empty",
-            children: "当前名士驻守已是该方案下的最优配置，无需调动岗位。",
+            children: "当前人员配置已是该方案下的最优结果，无需调动岗位。",
           }),
       w("div", {
         class: "actions end",
@@ -32279,7 +32279,7 @@ function Mp() {
         t.name,
       ],
     }),
-    sub: `主公飞到了 ${s ? Ws(s) : "首都"}`,
+    sub: `当前位置：${s ? Ws(s) : "首都"}`,
     onClose: () => A.openModal(null),
     cls: "event-modal",
     help: If("event", e, A.metrics),
@@ -32316,7 +32316,7 @@ function PatrolResultModal({ m: A }) {
     st = e.state,
     tl = st.tiles[A.tile],
     close = () => e.openModal(null);
-  const title = tl ? `御驾巡察 · ${Ws(tl)} #${tl.id}` : "御驾巡察结果";
+  const title = tl ? `调研结算 · ${Ws(tl)} #${tl.id}` : "调研结算";
   const lines = [...(A.gain ? A.gain.split(" · ").filter(Boolean) : []), ...(A.passby || [])];
   return w(Cn, {
     cls: "act-modal",
@@ -32814,7 +32814,7 @@ function pp({ tile: A, tab: e }) {
                 class: `bc-ribbon${exot ? " exotic" : ""}`,
                 children: [
                   w($i, { id: g, size: 18 }),
-                  w("b", { children: exot ? ["✦ 奇异赋能 · ", P.name] : ["开采本地", P.name] }),
+                  w("b", { children: exot ? ["奇异资源 · ", P.name] : ["开采本地", P.name] }),
                   L > 0 && w("em", { children: ["产出 +", SA(L)] }),
                 ],
               }),
@@ -33071,7 +33071,7 @@ function pp({ tile: A, tab: e }) {
                     w(NA, { node: Ae.warn, size: 16 }),
                     w("span", {
                       children:
-                        "当前国内尚无可用的「3 格相邻三角形空地」基座！请先在相邻位置开拓新土地或腾出 3 块互为邻居的空地后再规划国家奇观。",
+                        "当前尚无可用的「3 格相邻三角形空地」，请先开拓相邻地块或腾出 3 块相连空地后再规划国家奇观。",
                     }),
                   ],
                 })),
@@ -33157,7 +33157,7 @@ function pp({ tile: A, tab: e }) {
                       children: [
                         w("b", {
                           children: [
-                            P.fictional ? "✦ 这块地蕴藏奇异地脉「" : "这块地有",
+                            P.fictional ? "本地奇异资源「" : "本地资源：",
                             P.name,
                             P.fictional ? "」" : "",
                             w("em", { children: Ke[P.tier] }),
@@ -33636,8 +33636,8 @@ function Tp({ results: A }) {
     wide: !0,
     cls: "recruit-modal",
     help: If("recruit", t, e.metrics),
-    title: "招贤馆 · 名士招募",
-    sub: `已收录 ${Object.keys(t.cards).length}/${eo.length} 位名士 · 橙卡保底剩 ${orangeLeft} 抽 · 红卡保底剩 ${redLeft} 抽`,
+    title: "人才招募",
+    sub: `已收录 ${Object.keys(t.cards).length}/${eo.length} 位人才 · 橙卡保底剩 ${orangeLeft} 抽 · 红卡保底剩 ${redLeft} 抽`,
     children: [
       A
         ? w("div", {
@@ -33656,7 +33656,7 @@ function Tp({ results: A }) {
                     w("small", { children: o.era ?? Ke[o.tier] }),
                     w("em", {
                       class: s.isNew ? "is-new" : "",
-                      children: s.isNew ? "✦ 新收录" : s.refund ? `满星返 ◇${s.refund}` : "同名 +1",
+                      children: s.isNew ? "新收录" : s.refund ? `满星返 ◇${s.refund}` : "同名 +1",
                     }),
                   ],
                 },
@@ -33674,12 +33674,12 @@ function Tp({ results: A }) {
                     class: "rp-card orange",
                     "data-tip-touch": !0,
                     "data-tip-title": "橙卡保底机制",
-                    "data-tip": `每 ${O.pityOrange} 抽必出至少 1 位橙色或红色传世名士；提前抽出将重置保底计数。`,
+                    "data-tip": `每 ${O.pityOrange} 抽必出至少 1 位橙色或红色人才；提前抽出将重置保底计数。`,
                     children: [
                       w("div", {
                         class: "rp-hd",
                         children: [
-                          w("b", { children: "✦ 橙卡保底" }),
+                          w("b", { children: "橙卡保底" }),
                           w("em", { children: `剩 ${orangeLeft} 抽` }),
                         ],
                       }),
@@ -33695,12 +33695,12 @@ function Tp({ results: A }) {
                     class: "rp-card red",
                     "data-tip-touch": !0,
                     "data-tip-title": "红卡保底机制",
-                    "data-tip": `每 ${O.pityRed} 抽必出 1 位红色千古绝代名士；提前抽出将重置保底计数。`,
+                    "data-tip": `每 ${O.pityRed} 抽必出 1 位红色人才；提前抽出将重置保底计数。`,
                     children: [
                       w("div", {
                         class: "rp-hd",
                         children: [
-                          w("b", { children: "🔥 红卡保底" }),
+                          w("b", { children: "红卡保底" }),
                           w("em", { children: `剩 ${redLeft} 抽` }),
                         ],
                       }),
@@ -33789,7 +33789,7 @@ function Tp({ results: A }) {
         class: "pool",
         onToggle: (ev) => setPoolOpen(ev.currentTarget.open),
         children: [
-          w("summary", { children: ["卡池名录一览（全 ", eo.length, " 位名士）"] }),
+          w("summary", { children: ["卡池名录一览（共 ", eo.length, " 人）"] }),
           poolOpen &&
             w("div", {
               class: "pool-grid",
@@ -34128,7 +34128,7 @@ function Op({ m: A }) {
     v = n.to >= n.cap;
   return w(Cn, {
     cls: `act-modal mentor-result${n.jackpot ? " jackpot" : ""}`,
-    title: F0("mentor", n.jackpot ? "一点就透！" : `指点 · 掷出 ${n.roll} 点`),
+    title: F0("mentor", n.jackpot ? "指点 · 直达关口" : `指点 · 掷出 ${n.roll} 点`),
     children: [
       w("div", {
         class: "mr-hero",
@@ -34830,7 +34830,7 @@ function Xp() {
                   class: "fb-hd",
                   children: [
                     w("b", {
-                      children: e.quarter <= 40 ? `🌱 开国扶持 ${e.quarter}/40季` : `🌿 扶持退坡 ${Math.round(ff * 100)}%`,
+                      children: e.quarter <= 40 ? `开国扶持 ${e.quarter}/40季` : `扶持退坡 ${Math.round(ff * 100)}%`,
                     }),
                     jo(e) > 0 && w("em", { children: `首建半价 ×${jo(e)}` }),
                   ],
@@ -35290,7 +35290,7 @@ function Sp() {
             "data-tip-title": "尚未建成国家奇观",
             "data-tip": "点击地图已开拓空地，在「国家奇观」页签规划建造（每座奇观占 3 格相邻三角形空地）。",
             children: [
-              w("span", { class: "muted", children: "🏛️ 暂无建成奇观" }),
+              w("span", { class: "muted", children: "暂无建成奇观" }),
               _p6bQTip("如何建造国家奇观", "点击地图空地 → 选择「国家奇观」页签即可规划建造（每座占 3 格相邻三角形空地）。"),
             ],
           }),
@@ -35307,7 +35307,7 @@ function Sp() {
               ((e.settings.autoUpgrade = s.target.checked), A.refresh());
             },
           }),
-          w("b", { children: "🤖 自动升级产业" }),
+          w("b", { children: "自动升级产业" }),
           _p6bQTip(autoTipTitle, autoTipBody, !0),
           w("em", {
             class: `tr-state${e.settings.autoUpgrade ? " on" : ""}`,
@@ -35379,7 +35379,7 @@ function Np() {
                 class: "ind-sum-pills",
                 children: [
                   w("span", { class: "is-pill built", children: ["🏭 已建 ", w("b", { children: `${i}/${r}` })] }),
-                  w("span", { class: "is-pill ready", children: ["✦ 可建 ", w("b", { children: v })] }),
+                  w("span", { class: "is-pill ready", children: ["可建 ", w("b", { children: v })] }),
                   ficOpen &&
                     w("span", {
                       class: `is-pill fic${f ? " off" : ""}`,
@@ -35570,10 +35570,10 @@ function Yp() {
         return `${Ke[tr]} ${ownT}/${totT}`;
       })
       .join(" · "),
-    heroTipTitle = `名士阁总览 (${ownedArr.length}/${eo.length})`,
+    heroTipTitle = `人才库总览 (${ownedArr.length}/${eo.length})`,
     heroTipBody = `• 图鉴收录：${tierBreak}\n• 岗位配置：在岗 ${stationedCnt} 人 · 待命 ${idleCnt} 人${
       activeBonds > 0 ? ` · 已激活羁绊 ${activeBonds} 组` : ""
-    }\n• 招贤保底：橙卡保底剩 ${orangeLeft} 抽 · 红卡保底剩 ${redLeft} 抽`,
+    }\n• 招募保底：橙卡保底剩 ${orangeLeft} 抽 · 红卡保底剩 ${redLeft} 抽`,
     doDirectPull = (cnt) => {
       const need = cnt === 10 ? O.tenPullCost : O.pullCost;
       if (e.gems < need) {
@@ -35691,14 +35691,14 @@ function Yp() {
                         "data-tip-title": heroTipTitle,
                         "data-tip": heroTipBody,
                         children: [
-                          "名士阁",
+                          "人才总览",
                           w("em", { class: "th-cnt", children: `${ownedArr.length}/${eo.length}` }),
                         ],
                       }),
                       w("button", {
                         class: "th-wallet-btn",
-                        "data-tip-title": "招贤馆与星钻储备",
-                        "data-tip": `点击打开招贤馆（查看卡池名录与保底进度）\n• 橙卡保底：剩 ${orangeLeft} 抽 ｜ 红卡保底：剩 ${redLeft} 抽\n• 单次招贤 ◇${O.pullCost} · 十连九折 ◇${O.tenPullCost}`,
+                        "data-tip-title": "人才招募与星钻储备",
+                        "data-tip": `点击打开招募详情（查看卡池名录与保底进度）\n• 橙卡保底：剩 ${orangeLeft} 抽 ｜ 红卡保底：剩 ${redLeft} 抽\n• 单次招募 ◇${O.pullCost} · 十连九折 ◇${O.tenPullCost}`,
                         onClick: () => A.openModal({ type: "recruit" }),
                         children: [w(oP, { v: e.gems }), w("small", { children: "卡池▸" })],
                       }),
@@ -35712,22 +35712,22 @@ function Yp() {
                         "data-tip-touch": !0,
                         "data-tip-title": "岗位派驻",
                         "data-tip": `当前驻守地块 ${stationedCnt} 人 · 待命 ${idleCnt} 人`,
-                        children: ["🏛️ 在岗 ", w("b", { children: stationedCnt })],
+                        children: ["在岗 ", w("b", { children: stationedCnt })],
                       }),
                       activeBonds > 0
                         ? w("span", {
                             class: "th-pill gold",
                             "data-tip-touch": !0,
-                            "data-tip-title": "名士羁绊共振",
-                            "data-tip": `全国同时派驻已激活 ${activeBonds} 组历史/商业名士羁绊加成`,
-                            children: ["✦ 羁绊 ", w("b", { children: activeBonds })],
+                            "data-tip-title": "人才协同羁绊",
+                            "data-tip": `全国同时派驻已激活 ${activeBonds} 组人物羁绊加成`,
+                            children: ["羁绊 ", w("b", { children: activeBonds })],
                           })
                         : w("span", {
                             class: "th-pill",
                             "data-tip-touch": !0,
                             "data-tip-title": "待命后备",
-                            "data-tip": `当前共有 ${idleCnt} 位名士待命，可通过「智能调派」一键上岗`,
-                            children: ["⏳ 待命 ", w("b", { children: idleCnt })],
+                            "data-tip": `当前共有 ${idleCnt} 位人才待命，可通过「智能调派」自动配置`,
+                            children: ["待命 ", w("b", { children: idleCnt })],
                           }),
                       w("span", {
                         class: "th-pill pity",
@@ -35754,15 +35754,15 @@ function Yp() {
             children: [
               w("button", {
                 class: "th-act featured",
-                "data-tip-title": `十连招贤 · 九折特惠（◇${O.tenPullCost}）`,
-                "data-tip": `一次招募 10 位名士，立省 ◇${O.pullCost * 10 - O.tenPullCost} 星钻\n• 橙卡保底剩 ${orangeLeft} 抽 · 红卡保底剩 ${redLeft} 抽\n• ${
-                  e.gems >= O.tenPullCost ? "✓ 点击直接十连招募" : "星钻不足时点击打开招贤馆"
+                "data-tip-title": `十连招募 · 九折（◇${O.tenPullCost}）`,
+                "data-tip": `一次招募 10 位人才，节省 ◇${O.pullCost * 10 - O.tenPullCost} 星钻\n• 橙卡保底剩 ${orangeLeft} 抽 · 红卡保底剩 ${redLeft} 抽\n• ${
+                  e.gems >= O.tenPullCost ? "✓ 点击直接十连招募" : "星钻不足时打开招募详情"
                 }`,
                 onClick: () => doDirectPull(10),
                 children: [
                   w("em", { class: "tha-corner", children: "九折" }),
                   w("span", { class: "tha-ico", children: w(_e, { name: "gem", size: 16 }) }),
-                  w("b", { children: "十连招贤" }),
+                  w("b", { children: "十连招募" }),
                   w("span", {
                     class: "tha-sub",
                     children: [w(_e, { name: "gem", size: 10 }), " ", O.tenPullCost],
@@ -35771,14 +35771,14 @@ function Yp() {
               }),
               w("button", {
                 class: "th-act pull1",
-                "data-tip-title": `单次招贤（◇${O.pullCost}）`,
-                "data-tip": `招募 1 位名士（橙卡保底剩 ${orangeLeft} 抽 · 红卡保底剩 ${redLeft} 抽）\n• ${
-                  e.gems >= O.pullCost ? "✓ 点击直接招募 1 次" : "星钻不足时点击打开招贤馆"
+                "data-tip-title": `单次招募（◇${O.pullCost}）`,
+                "data-tip": `招募 1 位人才（橙卡保底剩 ${orangeLeft} 抽 · 红卡保底剩 ${redLeft} 抽）\n• ${
+                  e.gems >= O.pullCost ? "✓ 点击直接招募 1 次" : "星钻不足时打开招募详情"
                 }`,
                 onClick: () => doDirectPull(1),
                 children: [
                   w("span", { class: "tha-ico", children: w(_e, { name: "fic", size: 16 }) }),
-                  w("b", { children: "单次招贤" }),
+                  w("b", { children: "单次招募" }),
                   w("span", {
                     class: "tha-sub",
                     children: [w(_e, { name: "gem", size: 10 }), " ", O.pullCost],
@@ -35802,20 +35802,20 @@ function Yp() {
               w("button", {
                 class: `th-act bt${btInfo.cardCount > 0 ? " ready" : ""}`,
                 "data-tip-title": `同名卡一键突破 (${btInfo.cardCount})`,
-                "data-tip": `将所有满足等级且持有同名卡的名士一键升星（绝不消耗星钻）${
+                "data-tip": `将所有满足等级且持有同名卡的人才批量升星（不消耗星钻）${
                   btInfo.cardCount > 0
-                    ? `\n✓ 当前可突破 ${btInfo.cardCount} 位名士，共提升 ${btInfo.totalStars} 颗星级`
+                    ? `\n✓ 当前可突破 ${btInfo.cardCount} 位人才，共提升 ${btInfo.totalStars} 颗星级`
                     : "\n• 当前暂无满足等级的同名卡可一键升星"
                 }`,
                 onClick: () => {
                   if (!(btInfo.cardCount > 0)) {
-                    A.toast("当前暂无满足等级的同名卡可一键突破，点击名士可单独查看突破条件", "info");
+                    A.toast("当前暂无满足等级的同名卡可批量突破，可点击人物查看突破条件", "info");
                     return;
                   }
                   const res = A.act((st) => batchBreakthroughCopies(st));
                   if (res && res.ok && !res.msg && res.data) {
                     A.toast(
-                      `已完成 ${res.data.cardCount} 位名士突破，共提升 ${res.data.totalStars} 颗星级，未消耗星钻`,
+                      `已完成 ${res.data.cardCount} 位人才突破，共提升 ${res.data.totalStars} 颗星级`,
                       "gold",
                     );
                   }
@@ -35841,12 +35841,12 @@ function Yp() {
           w("button", {
             class: n === "owned" ? "on" : "",
             onClick: () => switchTab("owned"),
-            children: w("b", { children: `👥 麾下名士 (${ownedArr.length})` }),
+            children: w("b", { children: `已募人才 (${ownedArr.length})` }),
           }),
           w("button", {
             class: n === "all" ? "on" : "",
             onClick: () => switchTab("all"),
-            children: w("b", { children: `📖 全名士图鉴 (${ownedArr.length}/${eo.length})` }),
+            children: w("b", { children: `全部图鉴 (${ownedArr.length}/${eo.length})` }),
           }),
         ],
       }),
@@ -35912,11 +35912,11 @@ function Yp() {
         w("div", {
           class: "talent-empty",
           children: [
-            w("span", { children: "麾下尚无名士，招贤纳士以掌管全国百业与首都中枢" }),
+            w("span", { children: "当前尚未收录人才，可通过招募获取管理与科研人员" }),
             w("button", {
               class: "btn small gold",
               onClick: () => A.openModal({ type: "recruit" }),
-              children: "✦ 前往招贤馆",
+              children: "前往人才招募",
             }),
           ],
         }),
@@ -35925,7 +35925,7 @@ function Yp() {
         w("div", {
           class: "talent-empty",
           children: [
-            w("span", { children: "当前筛选条件下暂无匹配名士" }),
+            w("span", { children: "当前筛选条件下暂无匹配人才" }),
             (q || flt !== "all") &&
               w("button", {
                 class: "btn tiny ghost",
@@ -36415,7 +36415,7 @@ function Jp() {
               class: "wardrobe-hero",
               "data-tip-touch": !0,
               "data-tip-title": "主公外观衣橱",
-              "data-tip": `五维专精等级之和达到目标即自动免费解锁对应盛世外观（已解锁 ${unlockedSkins.length}/${skinsAll.length} 套），解锁后可随时穿戴或隐藏。`,
+              "data-tip": `五维专精等级之和达到目标即自动解锁对应主题外观（已解锁 ${unlockedSkins.length}/${skinsAll.length} 套），解锁后可随时穿戴或隐藏。`,
               children: [
                 w("div", {
                   class: "wh-top",
@@ -36426,7 +36426,7 @@ function Jp() {
                         " ",
                         _p6bQTip(
                           "主公外观衣橱",
-                          `五维专精等级之和达到目标即自动免费解锁对应盛世外观（已解锁 ${unlockedSkins.length}/${skinsAll.length} 套），解锁后可随时穿戴或隐藏。`,
+                          `五维专精等级之和达到目标即自动解锁对应主题外观（已解锁 ${unlockedSkins.length}/${skinsAll.length} 套），解锁后可随时穿戴或隐藏。`,
                         ),
                       ],
                     }),
@@ -36539,7 +36539,7 @@ function Jp() {
                       "data-tip-title": trTipTitle,
                       "data-tip": trTipBody,
                       children: [
-                        w("span", { class: "tr-ico", children: isAwake ? "✦" : "🔒" }),
+                        w("span", { class: "tr-ico", children: isAwake ? "●" : "🔒" }),
                         w("b", { children: isAwake ? Q.name : "？？？" }),
                         _p6bQTip(trTipTitle, trTipBody),
                         w("em", {
@@ -36561,7 +36561,7 @@ function Jp() {
 const Kp = {
     mgmt: "经验来自：巡察停在产值型产业、升级地块、搬迁、颁布管理类政令",
     tech: "经验来自：督办工程、勘探、建高级与架空产业、巡察停在配套型产业或工地、颁布技术类政令",
-    pol: "经验来自：升级首都、建/升税源型产业、改制与名臣卡、颁布政令、调整税制、做贸易、每年财政盈余结算、巡察停在首都或税源型产业",
+    pol: "经验来自：升级首都、建/升税源型产业、切换体制与装配政策、颁布政令、调整税制、贸易结算、年度财政盈余、调研停靠首都或税源产业",
     amb: "经验来自：开拓土地、填海移山、修路、巡察停在空地或边疆、颁布野心类政令",
     cha: "经验来自：招募/派驻/突破人才、建/升市政设施与国家奇观、建面向居民产业、指点人才、每年高宜居结算、巡察停在市政奇观、颁布魅力类政令",
   },
@@ -36611,7 +36611,7 @@ function Vp() {
       const ev = cr[src.slice(6)];
       h = ev ? `事件 · ${ev.name}` : "国事事件";
     } else if (src.startsWith("hidden")) {
-      h = "君主特质";
+      h = "隐藏特质";
     } else continue;
     const secNm = C.sector && lt[C.sector] ? lt[C.sector].name : "行业板块";
     const d =
@@ -36860,7 +36860,7 @@ function Vp() {
       ul = isRegimeUnlocked(e, rg.id),
       dir = rg.needDir ? INSIGHT_DIRS[rg.needDir] : null,
       curN = rg.needDir ? e.lord.insights[rg.needDir] || 0 : 0,
-      rgTip = `${rg.brief ? rg.brief + "\n" : ""}增益：${rg.pros}${rg.cons ? `\n代价：${rg.cons}` : "\n无负面代价"}\n${on ? "✓ 当前施行国体" : ul ? "点击改制，启用本国体专属 6 位名臣池" : `解锁条件：主公调研或完成五年规划积累「${dir ? dir.name : ""}」${curN}/${rg.need}`}`;
+      rgTip = `${rg.brief ? rg.brief + "\n" : ""}增益：${rg.pros}${rg.cons ? `\n代价：${rg.cons}` : "\n无附加代价"}\n${on ? "✓ 当前运行体制" : ul ? "点击切换体制，启用对应 6 项专属政策池" : `解锁条件：通过调研或五年规划积累「${dir ? dir.name : ""}」${curN}/${rg.need}`}`;
     return w(
       "button",
       {
@@ -36915,9 +36915,9 @@ function Vp() {
               w("div", {
                 class: "gh-emblem",
                 "data-tip-touch": !0,
-                "data-tip-title": "中枢内阁 · 治国总览",
+                "data-tip-title": "施政总览",
                 "data-tip":
-                  "汇集国家五年规划、30 位历史名臣策论、5 大国体、税制预算、经济特区与季度行政大令。名臣政策与五年规划均免体力零开销，是提升全国产出与税收乘区的核心引擎。",
+                  "整合五年规划、30 项体制政策、5 类基本体制、税制与三轨预算、经济特区及季度政令。体制政策与五年规划均零体力零国库消耗。",
                 children: w(_e, { name: "policy", size: 22 }),
               }),
               w("div", {
@@ -36929,11 +36929,11 @@ function Vp() {
                       w("b", {
                         class: "gh-title",
                         children: [
-                          "中枢内阁",
+                          "施政总览",
                           w("em", {
                             class: "gh-reg-pill",
                             "data-tip-touch": !0,
-                            "data-tip-title": `现行国体 · ${curReg.name}`,
+                            "data-tip-title": `现行体制 · ${curReg.name}`,
                             "data-tip": `${curReg.brief ? curReg.brief + "\n" : ""}增益：${curReg.pros}${curReg.cons ? `\n代价：${curReg.cons}` : "\n无负面代价"}`,
                             children: curReg.name,
                           }),
@@ -36961,7 +36961,7 @@ function Vp() {
                           class: `gh-ins-chip${ready ? " ready" : ""}`,
                           "data-tip-touch": !0,
                           "data-tip-title": `${dInfo.icon} ${dInfo.name}（${val}/24）`,
-                          "data-tip": `主公走格子调研或完成五年规划可积累${dInfo.name}。\n满 24 点解锁现代国体「${targetRg ? targetRg.name : ""}」及专属 6 位名臣池。`,
+                          "data-tip": `通过调研移动或完成五年规划可积累${dInfo.name}。\n满 24 点解锁体制「${targetRg ? targetRg.name : ""}」及对应 6 项专属政策。`,
                           children: [dInfo.icon, dInfo.short, w("b", { children: `${val}/24` })],
                         },
                         dk,
@@ -36980,7 +36980,7 @@ function Vp() {
                 "data-tip-title": curFyp ? `五年规划 · ${curFyp.name}` : "五年规划（待签发）",
                 "data-tip": curFyp
                   ? `第 ${e.fyp.num} 轮《${curFyp.name}》进行中：达标 ${Math.round(fypProg * 100)}%，剩余 ${fypLeft} 季\n增益：${curFyp.pros}\n奖励：${curFyp.rewardDesc}`
-                  : "立项完全免费且零体力消耗！立即开启 20 季全国乘区增益，达标再领数季 GDP、星钻与民情洞察。",
+                  : "立项零国库零体力消耗，立即激活 20 季全局乘区增益，期满达标结算 GDP、星钻与洞察奖励。",
                 onClick: () => focusSec("cabinet", "gov-sec-fyp"),
                 children: [
                   w("span", { class: "gha-ico", children: w(NA, { node: Ae.flag, size: 15, stroke: 2.2 }) }),
@@ -36998,15 +36998,15 @@ function Vp() {
               }),
               w("button", {
                 class: `gh-act${emptyPolSlots > 0 ? " needs-attention" : ""}`,
-                "data-tip-title": `名臣政策槽（${equipped.length}/${slotCap}）`,
+                "data-tip-title": `体制政策槽（${equipped.length}/${slotCap}）`,
                 "data-tip":
                   emptyPolSlots > 0
-                    ? `尚有 ${emptyPolSlots} 个政策空槽未装配！装配名臣策论零体力零国库消耗，立即提供全国常驻乘区加成。`
-                    : `已装满 ${equipped.length}/${slotCap} 个名臣策论（首都 Lv.3 / Lv.5 解锁更多槽位），可随时点击更换。`,
+                    ? `尚有 ${emptyPolSlots} 个政策空槽未装配，装配政策不消耗体力与国库，立即提供全局常驻加成。`
+                    : `已配置 ${equipped.length}/${slotCap} 项体制政策（首都 Lv.3 / Lv.5 解锁更多槽位），可随时更换。`,
                 onClick: () => focusSec("cabinet", "gov-sec-minister"),
                 children: [
                   w("span", { class: "gha-ico", children: w(NA, { node: Ae.scroll, size: 15, stroke: 2.2 }) }),
-                  w("b", { children: "名臣政策" }),
+                  w("b", { children: "体制政策" }),
                   w("span", { class: "gha-sub", children: `已装 ${equipped.length}/${slotCap}` }),
                   emptyPolSlots > 0 && w("em", { class: "gha-corner", children: `空槽 ${emptyPolSlots}` }),
                 ],
@@ -37054,7 +37054,7 @@ function Vp() {
               class: effTab === "cabinet" ? "on" : "",
               onClick: () => setTab("cabinet"),
               children: [
-                "📜 国策内阁",
+                "国策与体制",
                 cabAlerts > 0 && w("em", { class: "gst-dot", children: cabAlerts }),
               ],
             }),
@@ -37062,7 +37062,7 @@ function Vp() {
               class: effTab === "fiscal" ? "on" : "",
               onClick: () => setTab("fiscal"),
               children: [
-                "⚖️ 财税特区",
+                "财税与特区",
                 fisAlerts > 0 && w("em", { class: "gst-dot", children: fisAlerts }),
               ],
             }),
@@ -37070,7 +37070,7 @@ function Vp() {
               class: effTab === "decrees" ? "on" : "",
               onClick: () => setTab("decrees"),
               children: [
-                "💮 行政政令",
+                "行政政令",
                 decAlerts > 0 && w("em", { class: "gst-dot", children: decAlerts }),
               ],
             }),
@@ -37104,8 +37104,8 @@ function Vp() {
                         class: "pill gold-pulse",
                         "data-tip-touch": !0,
                         "data-tip-title": "五年规划立项说明",
-                        "data-tip": `签发规划零国库零体力开销，立即激活 20 季全国增益；达标更奖数季 GDP 与星钻（累计已完成 ${e.stats.fypDone || 0} 轮）。`,
-                        children: e.stats.fypDone ? `✦ 待立项 · 已成${e.stats.fypDone}轮` : "✦ 免费立项 · 20季增益",
+                        "data-tip": `立项零国库零体力消耗，立即激活 20 季全局增益，达标结算 GDP 与星钻（累计完成 ${e.stats.fypDone || 0} 轮）。`,
+                        children: e.stats.fypDone ? `待立项 · 已成 ${e.stats.fypDone} 轮` : "待立项 · 20 季增益",
                       }),
                   children: curFyp
                     ? (() => {
@@ -37146,21 +37146,21 @@ function Vp() {
                                   "data-tip-touch": !0,
                                   "data-tip-title": "规划期常驻增益",
                                   "data-tip": curFyp.pros,
-                                  children: `📈 ${curFyp.brief}`,
+                                  children: curFyp.brief,
                                 }),
                                 w("span", {
                                   class: "pill",
                                   "data-tip-touch": !0,
                                   "data-tip-title": "达标考核目标",
                                   "data-tip": curFyp.kpiDesc,
-                                  children: `🎯 进度 ${Math.round(fypProg * 100)}%`,
+                                  children: `进度 ${Math.round(fypProg * 100)}%`,
                                 }),
                                 w("span", {
                                   class: "pill",
                                   "data-tip-touch": !0,
                                   "data-tip-title": "期满达标奖励",
                                   "data-tip": curFyp.rewardDesc,
-                                  children: `🎁 ◇${curFyp.gems}`,
+                                  children: `奖励 ◇${curFyp.gems}`,
                                 }),
                               ],
                             }),
@@ -37216,7 +37216,7 @@ function Vp() {
               w("div", {
                 id: "gov-sec-minister",
                 children: w(Qt, {
-                  title: "名臣政策",
+                  title: "体制政策",
                   extra: w("span", {
                     style: "display:inline-flex;align-items:center;gap:6px",
                     children: [
@@ -37224,9 +37224,9 @@ function Vp() {
                         ? w("span", {
                             class: "pill gold-pulse",
                             "data-tip-touch": !0,
-                            "data-tip-title": "名臣政策空槽提醒",
-                            "data-tip": "点击下方任意名臣策论即可免费装入内阁，不耗体力与国库，随时可换。",
-                            children: `✦ 空槽 ${emptyPolSlots} · 点卡装配`,
+                            "data-tip-title": "政策槽位空闲",
+                            "data-tip": "点击下方任意政策卡即可免费装配，不消耗体力与国库，可随时更换。",
+                            children: `空槽 ${emptyPolSlots} · 待装配`,
                           })
                         : w("span", {
                             class: "muted",
@@ -37256,8 +37256,8 @@ function Vp() {
                             {
                               class: "pcs-slot-v11 locked",
                               "data-tip-touch": !0,
-                              "data-tip-title": `第 ${idx + 1} 内阁槽未解锁`,
-                              "data-tip": `将首都升至 Lv.${unlockLv} 即可永久解锁第 ${idx + 1} 个名臣政策槽位。`,
+                              "data-tip-title": `第 ${idx + 1} 政策槽未解锁`,
+                              "data-tip": `将首都升至 Lv.${unlockLv} 解锁第 ${idx + 1} 个政策槽位。`,
                               children: [w(NA, { node: Ae.lock, size: 11 }), ` 首都 Lv.${unlockLv}`],
                             },
                             idx,
@@ -37271,14 +37271,14 @@ function Vp() {
                             {
                               class: "pcs-slot-v11 empty",
                               "data-tip-touch": !0,
-                              "data-tip-title": `内阁第 ${idx + 1} 槽空闲`,
-                              "data-tip": "点击下方任意名臣策论即可免费装配，立即生效全国乘区加成。",
-                              children: `✦ 空槽 ${idx + 1}`,
+                              "data-tip-title": `第 ${idx + 1} 政策槽空闲`,
+                              "data-tip": "点击下方任意政策卡即可装配生效。",
+                              children: `空槽 ${idx + 1}`,
                             },
                             idx,
                           );
                         }
-                        const eqTip = `名臣：${p.who}\n收益：${p.pros}${p.cons ? `\n代价：${p.cons}` : "\n无负面代价"}\n点击卸下该策论`;
+                        const eqTip = `来源：${p.who}\n收益：${p.pros}${p.cons ? `\n代价：${p.cons}` : "\n无附加代价"}\n点击卸下该政策`;
                         return w(
                           "button",
                           {
@@ -37300,7 +37300,7 @@ function Vp() {
                       children: regCards.map((p) => {
                         const on = equipped.includes(p.id),
                           pcTitle = `${p.name} · ${p.who}`,
-                          pcTip = `名臣：${p.who}（${curReg.name}专属）\n收益：${p.pros}${p.cons ? `\n代价：${p.cons}` : "\n无负面代价"}\n${on ? "点击卸下此策论" : emptyPolSlots > 0 ? "点击免费装入内阁政策槽" : "当前槽位已满，请先点击上方槽位卸下再装"}`;
+                          pcTip = `来源：${p.who}（${curReg.name}专属）\n收益：${p.pros}${p.cons ? `\n代价：${p.cons}` : "\n无附加代价"}\n${on ? "点击卸下此政策" : emptyPolSlots > 0 ? "点击装配至政策槽" : "槽位已满，请先卸下已有政策"}`;
                         return w(
                           "button",
                           {
@@ -37339,15 +37339,15 @@ function Vp() {
                 }),
               }),
               w(Qt, {
-                title: "基本国体",
+                title: "基本体制",
                 extra:
                   regCdLeftQ > 0
                     ? w("span", { class: "muted", style: "font-size:12px", children: `稳定期 ${regCdLeftQ} 季` })
                     : regCd > 0
                       ? w("span", { class: "muted", style: "font-size:12px", children: `冷却 ${Vc(regCd)}` })
                       : readyModernRegs.length > 0
-                        ? w("span", { class: "pill gold-pulse", children: "✦ 可改现代国体" })
-                        : w("span", { class: "muted", style: "font-size:12px", children: `${curReg.name} · 6名臣池` }),
+                        ? w("span", { class: "pill gold-pulse", children: "可切换体制" })
+                        : w("span", { class: "muted", style: "font-size:12px", children: `${curReg.name} · 6 项政策` }),
                 children: w("div", {
                   class: "reg-layout-v11",
                   children: [
@@ -37475,7 +37475,7 @@ function Vp() {
                         "data-tip-touch": !0,
                         "data-tip-title": "经济特区名额空闲",
                         "data-tip": zoneRuleTip,
-                        children: `✦ 空余 ${freeZones} 座`,
+                        children: `空余 ${freeZones} 座`,
                       })
                     : w("span", {
                         class: "muted",
@@ -37718,15 +37718,15 @@ function Wp() {
   const jumpDaily = (q) => {
     if (q.go === "tile") {
       const qTarget = q.name
-        .replace(/^亲临视察\s*/, "")
+        .replace(/^(亲临视察|定点调研)\s*/, "")
         .replace(/^[「『]+|[」』]+$/g, "")
         .trim();
       CQ(q.tileId);
       A.select(q.tileId);
-      A.toast(`已定位「${qTarget}」，点底部「调研」掷骰飞过去吧！`, "info");
+      A.toast(`已定位「${qTarget}」，可点击底部「调研」掷骰前往`, "info");
     } else if (q.go === "survey") {
       A.openPanel(null);
-      A.toast("点击屏幕下方「调研」按钮即可掷骰！", "info");
+      A.toast("点击底部「调研」按钮即可掷骰移动", "info");
     } else if (q.go === "mentor") {
       A.openModal({ type: "mentor" });
     } else if (q.go === "policy") {
@@ -37749,7 +37749,7 @@ function Wp() {
     return (rb ? 1 : 0) - (ra ? 1 : 0) || (da ? 1 : 0) - (db ? 1 : 0) || b.tier - a.tier;
   });
   const chestTip = dq.bonusClaimed
-    ? "今日勤政宝箱已开启，现实自然日 0 点自动刷新"
+    ? "今日全勤补给已领取，自然日 0 点自动刷新"
     : `完成当日全部 ${qs.length} 项日常委托，即可领取 ◇150 星钻 + 主公政治与魅力历练经验（现实自然日 0 点自动刷新）`;
   const auraTip = `当前称号：${sum.rankName}\n成就点数：★${sum.pts} / ${sum.maxPts}（已达成 ${sum.done}/${sum.total} 项）\n成就光环：每积累 100★ 成就点，全国所有产业产出永久 +1%（当前 +${SA(sum.bonus, 0)}，上限 +15%）`;
   return w(he, {
@@ -37798,7 +37798,7 @@ function Wp() {
                 "data-tip-title": "每日签到",
                 "data-tip": `每日首次登录可免费领取 ◇${O.dailyGems} 星钻（现实自然日 0 点刷新）`,
                 children: [
-                  w("b", { children: "📅 每日签到" }),
+                  w("b", { children: "每日签到" }),
                   w("button", {
                     class: "btn small gold",
                     disabled: signDone,
@@ -37810,7 +37810,7 @@ function Wp() {
               w("div", {
                 class: `dq-chest${allQDone && !dq.bonusClaimed ? " ready" : ""}${dq.bonusClaimed ? " opened" : ""}`,
                 "data-tip-touch": !0,
-                "data-tip-title": "今日勤政宝箱",
+                "data-tip-title": "日常全勤补给",
                 "data-tip": chestTip,
                 children: [
                   w("div", {
@@ -37819,15 +37819,15 @@ function Wp() {
                       w("span", {
                         style: "display:inline-flex;align-items:center;gap:5px;flex-direction:row",
                         children: [
-                          w("b", { children: `🎁 勤政宝箱 · ${doneQ}/${qs.length}` }),
-                          qTipC("今日勤政宝箱", chestTip),
+                          w("b", { children: `全勤补给 · ${doneQ}/${qs.length}` }),
+                          qTipC("日常全勤补给", chestTip),
                         ],
                       }),
                       w("button", {
                         class: "btn small gold",
                         disabled: !allQDone || dq.bonusClaimed,
                         onClick: () => A.act((o) => claimDailyBonus(o)),
-                        children: dq.bonusClaimed ? "已领取" : "开箱 ◇150",
+                        children: dq.bonusClaimed ? "已领取" : "领取 ◇150",
                       }),
                     ],
                   }),
@@ -38156,7 +38156,7 @@ function qp() {
                   const res = CloudLadder.importLocalRival(await fl.text());
                   res.ok
                     ? A.toast(
-                        `已导入「${res.entry.nation_name}」（GDP ${fe(res.entry.gdp)} 亿）参与比拼！`,
+                        `已载入「${res.entry.nation_name}」（GDP ${fe(res.entry.gdp)} 亿）`,
                         "good",
                       )
                     : A.toast(res.msg, "warn");
@@ -38469,7 +38469,7 @@ function Zp() {
                 "data-tip-touch": !0,
                 "data-tip-title": "世界种子与纪元",
                 "data-tip": `山河随机种子：#${e.seed}\n当前纪元：${Ng(e.quarter)}（实时 60 秒/季）`,
-                children: `🌱 #${e.seed}`,
+                children: `Seed #${e.seed}`,
               }),
               w("span", {
                 class: "pill",
@@ -38694,7 +38694,7 @@ function xi(A, e) {
     ];
   const f = {
       q: "勘探与奇异资源是什么？",
-      a: `花星钻在本格探矿（本格每次 ◇${h0(A, e)}）：每次给出最多 ${O.prospectOptions} 种符合${t}地形的候选资源，挑一种采用或保持原样。除常规矿产外，当首都 ≥Lv.3 且国土 ≥25 块（或位于外环边疆）时，可勘探出氦-3、室温超导晶、振金等 6 种「奇异资源」，直接大幅赋能架空与前沿产业，部分还附带零损供电或全局替代紧缺原料！`,
+      a: `花星钻在本格探矿（本格每次 ◇${h0(A, e)}）：每次给出最多 ${O.prospectOptions} 种符合${t}地形的候选资源，挑一种采用或保持原样。除常规矿产外，当首都 ≥Lv.3 且国土 ≥25 块（或位于外环边疆）时，可勘探出氦-3、室温超导晶、振金等 6 种「奇异资源」，用于支撑架空与高阶产业，部分附带额外供电或原料替代效果。`,
     },
     o = {
       q: "资源不合适怎么用「贸易」置换？",
@@ -38704,19 +38704,19 @@ function xi(A, e) {
     ? [
         {
           q: "升级首都有哪些核心收益？",
-          a: `① 提升首都自身产出、人口、自带水电与全国国土上限（Lv.1–5 解锁 37 / 75 / 127 / 169 / 217 格满图）；② 主公体力上限 +${O.staminaPerCapital} 并当场回满体力；③ 全国施工队上限 +1（当前共 ${m ? m.buildSlots : 2} 支）；④ Lv.3 自动解锁四大税制、首座经济特区名额、16 种架空未来产业与第 2 名臣政策槽，Lv.5 解锁第 3 名臣政策槽；⑤ 提高国家奇观扩建上限（奇观升至 Lv.k 需首都达到 Lv.k+1）。`,
+          a: `① 提升首都自身产出、人口、自带水电与全国国土上限（Lv.1–5 解锁 37 / 75 / 127 / 169 / 217 格满图）；② 主公体力上限 +${O.staminaPerCapital} 并当场回满体力；③ 全国施工队上限 +1（当前共 ${m ? m.buildSlots : 2} 支）；④ Lv.3 自动解锁四大税制、首座经济特区名额、16 种架空未来产业与第 2 政策槽，Lv.5 解锁第 3 政策槽；⑤ 提高国家奇观扩建上限（奇观升至 Lv.k 需首都达到 Lv.k+1）。`,
         },
         {
           q: "升级首都要什么条件？",
           a: `疆域规模达标即可：升到 Lv.2–6 分别需要已开拓国土达到 ${O.capitalLand.slice(1).join(" / ")} 块。`,
         },
         {
-          q: "首都「首长」有哪些全局加成？",
-          a: "派驻在首都的人物即为内阁首长：管理降低政令费并削减全国行政治理费；政治提高全国税率、主权发债上限与融资额度，并降低国民公共服务费与国债利率；魅力提高全国宜居度。",
+          q: "首都驻守人物有哪些全局加成？",
+          a: "派驻在首都的人物提供中枢全局修正：管理降低政令费并削减全国行政治理费；政治提高全国税率、主权发债上限与融资额度，并降低国民公共服务费与国债利率；魅力提高全国宜居度。",
         },
         {
           q: "治国与施政在哪里操作？",
-          a: `点左侧「施政」面板或左下角「施政」按钮：在「国策内阁」免费签发五年规划、装配 30 位历史名臣政策并切换 5 大国体；在「财税特区」调配税制、三轨预算与设立 7 格经济特区；在「行政政令」颁布今日特惠议题与片区/全国政令。`,
+          a: `点击左侧「施政」面板或底部「施政」按钮：在「国策与体制」立项五年规划、装配体制政策并切换基本体制；在「财税与特区」调整税制、三轨预算与设立经济特区；在「行政政令」颁布年度特惠议题与片区/全国政令。`,
         },
       ]
     : e.public
@@ -38738,7 +38738,7 @@ function xi(A, e) {
         ? [
             {
               q: "如何加快在建工程进度？",
-              a: `① 主公「督办」：花 ${O.lordActs.supervise.cost} 点体力（每 60 分钟充能 1 次，最多囤积 ${O.lordActs.supervise.maxCharges || 6} 次），当场砍掉剩余工期 ${Math.round(O.superviseCut * 100)}%，不足 1 季直接落成！\n② 宏观提速：在「施政」调高「基建专项预算」（提速/强基建/超级工程）、改制「产业基建制」、签发五年规划「重工强基」或颁布政令「基建提速」；主公飞艇视察交通类市政也会推进全国在建工期。`,
+              a: `① 主公「督办」：花 ${O.lordActs.supervise.cost} 点体力（每 60 分钟充能 1 次，最多囤积 ${O.lordActs.supervise.maxCharges || 6} 次），当场砍掉剩余工期 ${Math.round(O.superviseCut * 100)}%，不足 1 季直接竣工。\n② 宏观提速：在「施政」调高「基建专项预算」（提速/强基建/超级工程）、改制「产业基建制」、签发五年规划「重工强基」或颁布政令「基建提速」；主公飞艇视察交通类市政也会推进全国在建工期。`,
             },
             {
               q: "取消工程能退回多少资金？",
@@ -38757,7 +38757,7 @@ function xi(A, e) {
               },
               {
                 q: "水电供给与「需水产业」要注意什么？",
-                a: `运转产业每级消耗 1 电 1 水，水电总供给不足会按比例拉低全国产出（水务建在河谷/海湾享 1.5× 供水加成）。特别注意：化工、钢材、半导体、饮料、家化、纺织、房建、生物制药、医疗、地产开发、水气营销共 11 个涉水产业，必须全国建有水厂提供「供水」产品才能开工运转！`,
+                a: `运转产业每级消耗 1 电 1 水，水电总供给不足会按比例拉低全国产出（水务建在河谷/海湾享 1.5× 供水加成）。特别注意：化工、钢材、半导体、饮料、家化、纺织、房建、生物制药、医疗、地产开发、水气营销共 11 个涉水产业，必须全国建有水厂提供「供水」产品才能正常运转。`,
               },
               {
                 q: "供需边与高速路网怎么算加成？",
@@ -38780,7 +38780,7 @@ function xi(A, e) {
               o,
               {
                 q: "如何规划三格国家奇观？",
-                a: "点击「国家奇观」建造按钮后，地图会用金色边框标出全国所有相连的 3 格空地三角形；点击合法三角内的任意一个角，系统都会自动将符合地形要求的顶点设为主锚点并预演完整三格带动收益！",
+                a: "点击「国家奇观」建造按钮后，地图会用金色边框标出全国所有相连的 3 格空地三角形；点击合法三角内的任意一个角，系统会自动将符合地形要求的顶点设为主锚点并预演三格带动收益。",
               },
             ];
 }
@@ -38949,7 +38949,7 @@ function _p() {
                 w("button", {
                   class: `abox${x.block ? " off" : ""}`,
                   "data-tip-title": `施政 · 体力 ${x.cost} · 不限次 · 按体力`,
-                  "data-tip": `打开「治国与施政」：签发五年规划、切换税制、设立经济特区或颁布行政大令（按季度独立冷却）${
+                  "data-tip": `打开「施政」面板：立项五年规划、切换税制、设立经济特区或颁布行政政令（按季度独立冷却）${
                     x.block
                       ? `
 ! ${x.block}`
@@ -39377,7 +39377,7 @@ function _p() {
                     ? w("button", {
                         class: "btn",
                         disabled: !0,
-                        children: "升首都至 Lv.2 解锁名士驻守升阶",
+                        children: "首都升至 Lv.2 解锁驻守升阶",
                       })
                     : w("button", {
                         class: "btn",
@@ -39951,7 +39951,7 @@ function pQ({ cost: A, small: e }) {
     class: `btn${e ? " small" : ""}`,
     disabled: !0,
     "data-tip-title": `星钻不足（需 ◇${A}）`,
-    "data-tip": `勘探一次需 ◇${A} 星钻。可通过每日委托与勤政宝箱、国家成就、主公走格子随机奇遇或五年规划达标获取星钻。`,
+    "data-tip": `勘探一次消耗 ◇${A} 星钻。可通过每日委托、全勤补给、国家成就、调研事件或五年规划结项获取星钻。`,
     children: [w(NA, { node: Ae.gem, size: 13 }), ` 星钻不足 · ◇${A}`],
   });
 }
@@ -40884,8 +40884,8 @@ const rL = [
     icon: "policy",
     label: "施政",
     color: "#b79cff",
-    title: "中枢内阁 · 施政",
-    tip: "国策内阁（五年规划、30 名臣政策、5 大国体）、财税特区与季度行政政令",
+    title: "治国与施政",
+    tip: "国策与体制（五年规划、30 项体制政策、5 类体制）、财税特区与行政政令",
   },
   {
     id: "tasks",
@@ -40893,7 +40893,7 @@ const rL = [
     label: "委托",
     color: "#7ddc8f",
     title: "委托与成就",
-    tip: "每日委托与勤政宝箱、69 项国家成就与爵位光环",
+    tip: "每日委托与全勤补给、69 项国家成就与发展评级加成",
   },
   {
     id: "rank",
@@ -40942,9 +40942,9 @@ function vL() {
         : 0,
     govCnt = emptyPolNav + fypIdleNav + regReadyNav + zoneReadyNav,
     govLines = [];
-  emptyPolNav > 0 && govLines.push(`✓ 内阁有 ${emptyPolNav} 个名臣政策空槽待装配`);
+  emptyPolNav > 0 && govLines.push(`✓ 有 ${emptyPolNav} 个体制政策空槽待装配`);
   fypIdleNav > 0 && govLines.push("✓ 《五年规划》可免费立项");
-  regReadyNav > 0 && govLines.push("✓ 民情洞察已满，可改制现代国体");
+  regReadyNav > 0 && govLines.push("✓ 调研洞察达标，可切换现代体制");
   zoneReadyNav > 0 && govLines.push(`✓ 有 ${freeZoneNav} 座经济特区名额可设立`);
   govCnt > 0 && (f.policy = { n: govCnt, text: govLines.join("\n") });
   return (
@@ -41084,7 +41084,7 @@ function FlightHud() {
             children: [
               w("b", {
                 children: f.arrived
-                  ? `御驾抵达「${Ws(dstTl)} #${f.destTile}」`
+                  ? `已抵达「${Ws(dstTl)} #${f.destTile}」`
                   : `飞越「${Ws(curTl)} #${f.curTile}」`,
               }),
               !f.arrived && w("small", { children: `终点：${Ws(dstTl)} #${f.destTile}` }),
@@ -41229,7 +41229,7 @@ function BL() {
             class: "survey-min-bar",
             children: [
               w("b", { class: "sd-dice-sm", children: [e.steps, " 步"] }),
-              w("span", { children: ["御驾巡察中 · 点地图任意亮格起飞（", e.tiles.size, " 处可达）"] }),
+              w("span", { children: ["调研选点中 · 点击地图高亮地块前往（", e.tiles.size, " 处可达）"] }),
               w("button", {
                 class: "btn tiny primary",
                 onClick: () => setMinView(!1),
@@ -41257,7 +41257,7 @@ function BL() {
                     w("div", {
                       class: "sd-tmain",
                       children: [
-                        w("b", { children: ["御驾巡察 · 掷出 ", e.steps, " 点，择路起飞"] }),
+                        w("b", { children: ["实地调研 · 掷出 ", e.steps, " 点，选择落点"] }),
                         w("small", {
                           children: ["悬停航线预瞄落点 · 共 ", e.tiles.size, " 处可达，也可直接点地图亮格"],
                         }),
@@ -41319,11 +41319,11 @@ function BL() {
                           w("span", {
                             class: `sdc-tag${rt.hot || rt.wonder ? " hot" : " cash"}`,
                             children: rt.wonder
-                              ? "奇观御览"
+                              ? "奇观视察"
                               : rt.civic
                                 ? "市政视察"
                                 : rt.hot
-                                  ? "民情热点"
+                                  ? "洞察节点"
                                   : "现场办公",
                           }),
                           rt.willUnlock
@@ -41652,11 +41652,11 @@ function wL() {
 if (typeof T0 === "object" && T0) {
   Object.assign(T0, {
     survey:
-      "掷骰乘飞艇巡察山河（随疆域扩大额外 +1/+2 格机动）；沿途增收获经验，落点积累四向体制洞察并可触发奇观/国事事件",
+      "掷骰进行实地调研（随疆域扩大享 +1/+2 机动步数）；沿途结算资金与经验，终点积累四向体制洞察并触发地块事件",
     mentor: `直接给一位人物升 1–${O.diceMax} 级（极小概率直达当前关口）；到 10 级关口可用同名卡或星钻猎头双轨突破`,
     trade:
       "将本格资源置换成符合本格地形的同品质资源（T4 奇异资源需首都 Lv.3 且国土 ≥25 块，或位于外环边疆）",
-    govern: `打开「治国与施政」：调配三轨预算、国体与名臣政策卡，签发五年规划或颁布行政大令（政令按季度独立冷却，年度议题国库半价）`,
+    govern: `打开「施政」面板：配置五年规划、体制政策与三轨预算，或颁布季度行政政令（年度议题享国库折扣）`,
   });
 }
 if (typeof t9 === "object" && t9) {
