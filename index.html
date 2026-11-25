@@ -67,11 +67,16 @@ const Ds = { name: "经世济国", version: "1.1", stage: "正式版", note: "�
     foundingDiscount: 0.5,
     foundingQuarters: 60,
     foundingTax: 1,
-    diversityPer: 0.005,
-    diversityCap: 0.25,
+    diversityPer: 0.007,
+    diversityCap: 0.35,
     crowdFree: 3,
     crowdPer: 0.04,
     crowdCap: 0.6,
+    supplyPerLv: 2.5,
+    supplyResBonus: 1,
+    supplyFloor: 0.45,
+    optHarvestBonus: 0.2,
+    upgradeTime: [0, 0, 0, 2, 2, 3],
     landGdp: 0.8,
     capitalOutput: 4,
     capitalPop: 20,
@@ -106,7 +111,7 @@ const Ds = { name: "经世济国", version: "1.1", stage: "正式版", note: "�
       cap: 0.25,
     },
     fictionCapital: 3,
-    fictionDiversity: 12,
+    fictionDiversity: 18,
     prospectOptions: 5,
     agendaPicks: 3,
     agendaDiscount: 0.5,
@@ -192,14 +197,16 @@ const hf = ["12", "18", "13", "20", "17", "11", "19", "10", "16", "14", "15"],
       en: "Food",
       sector: "12",
       level: 0,
-      harvest: ["wheat", "rice", "cotton", "sugarcane", "coffee", "fish"],
+      harvest: ["wheat", "cotton", "fish", "salt", "sugarcane", "tobacco_leaf", "coffee"],
       harvestOptional: !0,
       needs: [],
       makes: "农产品",
       water: !0,
+      mountain: !0,
+      ice: !0,
       suits: ["plain", "valley"],
       model: "farm",
-      desc: "种植、养殖、渔业与食品加工。运转时每有效级提供 +5 万基础人口并放大全国人口 +4%（最高 +42%），直接拉高内需。",
+      desc: "种植、养殖、渔业与食品加工。运转时提供基础人口与人口乘区加成，建于农渔盐茶等资源格额外增产。",
     },
     {
       id: "121011",
@@ -208,11 +215,16 @@ const hf = ["12", "18", "13", "20", "17", "11", "19", "10", "16", "14", "15"],
       en: "Beverages",
       sector: "12",
       level: 1,
+      harvest: ["spring", "sugarcane", "coffee"],
+      harvestOptional: !0,
       needs: [["农产品", "甘蔗", "咖啡"], ["供水"]],
       makes: "饮料",
-      suits: ["valley"],
+      mountain: !0,
+      ice: !0,
+      water: !0,
+      suits: ["valley", "hill"],
       model: "light",
-      desc: "酒类、软饮、咖啡与茶。开工需全国具备供水。",
+      desc: "酒类、软饮、咖啡与茶饮制造。建于清泉水脉、甘蔗带或高山茶咖地块享本地禀赋增产。",
     },
     {
       id: "121012",
@@ -221,10 +233,13 @@ const hf = ["12", "18", "13", "20", "17", "11", "19", "10", "16", "14", "15"],
       en: "Tobacco & Cannabis",
       sector: "12",
       level: 1,
+      harvest: ["tobacco_leaf"],
+      harvestOptional: !0,
       needs: [["农产品"]],
       makes: "烟草制品",
+      suits: ["hill", "plain"],
       model: "light",
-      desc: "烟叶种植、烘烤与卷烟制造。",
+      desc: "烟叶醇化与卷烟制造，高税率必选消费税源，并供应商超与必选批发渠道。",
     },
     {
       id: "121013",
@@ -233,10 +248,15 @@ const hf = ["12", "18", "13", "20", "17", "11", "19", "10", "16", "14", "15"],
       en: "Household Products",
       sector: "12",
       level: 2,
+      harvest: ["herbs", "marine_bio"],
+      harvestOptional: !0,
       needs: [["化工品"], ["供水"]],
       makes: "日化用品",
+      water: !0,
+      ice: !0,
+      mountain: !0,
       model: "light",
-      desc: "清洁、个护等家庭日常用品。开工需全国具备供水。",
+      desc: "清洁、个护与家庭日常用品制造。建于药材或海洋生物地块享天然活性原料增产。",
     },
     {
       id: "121110",
@@ -245,10 +265,13 @@ const hf = ["12", "18", "13", "20", "17", "11", "19", "10", "16", "14", "15"],
       en: "Wholesale - Consumer Staples",
       sector: "12",
       level: 2,
-      needs: [["物流"], ["农产品", "饮料", "日化用品"]],
+      harvest: ["harbor"],
+      harvestOptional: !0,
+      needs: [["物流"], ["农产品"], ["饮料", "烟草制品", "日化用品"]],
       makes: "必需品批发",
+      water: !0,
       model: "warehouse",
-      desc: "把食品与日用品分销到各级渠道。",
+      desc: "整合农产品与饮品、烟草、日化货源并分销至全国渠道，建于深水航道享集散增产。",
     },
     {
       id: "121111",
@@ -257,10 +280,10 @@ const hf = ["12", "18", "13", "20", "17", "11", "19", "10", "16", "14", "15"],
       en: "Retail - Consumer Staples",
       sector: "12",
       level: 1,
-      needs: [["农产品", "饮料", "日化用品"]],
+      needs: [["农产品"], ["饮料", "烟草制品", "日化用品", "生活服务"]],
       makes: "商超零售",
       model: "retail",
-      desc: "超市、便利店与药店。",
+      desc: "超市、便利店与民生卖场，衔接基础消费品并为银行业与现代零售提供商业流水。",
     },
     {
       id: "181010",
@@ -269,10 +292,14 @@ const hf = ["12", "18", "13", "20", "17", "11", "19", "10", "16", "14", "15"],
       en: "Chemicals",
       sector: "18",
       level: 2,
-      needs: [["石油", "天然气", "可燃冰", "钾盐", "磷矿", "盐"], ["供水"]],
+      harvest: ["salt", "abyssal_vent"],
+      harvestOptional: !0,
+      needs: [["油气燃料", "煤炭", "石油", "天然气", "可燃冰"], ["供水"]],
       makes: "化工品",
+      water: !0,
+      ice: !0,
       model: "chem",
-      desc: "有机与无机化学品，许多制造业的上游。开工需全国具备供水。",
+      desc: "有机与无机基础化学品，制造业核心上游。需碳氢能源底座与供水，建于盐湖或热液口大幅增产。",
     },
     {
       id: "181011",
@@ -287,7 +314,7 @@ const hf = ["12", "18", "13", "20", "17", "11", "19", "10", "16", "14", "15"],
       mountain: !0,
       suits: ["hill", "mountain"],
       model: "cement",
-      desc: "水泥、骨料与建筑用材料，需要本地石灰石或砂石。",
+      desc: "水泥、骨料与结构建材，需要本地石灰岩或砂石，支撑全国产业基础扩建。",
     },
     {
       id: "181012",
@@ -296,10 +323,12 @@ const hf = ["12", "18", "13", "20", "17", "11", "19", "10", "16", "14", "15"],
       en: "Containers & Packaging",
       sector: "18",
       level: 2,
-      needs: [["化工品", "木材制品"]],
+      harvest: ["bamboo_pulp"],
+      harvestOptional: !0,
+      needs: [["木材制品"], ["化工品", "建材"]],
       makes: "包装",
       model: "light",
-      desc: "纸箱、塑料与金属容器。",
+      desc: "纸品、复合膜与工业容器，需林业木浆与化工或玻璃建材协同供应。",
     },
     {
       id: "181013",
@@ -308,13 +337,13 @@ const hf = ["12", "18", "13", "20", "17", "11", "19", "10", "16", "14", "15"],
       en: "Forestry, Paper & Wood Products",
       sector: "18",
       level: 1,
-      harvest: ["timber", "rubber"],
+      harvest: ["timber", "rubber", "bamboo_pulp"],
       needs: [],
       makes: "木材制品",
       mountain: !0,
       suits: ["forest"],
       model: "forestry",
-      desc: "林场与橡胶园经营、木材加工与造纸，需要本地木材或橡胶。",
+      desc: "林场、橡胶园与竹浆林经营及造纸加工，需要本地用材林、橡胶或竹浆资源。",
     },
     {
       id: "181014",
@@ -326,7 +355,7 @@ const hf = ["12", "18", "13", "20", "17", "11", "19", "10", "16", "14", "15"],
       needs: [["铁矿"], ["电力", "煤炭"], ["供水"]],
       makes: "钢材",
       model: "steel",
-      desc: "炼铁、炼钢与轧钢。开工需全国具备供水。",
+      desc: "高炉炼铁、炼钢与特种轧钢，装备制造与产业扩建的核心材料。",
     },
     {
       id: "181015",
@@ -336,27 +365,15 @@ const hf = ["12", "18", "13", "20", "17", "11", "19", "10", "16", "14", "15"],
       sector: "18",
       level: 1,
       harvest: [
+        "coal",
         "iron",
-        "copper",
         "bauxite",
+        "quartz",
+        "copper",
+        "lithium",
         "gold",
-        "silver",
         "rareearth",
         "uranium",
-        "lithium",
-        "coal",
-        "quartz",
-        "potash",
-        "salt",
-        "phosphate",
-        "zinc",
-        "nickel",
-        "cobalt",
-        "graphite",
-        "tungsten",
-        "titanium",
-        "platinum",
-        "diamond",
       ],
       needs: [],
       makes: "金属矿产",
@@ -365,7 +382,7 @@ const hf = ["12", "18", "13", "20", "17", "11", "19", "10", "16", "14", "15"],
       water: !0,
       suits: ["mountain", "hill"],
       model: "mine",
-      desc: "开采金属与矿物，需要本地矿产资源。开采的资源同时供给全国。",
+      desc: "开采煤炭、铁、铜、铝、石英及锂、稀土、铀等核心矿产，向全国工业链提供原料配额。",
     },
     {
       id: "131010",
@@ -381,7 +398,7 @@ const hf = ["12", "18", "13", "20", "17", "11", "19", "10", "16", "14", "15"],
       ice: !0,
       suits: ["desert", "water"],
       model: "oil",
-      desc: "油气开采、运输与炼化，需要本地石油、天然气或可燃冰。",
+      desc: "油气勘采、储运与炼化，需要本地石油、天然气或可燃冰。",
     },
     {
       id: "131011",
@@ -393,7 +410,7 @@ const hf = ["12", "18", "13", "20", "17", "11", "19", "10", "16", "14", "15"],
       needs: [["油气燃料"], ["机械设备"]],
       makes: "油服",
       model: "factory",
-      desc: "钻井、油田服务与专用设备。",
+      desc: "深井钻探、油气田工程与专用装备。",
     },
     {
       id: "131110",
@@ -402,6 +419,8 @@ const hf = ["12", "18", "13", "20", "17", "11", "19", "10", "16", "14", "15"],
       en: "Renewable Energy",
       sector: "13",
       level: 0,
+      harvest: ["wind_corridor", "geothermal", "abyssal_vent"],
+      harvestOptional: !0,
       needs: [],
       makes: "绿电",
       water: !0,
@@ -409,7 +428,7 @@ const hf = ["12", "18", "13", "20", "17", "11", "19", "10", "16", "14", "15"],
       ice: !0,
       suits: ["desert", "water", "hill"],
       model: "renewable",
-      desc: "风电、光伏等可再生能源。荒漠、海湾与丘陵更适宜。",
+      desc: "风电、光伏与地热发电。建于强风走廊、地热裂谷或深海热液口享高额清洁能源加成。",
     },
     {
       id: "201010",
@@ -418,12 +437,16 @@ const hf = ["12", "18", "13", "20", "17", "11", "19", "10", "16", "14", "15"],
       en: "Electric Utilities",
       sector: "20",
       level: 1,
+      harvest: ["wind_corridor", "geothermal"],
+      harvestOptional: !0,
       needs: [["油气燃料", "煤炭", "铀矿", "绿电", "可燃冰"]],
       makes: "电力",
       mountain: !0,
+      ice: !0,
+      water: !0,
       suits: ["valley"],
       model: "power",
-      desc: "发电与电网，可用油气、煤、铀、绿电或可燃冰。",
+      desc: "主力发电与骨干电网，可用油气、煤、铀、绿电或可燃冰。",
     },
     {
       id: "201011",
@@ -432,13 +455,16 @@ const hf = ["12", "18", "13", "20", "17", "11", "19", "10", "16", "14", "15"],
       en: "Gas & Water Utilities",
       sector: "20",
       level: 0,
+      harvest: ["spring"],
+      harvestOptional: !0,
       needs: [],
       makes: "供水",
       water: !0,
       mountain: !0,
+      ice: !0,
       suits: ["valley", "water"],
       model: "utility",
-      desc: "供水、燃气管网与水处理。建在河谷或海湾上供水量 ×1.5；可接油气供应链并向 11 个工农/民生下游提供 +24% 配套联动。",
+      desc: "供水、燃气管网与水处理。河谷或海湾供水量 ×1.5，建于清泉水脉额外增产并提升供货配额。",
     },
     {
       id: "201012",
@@ -450,7 +476,7 @@ const hf = ["12", "18", "13", "20", "17", "11", "19", "10", "16", "14", "15"],
       needs: [["电力"], ["供水", "油气燃料", "绿电", "可燃冰"]],
       makes: "能源交易",
       model: "office",
-      desc: "电力与燃气的销售和交易。开工需全国具备供水、油气燃料、绿电或可燃冰之一。",
+      desc: "电力与燃气跨区调度、结算与合约交易。",
     },
     {
       id: "171010",
@@ -462,7 +488,7 @@ const hf = ["12", "18", "13", "20", "17", "11", "19", "10", "16", "14", "15"],
       needs: [["机械设备"], ["电气设备"], ["工业零部件"]],
       makes: "综合工业",
       model: "factory",
-      desc: "跨多个工业门类的综合制造集团。",
+      desc: "跨多个工业门类的重型制造集团。",
     },
     {
       id: "171011",
@@ -471,12 +497,12 @@ const hf = ["12", "18", "13", "20", "17", "11", "19", "10", "16", "14", "15"],
       en: "Aerospace & Defense",
       sector: "17",
       level: 4,
-      needs: [["运输装备"], ["电子硬件"], ["化工品", "钛矿", "钨矿"]],
+      needs: [["运输装备"], ["电子硬件"], ["化工品", "稀土"]],
       makes: "航天装备",
       mountain: !0,
       suits: ["desert"],
       model: "aero",
-      desc: "飞机、航天器与相关系统。",
+      desc: "干线飞机、运载火箭与航天器系统。",
     },
     {
       id: "171012",
@@ -485,10 +511,10 @@ const hf = ["12", "18", "13", "20", "17", "11", "19", "10", "16", "14", "15"],
       en: "Electrical Equipment",
       sector: "17",
       level: 2,
-      needs: [["铜矿", "锂矿", "镍矿", "钴矿", "石墨", "铂族金属"], ["电力"]],
+      needs: [["铜矿", "锂矿"], ["电力"]],
       makes: "电气设备",
       model: "factory",
-      desc: "电机、电池、电网与楼宇电气设备。",
+      desc: "电机、储能电芯、输变电与自动化设备，支撑全国产业 Lv.4 技改。",
     },
     {
       id: "171013",
@@ -500,7 +526,7 @@ const hf = ["12", "18", "13", "20", "17", "11", "19", "10", "16", "14", "15"],
       needs: [["钢材"], ["电力"]],
       makes: "机械设备",
       model: "factory",
-      desc: "工程机械、农机与通用机械。",
+      desc: "工业母机、工程机械与通用装备，支撑全国产业 Lv.4 技改。",
     },
     {
       id: "171014",
@@ -512,7 +538,7 @@ const hf = ["12", "18", "13", "20", "17", "11", "19", "10", "16", "14", "15"],
       needs: [["钢材"], ["机械设备"]],
       makes: "运输装备",
       model: "factory",
-      desc: "卡车、轨道车辆与船舶。",
+      desc: "重卡、轨道车辆与远洋船舶制造。",
     },
     {
       id: "171015",
@@ -522,12 +548,12 @@ const hf = ["12", "18", "13", "20", "17", "11", "19", "10", "16", "14", "15"],
       sector: "17",
       level: 2,
       needs: [
-        ["钢材", "铝土矿", "铜矿", "锌矿", "钛矿", "钨矿", "橡胶"],
+        ["钢材", "铝土矿", "铜矿", "橡胶"],
         ["化工品", "电力"],
       ],
       makes: "工业零部件",
       model: "factory",
-      desc: "金属、玻璃、橡胶等半成品与零部件。",
+      desc: "精密金属件、特种玻璃与橡胶密封等工业中间品。",
     },
     {
       id: "171110",
@@ -539,7 +565,7 @@ const hf = ["12", "18", "13", "20", "17", "11", "19", "10", "16", "14", "15"],
       needs: [["机械设备", "电气设备"]],
       makes: "工业服务",
       model: "warehouse",
-      desc: "设备租赁、维修与工业品分销。",
+      desc: "工业设备运维、检测与供应链集成，支撑全国产业 Lv.6 技改。",
     },
     {
       id: "171111",
@@ -551,7 +577,7 @@ const hf = ["12", "18", "13", "20", "17", "11", "19", "10", "16", "14", "15"],
       needs: [["物流", "IT服务"]],
       makes: "商务服务",
       model: "office",
-      desc: "人力、环卫、安保等商业服务。",
+      desc: "人力资源、审计咨询与企业外包服务。",
     },
     {
       id: "171112",
@@ -560,12 +586,14 @@ const hf = ["12", "18", "13", "20", "17", "11", "19", "10", "16", "14", "15"],
       en: "Transportation & Logistics",
       sector: "17",
       level: 1,
+      harvest: ["harbor"],
+      harvestOptional: !0,
       needs: [["农产品", "金属矿产", "木材制品", "油气燃料"]],
       makes: "物流",
       water: !0,
       suits: ["water", "valley", "plain"],
       model: "logistics",
-      desc: "铁路、公路、航运与快递。建在海湾时为港口。",
+      desc: "干线铁路、公路与港口航运。建于深水航道享枢纽港口加成。",
     },
     {
       id: "171113",
@@ -577,7 +605,7 @@ const hf = ["12", "18", "13", "20", "17", "11", "19", "10", "16", "14", "15"],
       needs: [["建材"], ["钢材", "机械设备"]],
       makes: "基建工程",
       model: "construct",
-      desc: "基础设施与大型工程建设。",
+      desc: "大型土木工程与工业园区建设。",
     },
     {
       id: "111010",
@@ -586,10 +614,12 @@ const hf = ["12", "18", "13", "20", "17", "11", "19", "10", "16", "14", "15"],
       en: "Apparel & Textile Products",
       sector: "11",
       level: 1,
+      harvest: ["cotton"],
+      harvestOptional: !0,
       needs: [["棉花", "化工品"], ["供水"]],
       makes: "服装",
       model: "light",
-      desc: "纺织与服装制造，可用棉花或化纤。开工需全国具备供水。",
+      desc: "纺织与成衣制造，可用棉花或化纤，建于长绒棉田享原产地加成。",
     },
     {
       id: "111011",
@@ -659,6 +689,8 @@ const hf = ["12", "18", "13", "20", "17", "11", "19", "10", "16", "14", "15"],
       en: "Leisure Facilities & Services",
       sector: "11",
       level: 1,
+      harvest: ["scenic", "geothermal"],
+      harvestOptional: !0,
       needs: [["生活服务", "农产品"]],
       makes: "文旅服务",
       water: !0,
@@ -666,7 +698,7 @@ const hf = ["12", "18", "13", "20", "17", "11", "19", "10", "16", "14", "15"],
       ice: !0,
       suits: ["forest", "mountain", "water"],
       model: "leisure",
-      desc: "酒店、餐饮、出行与主题乐园。",
+      desc: "酒店、景区与主题文旅设施，提供民生承载加成，建于地质奇观或地热裂谷大幅增产。",
     },
     {
       id: "111210",
@@ -675,10 +707,13 @@ const hf = ["12", "18", "13", "20", "17", "11", "19", "10", "16", "14", "15"],
       en: "Wholesale - Discretionary",
       sector: "11",
       level: 2,
+      harvest: ["harbor"],
+      harvestOptional: !0,
       needs: [["物流"], ["服装", "家居用品", "休闲产品", "汽车"]],
       makes: "批发贸易",
+      water: !0,
       model: "warehouse",
-      desc: "非必需消费品的批量分销。",
+      desc: "非必需消费品的跨区批量分销，建于深水航道享贸易集散加成。",
     },
     {
       id: "111211",
@@ -687,10 +722,10 @@ const hf = ["12", "18", "13", "20", "17", "11", "19", "10", "16", "14", "15"],
       en: "Retail - Discretionary",
       sector: "11",
       level: 2,
-      needs: [["服装", "家居用品", "休闲产品", "电子硬件", "黄金", "白银", "铂族金属", "钻石"]],
+      needs: [["商超零售", "物流"], ["服装", "家居用品", "休闲产品", "电子硬件", "黄金"]],
       makes: "零售",
       model: "retail",
-      desc: "百货、专卖与珠宝零售。",
+      desc: "百货中心、品牌专卖与珠宝零售，需商业流通底座与消费制造货源协同。",
     },
     {
       id: "111212",
@@ -702,7 +737,7 @@ const hf = ["12", "18", "13", "20", "17", "11", "19", "10", "16", "14", "15"],
       needs: [["物流"], ["网络服务"], ["服装", "家居用品", "休闲产品", "电子硬件"]],
       makes: "电商",
       model: "warehouse",
-      desc: "在线零售平台。",
+      desc: "全国在线零售与数字履约平台。",
     },
     {
       id: "191010",
@@ -714,7 +749,7 @@ const hf = ["12", "18", "13", "20", "17", "11", "19", "10", "16", "14", "15"],
       needs: [["芯片"], ["工业零部件"]],
       makes: "电子硬件",
       model: "campus",
-      desc: "电脑、手机与网络设备。",
+      desc: "服务器、终端设备与通信硬件制造。",
     },
     {
       id: "191011",
@@ -723,10 +758,14 @@ const hf = ["12", "18", "13", "20", "17", "11", "19", "10", "16", "14", "15"],
       en: "Semiconductors",
       sector: "19",
       level: 3,
-      needs: [["石英砂", "稀土", "铂族金属"], ["化工品"], ["电力"], ["供水"]],
+      harvest: ["permafrost"],
+      harvestOptional: !0,
+      needs: [["石英砂", "稀土"], ["化工品"], ["电力"], ["供水"]],
       makes: "芯片",
+      ice: !0,
+      mountain: !0,
       model: "fab",
-      desc: "芯片设计、制造与设备。需要全国开采石英砂、稀土或铂族金属，且开工需全国具备供水。",
+      desc: "晶圆制造、封测与光刻工艺，需石英砂或稀土配额，支撑全国产业 Lv.5 技改。",
     },
     {
       id: "191110",
@@ -735,10 +774,14 @@ const hf = ["12", "18", "13", "20", "17", "11", "19", "10", "16", "14", "15"],
       en: "Software",
       sector: "19",
       level: 3,
+      harvest: ["permafrost"],
+      harvestOptional: !0,
       needs: [["电子硬件", "通信网络"]],
       makes: "软件",
+      ice: !0,
+      mountain: !0,
       model: "campus",
-      desc: "系统与应用软件。",
+      desc: "操作系统、工业软件与平台研发，支撑全国产业 Lv.5 技改。",
     },
     {
       id: "191111",
@@ -747,12 +790,15 @@ const hf = ["12", "18", "13", "20", "17", "11", "19", "10", "16", "14", "15"],
       en: "IT Services",
       sector: "19",
       level: 2,
+      harvest: ["permafrost"],
+      harvestOptional: !0,
       needs: [["通信网络", "电子硬件"]],
       makes: "IT服务",
       ice: !0,
+      mountain: !0,
       suits: ["ice"],
       model: "campus",
-      desc: "咨询、外包与数据中心服务。建在冰原上享天然散热适宜地形加成（+15%）。",
+      desc: "算力托管、系统集成与数据中心服务，建于冰原或极寒散热带享天然散热增产。",
     },
     {
       id: "101010",
@@ -761,10 +807,10 @@ const hf = ["12", "18", "13", "20", "17", "11", "19", "10", "16", "14", "15"],
       en: "Advertising & Marketing",
       sector: "10",
       level: 2,
-      needs: [["内容", "网络服务", "出版传媒"]],
+      needs: [["内容", "出版传媒"], ["通信网络", "生活服务"]],
       makes: "营销服务",
       model: "media",
-      desc: "广告创意、投放与营销服务。",
+      desc: "品牌传播、媒介投放与商业推广，需娱乐内容或出版传媒提供内容供给。",
     },
     {
       id: "101011",
@@ -777,7 +823,7 @@ const hf = ["12", "18", "13", "20", "17", "11", "19", "10", "16", "14", "15"],
       makes: "卫星传输",
       ice: !0,
       model: "antenna",
-      desc: "有线电视与卫星传输。",
+      desc: "轨道卫星星座与广域信号传输网络。",
     },
     {
       id: "101012",
@@ -786,10 +832,14 @@ const hf = ["12", "18", "13", "20", "17", "11", "19", "10", "16", "14", "15"],
       en: "Entertainment Content",
       sector: "10",
       level: 1,
+      harvest: ["scenic"],
+      harvestOptional: !0,
       needs: [["生活服务", "通信网络"]],
       makes: "内容",
+      mountain: !0,
+      water: !0,
       model: "media",
-      desc: "影视、音乐与游戏内容。",
+      desc: "影视、音乐与数字互动娱乐制作，提供民生承载并向广告与数字生态供货。",
     },
     {
       id: "101013",
@@ -798,10 +848,12 @@ const hf = ["12", "18", "13", "20", "17", "11", "19", "10", "16", "14", "15"],
       en: "Publishing & Broadcasting",
       sector: "10",
       level: 1,
+      harvest: ["bamboo_pulp"],
+      harvestOptional: !0,
       needs: [["木材制品", "通信网络"]],
       makes: "出版传媒",
       model: "media",
-      desc: "书报刊出版与广播电视。",
+      desc: "书刊出版、知识发行与广播传媒，提供民生承载并支撑广告营销产业。",
     },
     {
       id: "101014",
@@ -813,7 +865,7 @@ const hf = ["12", "18", "13", "20", "17", "11", "19", "10", "16", "14", "15"],
       needs: [["通信网络"], ["软件", "IT服务"]],
       makes: "网络服务",
       model: "campus",
-      desc: "网站、应用与在线服务。",
+      desc: "大型平台、搜索引擎与在线数字服务。",
     },
     {
       id: "101110",
@@ -827,7 +879,7 @@ const hf = ["12", "18", "13", "20", "17", "11", "19", "10", "16", "14", "15"],
       mountain: !0,
       ice: !0,
       model: "antenna",
-      desc: "移动、固网与卫星通信。",
+      desc: "移动基站、光纤骨干网与数据通信底座。",
     },
     {
       id: "161010",
@@ -836,10 +888,15 @@ const hf = ["12", "18", "13", "20", "17", "11", "19", "10", "16", "14", "15"],
       en: "Biotech & Pharma",
       sector: "16",
       level: 3,
+      harvest: ["herbs", "marine_bio", "ancient_bio"],
+      harvestOptional: !0,
       needs: [["化工品"], ["医疗服务", "IT服务"], ["供水"]],
       makes: "药品",
+      water: !0,
+      mountain: !0,
+      ice: !0,
       model: "fab",
-      desc: "药物研发与生产。开工需全国具备供水。",
+      desc: "原研药与生物制剂生产，建于药材、海洋生物或古生态菌群地块大幅增产。",
     },
     {
       id: "161011",
@@ -848,10 +905,14 @@ const hf = ["12", "18", "13", "20", "17", "11", "19", "10", "16", "14", "15"],
       en: "Health Care Facilities & Svcs",
       sector: "16",
       level: 1,
+      harvest: ["herbs", "ancient_bio"],
+      harvestOptional: !0,
       needs: [["生活服务"], ["供水"]],
       makes: "医疗服务",
+      mountain: !0,
+      water: !0,
       model: "hospital",
-      desc: "医院、诊所与医疗服务。开工需全国具备供水。",
+      desc: "综合医院、专科诊疗与公共卫生体系，核心民生承载底座。",
     },
     {
       id: "161012",
@@ -863,7 +924,7 @@ const hf = ["12", "18", "13", "20", "17", "11", "19", "10", "16", "14", "15"],
       needs: [["电子硬件", "电气设备"], ["医疗服务"]],
       makes: "医疗器械",
       model: "fab",
-      desc: "诊断与治疗设备。",
+      desc: "精密影像诊断、手术器械与生命支持设备。",
     },
     {
       id: "141010",
@@ -872,10 +933,10 @@ const hf = ["12", "18", "13", "20", "17", "11", "19", "10", "16", "14", "15"],
       en: "Banking",
       sector: "14",
       level: 1,
-      needs: [["生活服务", "商超零售"]],
+      needs: [["商超零售", "必需品批发", "物流"]],
       makes: "信贷",
       model: "finance",
-      desc: "吸收存款并发放贷款。",
+      desc: "依托实体商贸与物流结算吸收存款并发放信贷，支撑全国产业 Lv.5 技改与金融深化。",
     },
     {
       id: "141110",
@@ -887,7 +948,7 @@ const hf = ["12", "18", "13", "20", "17", "11", "19", "10", "16", "14", "15"],
       needs: [["信贷"]],
       makes: "资管",
       model: "finance",
-      desc: "为他人管理投资。",
+      desc: "主权基金、产业资本配置与机构资产管理，支撑全国产业 Lv.6 技改。",
     },
     {
       id: "141111",
@@ -899,7 +960,7 @@ const hf = ["12", "18", "13", "20", "17", "11", "19", "10", "16", "14", "15"],
       needs: [["信贷"], ["汽车", "住宅", "电子硬件"]],
       makes: "消费金融",
       model: "finance",
-      desc: "车贷、房贷、消费信贷等专项融资。",
+      desc: "车贷、按揭与耐用品分期信贷。",
     },
     {
       id: "141112",
@@ -911,7 +972,7 @@ const hf = ["12", "18", "13", "20", "17", "11", "19", "10", "16", "14", "15"],
       needs: [["信贷"], ["IT服务"]],
       makes: "投行交易",
       model: "finance",
-      desc: "投行、交易所与机构服务。",
+      desc: "证券承销、做市清算与大宗机构交易。",
     },
     {
       id: "141210",
@@ -923,7 +984,7 @@ const hf = ["12", "18", "13", "20", "17", "11", "19", "10", "16", "14", "15"],
       needs: [["信贷"], ["汽车", "住宅", "医疗服务"]],
       makes: "保险",
       model: "finance",
-      desc: "保险承保与相关服务。",
+      desc: "财产险、寿险承保与风险精算。",
     },
     {
       id: "151010",
@@ -932,11 +993,15 @@ const hf = ["12", "18", "13", "20", "17", "11", "19", "10", "16", "14", "15"],
       en: "Real Estate Owners & Developers",
       sector: "15",
       level: 2,
+      harvest: ["scenic"],
+      harvestOptional: !0,
       needs: [["建材"], ["信贷"], ["供水"]],
       makes: "地产",
+      mountain: !0,
+      water: !0,
       suits: ["plain"],
       model: "housing",
-      desc: "持有和开发物业。开工需全国具备供水。",
+      desc: "综合商业体与住宅社区开发，建于自然奇观带享景观溢价。",
     },
     {
       id: "151011",
@@ -948,7 +1013,7 @@ const hf = ["12", "18", "13", "20", "17", "11", "19", "10", "16", "14", "15"],
       needs: [["地产"], ["资管", "信贷"]],
       makes: "REIT",
       model: "finance",
-      desc: "房地产投资信托。",
+      desc: "不动产证券化与商业地产投资信托。",
     },
     {
       id: "151012",
@@ -960,7 +1025,7 @@ const hf = ["12", "18", "13", "20", "17", "11", "19", "10", "16", "14", "15"],
       needs: [["住宅", "地产"]],
       makes: "物业服务",
       model: "office",
-      desc: "物业管理、经纪与房产信息服务。",
+      desc: "社区运维、楼宇管理与不动产经纪，高税率城市服务底座。",
     },
     {
       id: "X001",
@@ -974,7 +1039,7 @@ const hf = ["12", "18", "13", "20", "17", "11", "19", "10", "16", "14", "15"],
       makes: "低空航运",
       suits: ["plain", "hill"],
       model: "vertiport",
-      desc: "飞行汽车、喷气背包与无人机在城市上空形成交通网络。",
+      desc: "垂直起降航空器与无人货运在城市上空组成的立体交通网。",
     },
     {
       id: "X002",
@@ -984,10 +1049,10 @@ const hf = ["12", "18", "13", "20", "17", "11", "19", "10", "16", "14", "15"],
       en: "Super Mecha",
       sector: "17",
       level: 4,
-      needs: [["钢材", "太空矿产", "钨矿"], ["机械设备"], ["芯片"]],
+      needs: [["钢材", "太空矿产", "稀土"], ["机械设备"], ["芯片"]],
       makes: "巨型机甲",
       model: "mecha",
-      desc: "会走路的巨型机器人，军用用途，可在星际间穿梭。",
+      desc: "重型双足机动工程与星际防务装甲总成。",
     },
     {
       id: "X003",
@@ -997,14 +1062,17 @@ const hf = ["12", "18", "13", "20", "17", "11", "19", "10", "16", "14", "15"],
       en: "Home Fusion",
       sector: "20",
       level: 4,
+      harvest: ["abyssal_vent"],
+      harvestOptional: !0,
       needs: [["锂矿", "铀矿"], ["机械设备"], ["芯片"]],
       makes: "聚变电力",
       alsoMakes: ["电力"],
       mountain: !0,
+      ice: !0,
       suits: ["valley", "water"],
       water: !0,
       model: "fusion",
-      desc: "人造太阳。运转后也算作全国的电力来源。",
+      desc: "模块化磁约束聚变反应堆，运转后向全国电网输出高密度电力。",
     },
     {
       id: "X004",
@@ -1014,10 +1082,14 @@ const hf = ["12", "18", "13", "20", "17", "11", "19", "10", "16", "14", "15"],
       en: "Synthetic Biology",
       sector: "16",
       level: 3,
+      harvest: ["marine_bio", "ancient_bio"],
+      harvestOptional: !0,
       needs: [["药品"], ["化工品"], ["芯片", "IT服务"]],
       makes: "生物制造",
+      water: !0,
+      ice: !0,
       model: "biotech",
-      desc: "用微生物“种”出材料、食品与药物原料。",
+      desc: "定向编辑工程菌株定向合成材料、蛋白与活性药物原料。",
     },
     {
       id: "X005",
@@ -1030,7 +1102,7 @@ const hf = ["12", "18", "13", "20", "17", "11", "19", "10", "16", "14", "15"],
       needs: [["芯片"], ["医疗器械"], ["软件"]],
       makes: "脑机设备",
       model: "neuro",
-      desc: "用意念操控设备，医疗与娱乐两用。",
+      desc: "高带宽神经信号读写接口，兼顾临床神经修复与人机协同。",
     },
     {
       id: "X006",
@@ -1043,7 +1115,7 @@ const hf = ["12", "18", "13", "20", "17", "11", "19", "10", "16", "14", "15"],
       needs: [["芯片"], ["脑机设备"], ["生物制造"]],
       makes: "仿生人",
       model: "android",
-      desc: "拥有远超人类能力的具身智能的终极形态。",
+      desc: "融合合成肌肉组织与通用智能核心的全尺寸具身智能体。",
     },
     {
       id: "X007",
@@ -1055,12 +1127,12 @@ const hf = ["12", "18", "13", "20", "17", "11", "19", "10", "16", "14", "15"],
       level: 4,
       needs: [["航天装备"], ["机械设备"]],
       makes: "太空矿产",
-      alsoMakes: ["稀土", "铂族金属"],
+      alsoMakes: ["稀土", "锂矿"],
       mountain: !0,
       ice: !0,
       suits: ["desert", "ice"],
       model: "spacemine",
-      desc: "从小行星带回稀土、铂族金属甚至其他神秘金属，运转后全国都能用。",
+      desc: "近地小行星捕获与轨道冶炼设施，向全国持续补充稀土与锂矿配额。",
     },
     {
       id: "X008",
@@ -1073,7 +1145,7 @@ const hf = ["12", "18", "13", "20", "17", "11", "19", "10", "16", "14", "15"],
       needs: [["投行交易"], ["资管"], ["网络服务", "量子算力"]],
       makes: "全球交易",
       model: "exchange",
-      desc: "24 小时、全天候不间断的全球交易所。",
+      desc: "全天候跨时区自动化清算与高频大宗交易枢纽。",
     },
     {
       id: "X009",
@@ -1083,12 +1155,15 @@ const hf = ["12", "18", "13", "20", "17", "11", "19", "10", "16", "14", "15"],
       en: "Quantum Computing",
       sector: "19",
       level: 4,
+      harvest: ["permafrost"],
+      harvestOptional: !0,
       needs: [["芯片"], ["电力"], ["软件", "IT服务"]],
       makes: "量子算力",
       ice: !0,
+      mountain: !0,
       suits: ["ice"],
       model: "quantum",
-      desc: "极低温下运行的量子计算机。冰原上最适宜。",
+      desc: "极低温超导量子计算阵列，冰原与极寒散热带享显著加成。",
     },
     {
       id: "X010",
@@ -2552,7 +2627,7 @@ const oA = (A, e, t, n, s) => ({ mgmt: A, tech: e, pol: t, amb: n, cha: s }),
       "kalanick2014",
       "特拉维斯·卡兰尼可",
       1,
-      "打车狂飙",
+      "出行调度",
       "特拉维斯·卡兰尼克 · Uber",
       ["111110", "101014"],
       oA(70, 72, 50, 96, 65),
@@ -5304,40 +5379,40 @@ const Rl = [
   Pc = [1, 1.5, 2, 2.6, 3.3],
   kl = [0, 1.2, 2.5, 4.2, 6.8],
   fs = [
-    { id: "wheat", name: "小麦", tier: 0, terrains: ["plain", "valley"], color: "#e3c770" },
-    { id: "rice", name: "稻米", tier: 0, terrains: ["valley", "plain"], color: "#ece4c6" },
+    { id: "wheat", name: "谷物沃土", tier: 0, terrains: ["plain", "valley"], color: "#e3c770" },
     { id: "cotton", name: "棉花", tier: 0, terrains: ["plain", "valley", "desert"], color: "#f1efe6" },
+    { id: "fish", name: "近海渔场", tier: 0, terrains: ["water", "ice"], color: "#7fb0d0" },
+    { id: "spring", name: "清泉水脉", tier: 0, terrains: ["valley", "hill", "forest", "mountain", "ice"], color: "#7fd8e8" },
     { id: "timber", name: "木材", tier: 0, terrains: ["forest", "hill"], color: "#9a6b42" },
-    { id: "limestone", name: "石灰石", tier: 0, terrains: ["hill", "mountain"], color: "#d8d2c2" },
-    { id: "gravel", name: "砂石", tier: 0, terrains: ["valley", "desert", "plain"], color: "#bfae8e" },
-    { id: "fish", name: "渔获", tier: 0, terrains: ["water"], color: "#7fb0d0" },
-    { id: "salt", name: "盐", tier: 0, terrains: ["water", "desert"], color: "#f4f4f0" },
+    { id: "limestone", name: "石灰石", tier: 0, terrains: ["hill", "mountain", "desert"], color: "#d8d2c2" },
+    { id: "gravel", name: "砂石", tier: 0, terrains: ["valley", "desert", "plain", "mountain"], color: "#bfae8e" },
+    { id: "salt", name: "天然盐湖", tier: 0, terrains: ["water", "desert", "ice"], color: "#f4f4f0" },
     { id: "coal", name: "煤炭", tier: 1, terrains: ["hill", "mountain", "plain"], color: "#3d3f46" },
     { id: "iron", name: "铁矿", tier: 1, terrains: ["mountain", "hill"], color: "#a3573f" },
     { id: "bauxite", name: "铝土矿", tier: 1, terrains: ["hill", "forest"], color: "#c98b62" },
-    { id: "quartz", name: "石英砂", tier: 1, terrains: ["desert", "valley"], color: "#e9f1f7" },
-    { id: "sugarcane", name: "甘蔗", tier: 1, terrains: ["plain", "valley"], color: "#9cc46b" },
-    { id: "rubber", name: "橡胶", tier: 1, terrains: ["forest"], color: "#5b4a3a" },
-    { id: "phosphate", name: "磷矿", tier: 1, terrains: ["desert", "hill"], color: "#c9c26f" },
-    { id: "zinc", name: "锌矿", tier: 1, terrains: ["mountain", "hill"], color: "#a9b3bd" },
+    { id: "quartz", name: "石英砂", tier: 1, terrains: ["desert", "valley", "water", "ice"], color: "#e9f1f7" },
+    { id: "sugarcane", name: "甘蔗", tier: 1, terrains: ["plain", "valley", "water"], color: "#9cc46b" },
+    { id: "tobacco_leaf", name: "烟叶种植带", tier: 1, terrains: ["plain", "hill", "valley", "forest"], color: "#c89d54" },
+    { id: "rubber", name: "橡胶", tier: 1, terrains: ["forest", "valley"], color: "#5b4a3a" },
+    { id: "wind_corridor", name: "强风走廊", tier: 1, terrains: ["plain", "desert", "water", "ice", "mountain"], color: "#8ad4c6" },
     { id: "copper", name: "铜矿", tier: 2, terrains: ["mountain", "hill", "desert"], color: "#d07a3c" },
     { id: "gas", name: "天然气", tier: 2, terrains: ["plain", "desert", "water", "ice"], color: "#8fd3ff" },
-    { id: "potash", name: "钾盐", tier: 2, terrains: ["desert", "plain"], color: "#f08fa8" },
-    { id: "coffee", name: "咖啡", tier: 2, terrains: ["hill", "forest", "mountain"], color: "#6f4b3a" },
-    { id: "nickel", name: "镍矿", tier: 2, terrains: ["mountain", "hill", "ice"], color: "#8f9c88" },
-    { id: "cobalt", name: "钴矿", tier: 2, terrains: ["mountain", "forest"], color: "#3b5bd6" },
-    { id: "graphite", name: "石墨", tier: 2, terrains: ["hill", "mountain", "ice"], color: "#3a3a40" },
+    { id: "coffee", name: "咖啡", tier: 2, terrains: ["hill", "forest", "mountain", "valley"], color: "#6f4b3a" },
+    { id: "herbs", name: "道地药材", tier: 2, terrains: ["forest", "hill", "mountain", "valley", "plain"], color: "#6ec488" },
+    { id: "harbor", name: "深水航道", tier: 2, terrains: ["water", "plain", "valley"], color: "#4e92d8" },
+    { id: "geothermal", name: "地热裂谷", tier: 2, terrains: ["mountain", "ice", "desert", "water"], color: "#ff7e55" },
+    { id: "bamboo_pulp", name: "速生竹浆林", tier: 2, terrains: ["forest", "valley", "hill"], color: "#86b86b" },
     { id: "oil", name: "石油", tier: 3, terrains: ["desert", "water", "plain", "ice"], color: "#2b2a33" },
-    { id: "lithium", name: "锂矿", tier: 3, terrains: ["desert", "mountain"], color: "#c7f0e6" },
-    { id: "gold", name: "黄金", tier: 3, terrains: ["mountain", "hill", "valley"], color: "#ffd24a" },
-    { id: "silver", name: "白银", tier: 3, terrains: ["mountain", "hill"], color: "#dfe3ea" },
-    { id: "tungsten", name: "钨矿", tier: 3, terrains: ["mountain"], color: "#6d6a73" },
-    { id: "titanium", name: "钛矿", tier: 3, terrains: ["desert", "water", "mountain"], color: "#b4bec9" },
     { id: "hydrate", name: "可燃冰", tier: 3, terrains: ["water", "ice"], color: "#b8f0ff" },
-    { id: "rareearth", name: "稀土", tier: 4, terrains: ["mountain", "hill", "desert"], color: "#ff6fa0" },
-    { id: "uranium", name: "铀矿", tier: 4, terrains: ["mountain", "desert"], color: "#9dff5c" },
-    { id: "platinum", name: "铂族金属", tier: 4, terrains: ["mountain", "ice"], color: "#e8e6f2" },
-    { id: "diamond", name: "钻石", tier: 4, terrains: ["desert", "mountain", "ice"], color: "#cff7ff" },
+    { id: "lithium", name: "锂矿", tier: 3, terrains: ["desert", "mountain", "hill"], color: "#c7f0e6" },
+    { id: "gold", name: "黄金", tier: 3, terrains: ["mountain", "hill", "valley", "desert"], color: "#ffd24a" },
+    { id: "scenic", name: "地质奇观带", tier: 3, terrains: ["mountain", "forest", "valley", "water", "hill", "plain"], color: "#f29b68" },
+    { id: "marine_bio", name: "海洋生物群", tier: 3, terrains: ["water", "ice", "forest", "valley"], color: "#46d2b8" },
+    { id: "permafrost", name: "极寒散热带", tier: 3, terrains: ["ice", "mountain", "plain", "desert", "forest"], color: "#9ec8ff" },
+    { id: "rareearth", name: "稀土", tier: 4, terrains: ["mountain", "hill", "desert", "plain"], color: "#ff6fa0" },
+    { id: "uranium", name: "铀矿", tier: 4, terrains: ["mountain", "desert", "ice", "hill"], color: "#9dff5c" },
+    { id: "ancient_bio", name: "古生态菌群", tier: 4, terrains: ["forest", "valley", "hill", "plain", "water"], color: "#7effb2" },
+    { id: "abyssal_vent", name: "深海热液口", tier: 4, terrains: ["water", "ice", "valley", "forest"], color: "#ff684c" },
     ...[
       {
         id: "helium3",
@@ -5870,7 +5945,7 @@ const WARDROBE_SKINS = [
       {
         name: "超级产业集群",
         type: "终极",
-        effect: "同业扎堆免除拥挤减产惩罚，≥3 格相连同业集群额外 +14% 产出",
+        effect: "同业免罚上限由 3 座提至 6 座且超额饱和折损减半，≥3 格相连同业集群额外 +14% 产出",
         mods: { noCrowdAll: 1, clusterOutBonus: 0.14 },
       },
       {
@@ -7467,7 +7542,14 @@ function cf(A, e, t, n) {
 }
 function QB(A, e) {
   const t = Tl(e);
-  return (e.harvest && A.resource && e.harvest.includes(A.resource) && t.push(jl(A.resource)), t);
+  return (
+    e.harvest &&
+      (!e.harvestOptional || e.id === "121010") &&
+      A.resource &&
+      e.harvest.includes(A.resource) &&
+      t.push(jl(A.resource)),
+    t
+  );
 }
 function wc(A, e) {
   return !e.harvest || e.harvestOptional ? !0 : !!A.resource && e.harvest.includes(A.resource);
@@ -7497,6 +7579,11 @@ const ti = (A) => ({
   effLevel: 1,
   levelCap: 1,
   util: 1,
+  supplyFit: 1,
+  supplySat: 1,
+  supplyNeck: null,
+  civicFit: 1,
+  spec: null,
   exclusiveActive: !1,
   revenue: 0,
   taxRate: 0,
@@ -7505,6 +7592,80 @@ const ti = (A) => ({
   supply: 0,
   livability: 0,
 });
+const CIVIC_BASE_INDS = new Set([
+    "121010",
+    "111110",
+    "121011",
+    "121012",
+    "121111",
+    "111010",
+    "111012",
+    "111111",
+    "101012",
+    "101013",
+    "161011",
+    "151012",
+  ]),
+  SEC_CONV_TOTAL = Object.fromEntries(
+    Object.keys(lt).map((k) => [
+      k,
+      Ee.filter((x) => String(x.sector) === String(k) && x.source !== "架空").length,
+    ]),
+  ),
+  SPEC_DEFS = {
+    scale: {
+      id: "scale",
+      name: "规模产线",
+      short: "规模",
+      out: 0.35,
+      clusterAdd: 0.15,
+      utilLoad: 1.6,
+      supplyLoad: 1.6,
+      utilSupMult: 1.25,
+      utilMaintMult: 1.5,
+      desc: "基础产出 +35%，同业集群额外 +15%（公用设施供给 ×1.25）；水电与上游原料配额消耗 ×1.6",
+    },
+    craft: {
+      id: "craft",
+      name: "精工产线",
+      short: "精工",
+      out: 0.12,
+      taxMult: 1.3,
+      edgeMult: 0.25,
+      utilLoad: 1,
+      supplyLoad: 1,
+      noCluster: !0,
+      desc: "基础产出 +12%，税收转化 ×1.30，供需边加成 +25%，能耗与原料消耗不变；不享同业集群加成",
+    },
+  },
+  LEGACY_RES_MAP = {
+    rice: { def: "wheat", mine: "coal" },
+    phosphate: { def: "salt", mine: "quartz" },
+    zinc: { def: "iron", mine: "iron" },
+    potash: { def: "geothermal", mine: "copper" },
+    nickel: { def: "copper", mine: "copper" },
+    cobalt: { def: "herbs", mine: "copper" },
+    graphite: { def: "harbor", mine: "copper" },
+    silver: { def: "scenic", mine: "gold" },
+    tungsten: { def: "permafrost", mine: "gold" },
+    titanium: { def: "marine_bio", mine: "lithium" },
+    platinum: { def: "ancient_bio", mine: "uranium" },
+    diamond: { def: "abyssal_vent", mine: "rareearth" },
+  };
+function migrateTileRes(tile) {
+  if (!tile || !tile.resource) return null;
+  if (ke[tile.resource]) return tile.resource;
+  const m = LEGACY_RES_MAP[tile.resource],
+    isMine = tile.industry === "181015",
+    cand = m ? (isMine ? m.mine : m.def) : null;
+  if (cand && ke[cand] && (isMine || ke[cand].terrains.includes(tile.terrain))) return cand;
+  if (isMine) {
+    const ore = HA["181015"].harvest.find((id) => ke[id] && ke[id].terrains.includes(tile.terrain));
+    return ore || "iron";
+  }
+  const fb = fs.find((r) => !r.fictional && r.terrains.includes(tile.terrain));
+  return fb ? fb.id : null;
+}
 function A4(A, e, taxPosMult = 0) {
   const t = A.taxes.length ? A.taxes : ["balanced"],
     raw = Math.max(
@@ -7596,6 +7757,41 @@ function dt(A, e = Date.now()) {
         (C.add(y.id), QB(y, R).forEach((W) => E.add(W)), (h = !0));
     }
   }
+  const tagSup = new Map(),
+    tagDem = new Map();
+  for (const y of n) {
+    if (y.unlocked && y.resource && ke[y.resource] && ke[y.resource].altTags)
+      for (const tg of ke[y.resource].altTags) tagSup.set(tg, (tagSup.get(tg) ?? 0) + 8);
+  }
+  for (const y of u) {
+    if (!C.has(y.id)) continue;
+    const R = HA[y.industry],
+      effLv = Math.min(y.level, Og(A, y)),
+      hasRes = !!(R.harvest && y.resource && R.harvest.includes(y.resource)),
+      supAmt = effLv * ((O.supplyPerLv ?? 2.5) + (hasRes ? (O.supplyResBonus ?? 1) : 0));
+    for (const tg of QB(y, R)) tagSup.set(tg, (tagSup.get(tg) ?? 0) + supAmt);
+  }
+  for (const y of u) {
+    if (!C.has(y.id)) continue;
+    const R = HA[y.industry];
+    if (!R.needs.length || (((T = g.get(y.id)) == null ? void 0 : T.ignoreDeps) ?? 0) > 0) continue;
+    const effLv = Math.min(y.level, Og(A, y)),
+      demAmt = effLv * (y.level >= 4 && y.spec === "scale" ? 1.6 : 1);
+    for (const grp of R.needs) {
+      const avail = grp.filter((tg) => (tagSup.get(tg) ?? 0) > 0);
+      if (!avail.length) continue;
+      const totSup = avail.reduce((s0, tg) => s0 + (tagSup.get(tg) ?? 0), 0);
+      for (const tg of avail) {
+        const w0 = totSup > 0 ? (tagSup.get(tg) ?? 0) / totSup : 1 / avail.length;
+        tagDem.set(tg, (tagDem.get(tg) ?? 0) + demAmt * w0);
+      }
+    }
+  }
+  const tagLoad = {};
+  for (const [tg, sup0] of tagSup.entries()) {
+    const dem0 = tagDem.get(tg) ?? 0;
+    tagLoad[tg] = { sup: sup0, dem: dem0, ratio: dem0 > 0 ? Math.min(1, sup0 / dem0) : 1 };
+  }
   const d = ((AA = n.find((y) => y.capital)) == null ? void 0 : AA.level) ?? 1,
     x = O.util.capital[d - 1] ?? O.util.capital[0],
     M = { supply: x, demand: 0, cut: 0 },
@@ -7614,15 +7810,21 @@ function dt(A, e = Date.now()) {
   for (const y of u) {
     if (!C.has(y.id)) continue;
     const R = Math.min(y.level, Og(A, y)),
+      isScale = y.level >= 4 && y.spec === "scale",
+      supMult = isScale ? 1.25 : 1,
+      demUnits = isScale ? Math.ceil(R * 1.6) : R,
       q = O.util.power[y.industry],
       W = O.util.water[y.industry],
       micro = hasMicroGrid && isIsolatedTile(y.id);
-    (q ? (M.supply += q * R) : micro || (M.demand += R),
+    (q ? (M.supply += Math.round(q * R * supMult)) : micro || (M.demand += demUnits),
       W
         ? (z.supply += Math.round(
-            W * R * (y.industry === "201011" && (y.terrain === "valley" || y.terrain === "water") ? 1.5 : 1),
+            W *
+              R *
+              supMult *
+              (y.industry === "201011" && (y.terrain === "valley" || y.terrain === "water") ? 1.5 : 1),
           ))
-        : micro || (z.demand += R));
+        : micro || (z.demand += demUnits));
   }
   const utilMult = (f.utilSupply ?? 0) + (c.utilSupply ?? 0);
   if (utilMult !== 0) {
@@ -7815,10 +8017,52 @@ function dt(A, e = Date.now()) {
         (v[y.id] !== void 0 ? 1 + effZonePop : 1);
     ((OA[y.id] = W), (lA += W));
   }
-  let foodLv = 0;
-  for (const y of u) C.has(y.id) && y.industry === "121010" && (foodLv += Math.min(y.level, Og(A, y)));
-  const foodBasePop = foodLv * 5,
-    foodPopMult = Math.min(0.42, foodLv * 0.04) + (f.foodPopAdd || 0);
+  let foodLv = 0,
+    civicOtherLv = 0,
+    civicTotalLv = 0,
+    hiIndLvSum = 0;
+  const civicKindSet = new Set(),
+    secKindSets = {};
+  for (const y of u) {
+    if (!C.has(y.id)) continue;
+    const R = HA[y.industry],
+      effLv = Math.min(y.level, Og(A, y));
+    y.industry === "121010" && (foodLv += effLv);
+    if (CIVIC_BASE_INDS.has(y.industry)) {
+      civicKindSet.add(y.industry);
+      y.industry !== "121010" && (civicOtherLv += effLv);
+    }
+    (CIVIC_BASE_INDS.has(y.industry) || R.consumer) && (civicTotalLv += effLv);
+    R.level >= 3 && (hiIndLvSum += effLv);
+    if (R.source !== "架空") {
+      (secKindSets[R.sector] ?? (secKindSets[R.sector] = new Set())).add(y.industry);
+    }
+  }
+  const civicKinds = civicKindSet.size,
+    civicPopBase = civicOtherLv * 3 + civicKinds * 6,
+    civicPopMult = Math.min(0.3, civicKinds * 0.025),
+    civicNeedLv = hiIndLvSum * 0.45,
+    civicNeedKinds = Math.min(8, 2 + Math.floor(hiIndLvSum / 6)),
+    civicCover =
+      hiIndLvSum < 4
+        ? 1
+        : Math.min(
+            1,
+            0.6 * Math.min(1, civicTotalLv / Math.max(1, civicNeedLv)) +
+              0.4 * Math.min(1, civicKinds / Math.max(1, civicNeedKinds)),
+          ),
+    secProgress = {};
+  let completedSectors = 0;
+  for (const secKey of Object.keys(lt)) {
+    const cnt = secKindSets[secKey] ? secKindSets[secKey].size : 0,
+      tot = SEC_CONV_TOTAL[secKey] || 1,
+      done = cnt >= tot,
+      chained = cnt >= Math.min(3, tot);
+    done && (completedSectors += 1);
+    secProgress[secKey] = { cnt, tot, done, chained };
+  }
+  const foodBasePop = foodLv * 5 + civicPopBase,
+    foodPopMult = Math.min(0.42, foodLv * 0.04) + civicPopMult + (f.foodPopAdd || 0);
   lA = (lA + foodBasePop) * Math.max(0.2, 1 + (f.popCapMult || 0));
   const Be =
       (1 + dA / 100) *
@@ -7841,7 +8085,8 @@ function dt(A, e = Date.now()) {
       ((f.stayStack || 0) > 0 ? Math.min(0.1, 0.01 * Math.floor(Pt)) : 0),
     natOutAll = (f.outputAll || 0) + (f.output || 0),
     ficBonus = (f.ficOut || 0) + (f.fictOut || 0);
-  let wt = 0;
+  let wt = 0,
+    supplyShortCnt = 0;
   const Se = [],
     kt = {};
   for (const y of u) kt[y.industry] = (kt[y.industry] ?? 0) + 1;
@@ -7923,8 +8168,13 @@ function dt(A, e = Date.now()) {
       (wc(y, R) || bA.unshift((R.harvest ?? []).map((ze) => ke[ze].name)), (W.missing = bA));
     }
     const CA = Og(A, y);
-    ((W.levelCap = CA), (W.effLevel = Math.min(y.level, CA)), (W.levelMult = O.levelMult[W.effLevel - 1]));
-    const EA = [],
+    ((W.levelCap = CA),
+      (W.effLevel = Math.min(y.level, CA)),
+      (W.levelMult = O.levelMult[W.effLevel - 1]),
+      (W.spec = y.level >= 4 ? y.spec || null : null));
+    const isCraft = W.spec === "craft",
+      isScale = W.spec === "scale",
+      EA = [],
       DA = (bA, ze) => {
         Math.abs(ze) > 1e-6 && EA.push({ label: bA, value: ze });
       },
@@ -7937,7 +8187,10 @@ function dt(A, e = Date.now()) {
       R.harvest &&
         y.resource &&
         R.harvest.includes(y.resource) &&
-        DA(`资源 · ${ke[y.resource].name}`, Ms[ke[y.resource].tier] + (R.harvestOptional ? 0.1 : 0)),
+        DA(
+          `资源 · ${ke[y.resource].name}`,
+          Ms[ke[y.resource].tier] + (R.harvestOptional ? (O.optHarvestBonus ?? 0.2) : 0),
+        ),
       y.resource &&
         ke[y.resource] &&
         ke[y.resource].fictional &&
@@ -7948,7 +8201,7 @@ function dt(A, e = Date.now()) {
           (ke[y.resource].bonus + (f.exoticAdd ?? 0)) * (1 + (f.exoticBoost ?? 0)),
         ),
       (cA = R.suits) != null && cA.includes(y.terrain) && DA("适宜地形", O.terrainBonus),
-      W.cluster >= 0)
+      W.cluster >= 0 && !isCraft)
     ) {
       const bA = p[W.cluster].tiles.length;
       DA(
@@ -7959,11 +8212,13 @@ function dt(A, e = Date.now()) {
           (c.cluster ?? 0),
       );
     }
+    isScale && DA("规模产线", 0.35 + (W.cluster >= 0 ? 0.15 : 0));
+    isCraft && DA("精工产线", 0.12);
     const re = (k.get(y.id) ?? []).sort((bA, ze) => ze - bA).slice(0, O.supplyEdgeMax);
     if (re.length) {
       const bA =
         re.reduce((ze, Xt) => ze + Xt, 0) *
-        (1 + ((XA == null ? void 0 : XA.edgeBoost) ?? 0)) *
+        (1 + ((XA == null ? void 0 : XA.edgeBoost) ?? 0) + (isCraft ? 0.25 : 0)) *
         (1 + (((gA = g.get(y.id)) == null ? void 0 : gA.supply) ?? 0));
       ((W.supply = bA), DA(`供需边 · ${re.length} 条`, bA));
     }
@@ -7982,7 +8237,13 @@ function dt(A, e = Date.now()) {
       isMineSmelt =
         (f.mineSmeltOut || 0) > 0 &&
         (R.sector === "17" || R.sector === "18" || R.sector === "20" || $l(y, R)),
-      microExempt = hasMicroGrid && isIsolatedTile(y.id);
+      microExempt = hasMicroGrid && isIsolatedTile(y.id),
+      secProg = secProgress[R.sector],
+      effCrowdFree = O.crowdFree + ((f.noCrowdAll || 0) > 0 ? 3 : 0),
+      effCrowdPer =
+        O.crowdPer *
+        ((f.noCrowdAll || 0) > 0 ? 0.5 : 1) *
+        (v[y.id] !== void 0 && (f.sezNoCrowd || 0) > 0 ? 0.5 : 1);
     (ge && ks(ge.q - y.q, ge.r - y.r) <= we && DA("主公停留", st),
       v[y.id] !== void 0 && DA("特区", O.zoneOutput),
       y.reclaimed && (f.reclaimedTileOut || 0) > 0 && DA("山海沃土", f.reclaimedTileOut),
@@ -8011,13 +8272,55 @@ function dt(A, e = Date.now()) {
       y.level >= 4 && DA("规模效应", f.lv4plusOutput || 0),
       (R.sector === "15" || R.id === "111012") && DA("地产", f.realEstate || 0),
       R.id === "111111" && DA("文旅", f.tourism || 0),
+      secProg && (secProg.done ? DA("板块全链贯通", 0.18) : secProg.chained && DA("板块成链", 0.08)),
+      completedSectors > 0 && DA("全板块协同", completedSectors * 0.015),
+      civicKinds >= 2 && DA("民生门类协同", Math.min(0.18, civicKinds * 0.015)),
       DA("产业多样性", Wt),
-      (f.noCrowdAll || 0) > 0 ||
-        (v[y.id] !== void 0 && (f.sezNoCrowd || 0) > 0) ||
-        DA("同业扎堆", -Math.min(O.crowdCap, O.crowdPer * Math.max(0, (kt[y.industry] ?? 1) - O.crowdFree))),
+      DA("同业扎堆", -Math.min(O.crowdCap, effCrowdPer * Math.max(0, (kt[y.industry] ?? 1) - effCrowdFree))),
       microExempt || O.util.power[y.industry] || DA("电力不足", -M.cut),
       microExempt || O.util.water[y.industry] || DA("供水不足", -z.cut),
       welHc > 1 && EA.push({ label: `人力资本 ×${welHc.toFixed(2)}`, value: 0 }));
+    let supplySat = 1,
+      supplyNeck = null;
+    if (q && R.needs.length && !((((T = g.get(y.id)) == null ? void 0 : T.ignoreDeps) ?? 0) > 0)) {
+      for (const grp of R.needs) {
+        const avail = grp.filter((tg) => tagLoad[tg] && tagLoad[tg].sup > 0);
+        if (!avail.length) continue;
+        const totSup = avail.reduce((s0, tg) => s0 + tagLoad[tg].sup, 0);
+        let grpSat = 0,
+          worstTg = avail[0],
+          worstR = 2;
+        for (const tg of avail) {
+          const w0 = totSup > 0 ? tagLoad[tg].sup / totSup : 1 / avail.length,
+            rt = tagLoad[tg].ratio;
+          grpSat += w0 * rt;
+          if (rt < worstR) {
+            worstR = rt;
+            worstTg = tg;
+          }
+        }
+        if (grpSat < supplySat) {
+          supplySat = grpSat;
+          supplyNeck = worstTg;
+        }
+      }
+    }
+    const supplyFloor = O.supplyFloor ?? 0.45,
+      supplyFit = supplySat < 0.995 ? supplyFloor + (1 - supplyFloor) * supplySat : 1,
+      civicFit = q && R.level >= 3 && civicCover < 0.995 ? 0.75 + 0.25 * civicCover : 1;
+    if (supplyFit < 0.995) {
+      supplyShortCnt += 1;
+      EA.push({
+        label: `原料配额 ${Math.round(supplySat * 100)}%（${supplyNeck}） ×${supplyFit.toFixed(2)}`,
+        value: 0,
+      });
+    }
+    if (civicFit < 0.995) {
+      EA.push({
+        label: `民生承载 ${Math.round(civicCover * 100)}% ×${civicFit.toFixed(2)}`,
+        value: 0,
+      });
+    }
     const MA = y.financeLeft > 0 ? O.financeUtil : 1;
     let WA = !1;
     if (y.exclusive && y.card) {
@@ -8031,20 +8334,33 @@ function dt(A, e = Date.now()) {
     }
     ((W.exclusiveActive = WA),
       (W.util = MA),
+      (W.supplyFit = supplyFit),
+      (W.supplySat = supplySat),
+      (W.supplyNeck = supplyNeck),
+      (W.civicFit = civicFit),
       (W.bonuses = EA),
       (W.bonusTotal = EA.reduce((bA, ze) => bA + ze.value, 0)));
     const De = O.personality[R.personality],
-      supPow = q && O.util.power[y.industry] ? O.util.power[y.industry] * W.effLevel : 0,
+      specSupMult = isScale ? 1.25 : 1,
+      supPow = q && O.util.power[y.industry] ? Math.round(O.util.power[y.industry] * W.effLevel * specSupMult) : 0,
       supWat =
         q && O.util.water[y.industry]
           ? Math.round(
               O.util.water[y.industry] *
                 W.effLevel *
+                specSupMult *
                 (y.industry === "201011" && (y.terrain === "valley" || y.terrain === "water") ? 1.5 : 1),
             )
           : 0,
       utilSub = 0.08 * (supPow + supWat),
-      GA = W.levelMult * MA * De.gdp * (WA ? se[y.card].exclusive.mult : 1) * welHc,
+      GA =
+        W.levelMult *
+        MA *
+        supplyFit *
+        civicFit *
+        De.gdp *
+        (WA ? se[y.card].exclusive.mult : 1) *
+        welHc,
       effBase = O.baseOutput[R.level] + (q && utilSub > 0 ? utilSub / (W.levelMult * De.gdp) : 0);
     (jt.set(y.id, { base: effBase, mult: GA }),
       q &&
@@ -8098,16 +8414,20 @@ function dt(A, e = Date.now()) {
       W = y.card ? cf(A, y.card, y.industry, s) : null;
     R.gdp = R.facility;
     const CA = O.personality[q.personality],
-      maxRoads = maxRoadCnt.get(y.id) ?? 0;
+      maxRoads = maxRoadCnt.get(y.id) ?? 0,
+      specTaxMult = y.level >= 4 && y.spec === "craft" ? 1.3 : 1,
+      specUtilMaint =
+        y.level >= 4 && y.spec === "scale" && (O.util.power[y.industry] || O.util.water[y.industry]) ? 1.5 : 1;
     ((R.taxRate =
-      O.baseTax *
+      (O.baseTax *
         CA.tax *
         A4(A, q.personality, f.taxPosMult || 0) *
         Math.max(0, 1 + (f.tax || 0) + l(y, "tax", q) + maxRoads * (f.maxRoadTax || 0)) *
         (v[y.id] !== void 0 ? effZoneTax : 1) *
         (1 + O.foundingTax * fp) +
-      V +
-      (W && q.personality === "tax" ? W.taxBonus : 0)),
+        V +
+        (W && q.personality === "tax" ? W.taxBonus : 0)) *
+      specTaxMult),
       (R.revenue = R.gdp * R.taxRate));
     const EA =
         (f.maint || 0) +
@@ -8120,6 +8440,7 @@ function dt(A, e = Date.now()) {
       xf(q) *
       O.maintenanceRate *
       (lvMaintArr[(R.effLevel || 1) - 1] ?? 1) *
+      specUtilMaint *
       (1 - ((W == null ? void 0 : W.maintCut) ?? 0)) *
       Math.max(0.1, 1 + EA) *
       DA *
@@ -8212,6 +8533,13 @@ function dt(A, e = Date.now()) {
     foodLv,
     foodBasePop,
     foodPopMult,
+    civicKinds,
+    civicTotalLv,
+    civicCover,
+    completedSectors,
+    secProgress,
+    tagLoad,
+    supplyShortCnt,
     livability: dA,
     livCap,
     demand: Ce,
@@ -8258,7 +8586,7 @@ function dt(A, e = Date.now()) {
     }).length,
     creditLimit: Math.max(0, 1 + Math.floor(qA / 2) + (f.creditLimit || 0) + (c.credit ?? 0) + ne),
     buildSlots: 1 + qA + infG.slots + (f.buildSlots ?? 0) + (f.builders ?? 0),
-    buildsActive: n.filter((y) => y.build).length,
+    buildsActive: n.filter((y) => y.build || y.upBuild).length,
     power: M,
     water: z,
     zoneOf: v,
@@ -8866,7 +9194,9 @@ function yg(A, e, t) {
   }
   if (!e.industry) return [];
   const s = [],
-    f = t.supplyEdges.filter((r) => r.a === e.id || r.b === e.id).length;
+    f = t.supplyEdges.filter((r) => r.a === e.id || r.b === e.id).length,
+    tags = t.tags || new Set(),
+    cardLv = e.card ? (((o = A.cards[e.card]) == null ? void 0 : o.level) ?? 0) : 0;
   if (n === 2) {
     const r = e.age ?? O.upgradeAge;
     s.push({
@@ -8874,13 +9204,30 @@ function yg(A, e, t) {
       ok: r >= O.upgradeAge,
       how: `再运转 ${Math.max(0, O.upgradeAge - r)} 季`,
     });
-  } else if (n === 3) s.push({ label: "有 1 条供需边", ok: f >= 1, how: "把它的上游或下游建在旁边" });
-  else if (n === 4) {
-    const r = e.card ? (((o = A.cards[e.card]) == null ? void 0 : o.level) ?? 0) : 0;
+  } else if (n === 3) {
+    s.push({ label: "至少 1 条供需边", ok: f >= 1, how: "把它的上游或下游建在相邻地块" });
+    const hasMat =
+      tags.has("建材") || tags.has("钢材") || e.industry === "181011" || e.industry === "181014";
+    s.push({
+      label: "全国产出「建材」或「钢材」",
+      ok: hasMat,
+      how: "先建成并运转建材或钢材产业，提供扩建材料支撑",
+    });
+  } else if (n === 4) {
     s.push({
       label: `驻守人物达到 Lv.${O.upgradeCardLevel}`,
-      ok: r >= O.upgradeCardLevel,
-      how: e.card ? `人物现在 Lv.${r}，行业匹配时成长更快` : "先派驻人物",
+      ok: cardLv >= O.upgradeCardLevel,
+      how: e.card ? `人物现在 Lv.${cardLv}，行业匹配时成长更快` : "先派驻人物",
+    });
+    const hasEquip =
+      tags.has("电气设备") ||
+      tags.has("机械设备") ||
+      e.industry === "171012" ||
+      e.industry === "171013";
+    s.push({
+      label: "全国产出「电气设备」或「机械设备」",
+      ok: hasEquip,
+      how: "建成并运转电气设备或机械产业，提供产线技改母机",
     });
   } else if (n === 5) {
     const r = t.clusterOf[e.id] !== void 0;
@@ -8889,17 +9236,48 @@ function yg(A, e, t) {
       ok: r || f >= 2,
       how: `三块同业相连成集群，或再接一条供需边（现在 ${f} 条）`,
     });
+    const hasSys =
+      tags.has("信贷") ||
+      tags.has("软件") ||
+      tags.has("芯片") ||
+      e.industry === "141010" ||
+      e.industry === "191110" ||
+      e.industry === "191011";
+    s.push({
+      label: "全国产出「信贷」、「软件」或「芯片」",
+      ok: hasSys,
+      how: "建成银行、软件或半导体产业，提供数字化与资本支撑",
+    });
   } else if (n === 6) {
     const r = Un(A)[e.id].some((i) => A.tiles[i].public && !A.tiles[i].build);
     s.push({ label: "旁边有公共设施", ok: r, how: "在相邻地块建一座公共设施" });
+    s.push({
+      label: "驻守人物达到 Lv.20",
+      ok: cardLv >= 20,
+      how: e.card ? `人物现在 Lv.${cardLv}，可通过指点与突破提升至 Lv.20` : "先派驻高阶人物",
+    });
+    const hasAdv =
+      tags.has("IT服务") ||
+      tags.has("工业服务") ||
+      tags.has("资管") ||
+      e.industry === "191111" ||
+      e.industry === "171110" ||
+      e.industry === "141110";
+    s.push({
+      label: "全国产出「IT服务」、「工业服务」或「资管」",
+      ok: hasAdv,
+      how: "建成 IT 服务、工业服务或资产管理产业，提供满级运维支撑",
+    });
   }
   return s;
 }
 function Df(A, e, t, n = !1) {
   if (e.build) return { ok: !1, reason: "施工中" };
+  if (e.upBuild) return { ok: !1, reason: `技改扩建中（还剩 ${Math.ceil(e.upBuild.left)} 季）` };
   if (e.capital && e.level >= 6) return { ok: !1, reason: "首都已满级" };
   if (e.public && e.level >= (it[e.public] && it[e.public].wonder ? 5 : 3))
     return { ok: !1, reason: "已是最高等级" };
+  const m = t ?? dt(A);
   if (!e.capital && !e.public) {
     if (!e.industry) return { ok: !1, reason: "先建成设施再升级" };
     if (e.level >= 6) return { ok: !1, reason: "已是最高等级" };
@@ -8909,14 +9287,15 @@ function Df(A, e, t, n = !1) {
         r = o7(A, o, e.industry),
         i = n
           ? void 0
-          : yg(A, e, t ?? dt(A)).find((c) => {
+          : yg(A, e, m).find((c) => {
               var g;
               return (
                 !c.ok &&
                 !(
                   r &&
                   c.label.startsWith("驻守人物") &&
-                  (((g = A.cards[r]) == null ? void 0 : g.level) ?? 0) >= O.upgradeCardLevel
+                  (((g = A.cards[r]) == null ? void 0 : g.level) ?? 0) >=
+                    (e.level + 1 >= 6 ? 20 : O.upgradeCardLevel)
                 )
               );
             }),
@@ -8928,9 +9307,11 @@ function Df(A, e, t, n = !1) {
           : `Lv.${e.level + 1} 需要${Ke[o]}卡（或对口${Ke[Math.max(0, o - 1)]}卡）驻守${v}`,
       };
     }
+    if (!n && e.level >= 3 && m.buildsActive >= m.buildSlots)
+      return { ok: !1, reason: `施工队已满（${m.buildsActive}/${m.buildSlots}），腾出施工队后再启动高阶技改` };
   }
   if (n) return { ok: !0 };
-  const s = yg(A, e, t ?? dt(A)).find((f) => !f.ok);
+  const s = yg(A, e, m).find((f) => !f.ok);
   return s ? { ok: !1, reason: `升到 Lv.${e.level + 1} 需要：${s.label}` } : { ok: !0 };
 }
 function o7(A, e, ind) {
@@ -8963,7 +9344,58 @@ function estimateTileCumPaid(tile) {
   }
   return 0;
 }
-function yi(A, e, t = !1, n, s = !1) {
+function completeUpBuild(A, f) {
+  const ub = f && f.upBuild;
+  if (!ub) return null;
+  f.upBuild = null;
+  f.level = Math.min(6, ub.targetLv || f.level + 1);
+  if (ub.spec) f.spec = ub.spec;
+  else if (f.level >= 4 && !f.spec) f.spec = "scale";
+  yt(A, "mgmt", 20);
+  if (f.industry) {
+    HA[f.industry].level >= 3 && yt(A, "tech", 20);
+    HA[f.industry].personality === "tax" && yt(A, "pol", 15);
+  }
+  if (A.fyp) A.fyp.buildsDone = (A.fyp.buildsDone || 0) + 1;
+  const indName = f.industry ? HA[f.industry].name : "设施",
+    specLabel = ub.targetLv === 4 && f.spec && SPEC_DEFS[f.spec] ? `（定型：${SPEC_DEFS[f.spec].name}）` : "";
+  pe(A, `「${indName}」技改完工，升至 Lv.${f.level}${specLabel}。`, "good");
+  return `${indName} Lv.${f.level}`;
+}
+function cancelUpBuild(A, e) {
+  const f = A.tiles[e];
+  if (!f || !f.upBuild) return UA("该地块没有正在进行的技改工程");
+  const ub = f.upBuild,
+    paid = ub.paid || 0,
+    refund = Math.round(paid * 0.8 * 10) / 10;
+  f.upBuild = null;
+  if (paid > 0 && f.cumPaid != null) f.cumPaid = Math.max(0, f.cumPaid - paid);
+  A.treasury += refund;
+  const indName = f.industry ? HA[f.industry].name : "设施";
+  pe(A, `取消「${indName}」Lv.${ub.targetLv} 技改工程，退还 ${fe(refund, 1)} 亿。`, "warn");
+  return qe(`已取消技改，退还 ${fe(refund, 1)} 亿`, { refund });
+}
+function retoolSpec(A, e, nextSpec) {
+  const f = A.tiles[e];
+  if (!f || !f.industry || f.build || f.upBuild) return UA("只能对正常运转的已建成产业改组产线");
+  if (f.level < 4) return UA("产业达到 Lv.4 后开放产线定型");
+  if (nextSpec !== "scale" && nextSpec !== "craft") return UA("无效的产线方向");
+  if (f.spec === nextSpec) return UA(`当前已是${SPEC_DEFS[nextSpec].name}`);
+  const m = dt(A),
+    cost = Math.round(xf(HA[f.industry]) * 0.6);
+  if (!canPay(A, cost, m)) return UA(payErr(A, cost, m));
+  A.treasury -= cost;
+  f.spec = nextSpec;
+  f.paused = Math.max(f.paused || 0, 1);
+  yt(A, "mgmt", 15);
+  pe(
+    A,
+    `「${HA[f.industry].name}」改组为「${SPEC_DEFS[nextSpec].name}」（花费 ${cost} 亿，产线调试停产 1 季）。`,
+    "info",
+  );
+  return qe(`已改组为${SPEC_DEFS[nextSpec].name}（调试 1 季）`);
+}
+function yi(A, e, t = !1, n, s = !1, spec = null) {
   const f = resolveWonderHost(A, A.tiles[e]);
   if (!f) return UA("无效地块");
   e = f.id;
@@ -8973,17 +9405,33 @@ function yi(A, e, t = !1, n, s = !1) {
   const r = t ? 0 : bo(A, f);
   if (!t && !canPay(A, r, m)) return UA(payErr(A, r, m));
   !f.capital && f.cumPaid == null && (f.cumPaid = estimateTileCumPaid(f));
-  ((A.treasury -= r),
-    !t && !f.capital && (f.cumPaid = (f.cumPaid || 0) + r),
-    !t && A7(A, e, "upgradeCost"),
-    (f.level += 1),
+  A.treasury -= r;
+  !t && !f.capital && (f.cumPaid = (f.cumPaid || 0) + r);
+  !t && A7(A, e, "upgradeCost");
+  bumpDailyQ(A, "gov", 1);
+  const baseTime = f.industry && !t ? (O.upgradeTime && O.upgradeTime[f.level]) || 0 : 0;
+  if (baseTime > 0) {
+    const mods = be(A).mods,
+      upQ = Math.max(1, Math.round(baseTime * Math.max(0.3, 1 + (mods.buildTime || 0) + C0(A, e, "buildTime")))),
+      chosenSpec = f.level === 3 ? (spec === "craft" ? "craft" : "scale") : f.spec || "scale";
+    f.upBuild = { targetLv: f.level + 1, left: upQ, total: upQ, paid: r, spec: chosenSpec };
+    const specNote = f.level === 3 ? ` · ${SPEC_DEFS[chosenSpec].name}` : "";
+    s ||
+      pe(
+        A,
+        `启动「${HA[f.industry].name}」Lv.${f.level + 1}${specNote} 技改扩建，预计 ${upQ} 季完工（期间原产线照常运转）。`,
+        "info",
+      );
+    return qe(`已启动 Lv.${f.level + 1}${specNote} 技改（需 ${upQ} 季）`);
+  }
+  ((f.level += 1),
+    f.industry && f.level >= 4 && !f.spec && (f.spec = spec === "craft" ? "craft" : "scale"),
     yt(A, "mgmt", 20),
     f.capital && yt(A, "pol", 60 * f.level),
     f.public && yt(A, "cha", 25),
     f.industry &&
       (HA[f.industry].level >= 3 && yt(A, "tech", 20),
       HA[f.industry].personality === "tax" && yt(A, "pol", 15)),
-    bumpDailyQ(A, "gov", 1),
     A.fyp &&
       ((A.fyp.buildsDone = (A.fyp.buildsDone || 0) + 1),
       f.public && (A.fyp.pubDone = (A.fyp.pubDone || 0) + 1)));
@@ -9017,7 +9465,7 @@ function s4(A, e) {
       needWat = curM.water.demand >= curM.water.supply;
     let o = null;
     for (const v of A.tiles) {
-      if (!v.unlocked || !v.industry || v.build || !Df(A, v, curM).ok) continue;
+      if (!v.unlocked || !v.industry || v.build || v.upBuild || v.level >= 3 || !Df(A, v, curM).ok) continue;
       const c = bo(A, v);
       if (c > f || !canPay(A, c, curM)) continue;
       const isPow = !!O.util.power[v.industry],
@@ -9044,7 +9492,7 @@ function s4(A, e) {
     const s = t.reduce((f, o) => f + o.cost, 0);
     pe(
       A,
-      `托管升级 ${t.length} 处，共花 ${s.toFixed(0)} 亿：${t.map((f) => `${f.name} Lv.${f.level - 1}→${f.level}（${f.cost.toFixed(0)} 亿）`).join("、")}。`,
+      `托管基础扩建 ${t.length} 处，共花 ${s.toFixed(0)} 亿：${t.map((f) => `${f.name} Lv.${f.level - 1}→${f.level}（${f.cost.toFixed(0)} 亿）`).join("、")}。`,
       "good",
     );
   }
@@ -9080,6 +9528,8 @@ function i7(A, e) {
       freeWonderTri(A, t),
       (A.treasury += refund),
       (t.public = null),
+      (t.upBuild = null),
+      (t.spec = null),
       (t.cardLocked = !1),
       (t.level = 1),
       (t.cumPaid = 0),
@@ -9101,6 +9551,8 @@ function i7(A, e) {
   return (
     (A.treasury += refund),
     (t.industry = null),
+    (t.upBuild = null),
+    (t.spec = null),
     (t.cardLocked = !1),
     (t.level = 1),
     (t.cumPaid = 0),
@@ -9133,7 +9585,7 @@ function r7(A, e) {
 function f4(A, e, t) {
   const n = A.tiles[e],
     s = A.tiles[t];
-  if (!n.industry || n.build) return UA("只能搬迁已建成的产业");
+  if (!n.industry || n.build || n.upBuild) return UA(n.upBuild ? "技改扩建期间暂不可搬迁" : "只能搬迁已建成的产业");
   if (!r7(A, e).has(t)) return UA("目标地块不能承接这个产业");
   const m = dt(A),
     f = Vv(A, n);
@@ -9144,6 +9596,7 @@ function f4(A, e, t) {
   if (
     ((s.industry = n.industry),
     (s.level = n.level),
+    (s.spec = n.spec || null),
     (s.cumPaid = prevCumPaid),
     (s.financeLeft = n.financeLeft),
     (s.financedTotal = n.financedTotal || 0),
@@ -9160,6 +9613,8 @@ function f4(A, e, t) {
   }
   return (
     (n.industry = null),
+    (n.spec = null),
+    (n.upBuild = null),
     (n.cardLocked = !1),
     (n.level = 1),
     (n.cumPaid = 0),
@@ -11148,18 +11603,25 @@ function aa(left, A) {
 function x4(A, e, t = Date.now()) {
   const raw = A.tiles[e],
     n = resolveWonderHost(A, raw),
-    s = n == null ? void 0 : n.build;
-  if (!s) return UA("这里没有在建工程");
+    isUp = !!(n && !n.build && n.upBuild),
+    s = n == null ? void 0 : n.build || n.upBuild;
+  if (!s) return UA("这里没有在建或技改工程");
   so(A, t);
   const f = Tt(A, "supervise", t);
   if (f.block) return UA(f.block);
-  const o = s.kind === "industry" ? HA[s.id].short : it[s.id].name,
+  const o = isUp
+      ? `${n.industry ? HA[n.industry].short : "设施"} Lv.${s.targetLv} 技改`
+      : s.kind === "industry"
+        ? HA[s.id].short
+        : it[s.id].name,
     r = Math.ceil(s.left),
     i = aa(s.left, A);
   (E0(A, "supervise", t), yt(A, "tech", f.cost * O.actExp), vr(A, "supervises"));
   const v = { name: o, before: r, after: i, done: i <= 0 };
   return v.done
-    ? (pe(A, `主公督办「${o}」，工程提前完工。`, "good"), f7(A, n), qe(`督办「${o}」：当场完工`, v))
+    ? (pe(A, `主公督办「${o}」，工程提前完工。`, "good"),
+      isUp ? completeUpBuild(A, n) : f7(A, n),
+      qe(`督办「${o}」：当场完工`, v))
     : ((s.left = i),
       pe(A, `主公督办「${o}」，工期从 ${r} 季缩到 ${i} 季。`, "good"),
       qe(`督办「${o}」：还剩 ${i} 季（原来 ${r} 季）`, v));
@@ -11783,11 +12245,16 @@ function U4(A, e, t = Date.now()) {
         for (const k of Object.keys(A.cards)) A.cards[k].exp += 40;
         (yt(A, "tech", 50), (g = `视察「${pd.name}」讲学：全员人物历练 +40 · ${insTag}`));
       } else if (pd.cat === "infra") {
-        const bTls = A.tiles.filter((z) => z.unlocked && z.build);
+        const bTls = A.tiles.filter((z) => z.unlocked && (z.build || z.upBuild));
         if (bTls.length) {
           for (const bt of bTls) {
-            bt.build.left = Math.max(0, bt.build.left - 1);
-            if (bt.build.left <= 0) f7(A, bt);
+            if (bt.build) {
+              bt.build.left = Math.max(0, bt.build.left - 1);
+              if (bt.build.left <= 0) f7(A, bt);
+            } else if (bt.upBuild) {
+              bt.upBuild.left = Math.max(0, bt.upBuild.left - 1);
+              if (bt.upBuild.left <= 0) completeUpBuild(A, bt);
+            }
           }
           g = `督导「${pd.name}」：全国 ${bTls.length} 处工程推进 1 季 · ${insTag}`;
         } else {
@@ -11919,7 +12386,11 @@ function G4(A, e, t = Date.now()) {
             })();
         break;
       case "progress":
-        o.build && ((o.build.left = Math.max(1, o.build.left - B.q)), c.lines.push(`工程推进 ${B.q} 季`));
+        if (o.build) {
+          ((o.build.left = Math.max(1, o.build.left - B.q)), c.lines.push(`工程推进 ${B.q} 季`));
+        } else if (o.upBuild) {
+          ((o.upBuild.left = Math.max(1, o.upBuild.left - B.q)), c.lines.push(`技改推进 ${B.q} 季`));
+        }
         break;
       case "stamina":
         ((n.stamina = Math.min($n(A) + 2, n.stamina + B.n)), c.lines.push(`体力 +${B.n}`));
@@ -15667,30 +16138,42 @@ const FC = {
   gravel: Xu,
   fish: U7,
   salt: F3,
+  spring: y7,
   coal: vC,
   iron: da,
   bauxite: gu,
   quartz: fC,
   sugarcane: r3,
+  tobacco_leaf: W3,
   rubber: D3,
+  wind_corridor: E3,
   phosphate: au,
   zinc: _u,
   copper: i3,
   gas: V3,
   potash: q3,
   coffee: M3,
+  herbs: Ou,
+  harbor: DC,
+  geothermal: F7,
+  bamboo_pulp: QC,
   nickel: y3,
   cobalt: lu,
   graphite: bu,
   oil: X3,
   lithium: $4,
   gold: O7,
+  scenic: J7,
+  marine_bio: U3,
+  permafrost: o3,
   silver: du,
   tungsten: wu,
   titanium: Ru,
   hydrate: nC,
   rareearth: _7,
   uranium: Su,
+  ancient_bio: W3,
+  abyssal_vent: HC,
   platinum: V4,
   diamond: O3,
 };
@@ -16312,11 +16795,12 @@ class UC {
         if (o > 22) {
           ((e.fillStyle = "rgba(255,226,150,0.88)"),
             (e.font = `600 ${Math.max(8, Math.round(o * 0.22))}px system-ui, sans-serif`),
-            e.fillText("✦ 奇观区", C, E - o * 0.04, o * 1.42));
-          if (wh.build && o > 28) {
+            e.fillText("奇观区", C, E - o * 0.04, o * 1.42));
+          if ((wh.build || wh.upBuild) && o > 28) {
+            const remQ = Math.ceil((wh.build || wh.upBuild).left);
             ((e.fillStyle = "rgba(240,197,82,0.78)"),
               (e.font = `${Math.max(8, Math.round(o * 0.19))}px ui-monospace, monospace`),
-              e.fillText(`施工 ${Math.ceil(wh.build.left)}季`, C, E + o * 0.24, o * 1.38));
+              e.fillText(`${wh.build ? "施工" : "技改"} ${remQ}季`, C, E + o * 0.24, o * 1.38));
           }
         }
       } else if (o > 20) {
@@ -16348,10 +16832,12 @@ class UC {
                     ((e.fillStyle = "#b6f3ff"), e.fillText(fe(Q.gdp), C, E + o * 0.05, o * 1.48)),
           (B.industry || B.capital || (B.public && !B.build)) &&
             o > 30 &&
-            ((e.fillStyle = "rgba(200,215,235,0.75)"),
+            ((e.fillStyle = B.upBuild ? "#f0c552" : "rgba(200,215,235,0.75)"),
             (e.font = `${Math.round(h * 0.7)}px system-ui, sans-serif`),
             e.fillText(
-              `Lv.${B.level}${Q.effLevel < B.level ? `→${Q.effLevel}` : ""}${B.financeLeft ? " 融资" : ""}`,
+              B.upBuild
+                ? `Lv.${B.level}→${B.upBuild.targetLv} (${Math.ceil(B.upBuild.left)}季)`
+                : `Lv.${B.level}${Q.effLevel < B.level ? `→${Q.effLevel}` : ""}${B.level >= 4 && B.spec ? `·${B.spec === "craft" ? "精" : "规"}` : ""}${B.financeLeft ? " 融资" : ""}`,
               C,
               E + o * 0.36,
               o * 1.46,
@@ -20820,7 +21306,7 @@ void main() {
         #include <tonemapping_fragment>
         #include <colorspace_fragment>
       }
-    `})}const Rc={value:1},os=.95,uv=.92,fn=os*Math.sqrt(3)/2,Hi={base:12433321,speckle:[12893873,11972770,13157303,11709599],rim:14472647,lip:13617337},D0=.07,tf=.03,Ii=.6,qB=(os-D0-.068)*Math.sqrt(3)/2,JD={stone:{cols:[7172213,6843248,7501435,6514283],mortar:4935251,step:2,gap:.1,lo:.4},paver:{cols:[10262154,9801859,10722705,9341309],mortar:7301986,step:2,gap:.1,lo:.42},asphalt:{cols:[5198682,4869717,5527647],mortar:3816771,step:3,gap:.06,lo:.5},soil:{cols:[9071176,8413503,9663056,8019004],mortar:6967350,step:2,gap:0,lo:.42},grass:{cols:[6463559,6792779,6134339,6990158],mortar:5212730,step:1.5,gap:0,lo:.4},forest:{cols:[5013568,4552507,5474117,4156983],mortar:3695151,step:1.5,gap:0,lo:.36},sand:{cols:[14468756,13942154,14929823,13612931],mortar:12560504,step:2,gap:0,lo:.44},snow:{cols:[15660023,14937074,16185851,14411502],mortar:13228259,step:2,gap:0,lo:.4},site:{cols:[9274743,8814193,9603708,8353643],mortar:6446161,step:2,gap:.1,lo:.38},tech:{cols:[5857387,5462629,6252402,5067870],mortar:3554115,step:2,gap:.12,lo:.46}},Ps=Math.sqrt(3)/2,Jf=Array.from({length:6},(A,e)=>new VA(Math.cos(Math.PI/3*e),Math.sin(Math.PI/3*e))),tr=(A,e)=>!!A&&A.has((e%6+6)%6);function a1(A,e,t){const n=Jf[(t%6+6)%6],s=(Ps-A.dot(n))/e.dot(n);return new VA(A.x+e.x*s,A.y+e.y*s)}function n0(A,e,t,n){if(!(A!=null&&A.size))return[t,n];const s=n.clone().sub(t).normalize();return[tr(A,e-1)?a1(t,s.clone().negate(),e-1):t,tr(A,e+1)?a1(n,s,e+1):n]}function ax(A,e,t,n=null){const s=JD[e],f=!!(n!=null&&n.size),o=Jf.map((P,B)=>tr(n,B)?Ps:qB),r=f?(P,B)=>Jf.every((a,Q)=>P*a.x+B*a.y<=o[Q]):(P,B)=>zi(P,B,qB),i=(P,B,a)=>r(P*Ie,B*Ie)&&r((P+a)*Ie,B*Ie)&&r(P*Ie,(B+a)*Ie)&&r((P+a)*Ie,(B+a)*Ie),v=(P,B,a)=>A.slab(P+s.gap/2,0,B+s.gap/2,a-s.gap,s.lo+t.next()*(Ii-s.lo),a-s.gap,s.cols[t.int(s.cols.length)]),c=(P,B,a,Q)=>{if(i(P,B,a))v(P,B,a);else if(Q<2)for(const[D,l]of[[0,0],[a/2,0],[0,a/2],[a/2,a/2]])c(P+D,B+l,a/2,Q+1)},g=Math.ceil((f?1:qB)/Ie/s.step)+1;for(let P=-g;P<g;P++)for(let B=-g;B<g;B++)c(P*s.step,B*s.step,s.step,0)}const Xr=new Y(0,1,0),Px=new Y(0,-1,0);function Si(A=os){const e=[];for(let t=0;t<6;t++){const n=Math.PI/180*(60*t-30);e.push(new VA(A*Math.cos(n),A*Math.sin(n)))}return e}function zi(A,e,t=fn){return Math.abs(A)<=t&&Math.abs(.5*A+.866*e)<=t&&Math.abs(-.5*A+.866*e)<=t}const Cv=9,R8=14,Fr=[6448749,5725026,7238522];function wx(A,e,t,n){const s=(o,r=.26)=>n.next()<r?o[1+n.int(o.length-1)]:o[0],f=t>=R8-4;switch(A){case"plain":return t<2?s([7315530,6130750,8827994],.4):s(f?Fr:[9069120,8017206,10515536]);case"hill":{const o=5+Math.round(1.3*Math.sin(e*.75)),r=9+Math.round(1.2*Math.sin(e*.55+1.3));return t<2?s([8036940,6983999,9484384],.4):t<o?s([11569742,10648900,12425820]):t<r?s([9071168,8084791]):s(Fr)}case"forest":return t<3?s([4156986,5209922,3366192],.4):!f&&(e*7+t*3)%11===0?3811868:s(f?Fr:[6177840,5389097,7032375]);case"mountain":{if(t<1)return s([15660023,14673902],.3);if(t<2&&e%3!==2)return 15134195;const o=(e+(t%6<3?t:6-t%6))%5;return n.next()<.07?5001560:o<2?10133930:o<4?8225933:6712436}case"desert":{const o=t+Math.round(Math.sin(e*.6)*.8),r=o<1?15717787:o<4?14861450:o<5?13938030:o<8?14728576:o<10?13212252:11829834;return n.next()<.12?15982512:r}case"valley":return t<2?s([6989402,6001997,8699244],.4):t===5||t===6?s([4166608,3112892,9425919],.3):s(f?Fr:[9069120,8017206,6965807]);case"ice":return t<2?s([16186367,15135482],.3):(e+t)%7===0&&t>2&&!f?t%2?15334399:8369110:s([12574962,11129836,13888504]);case"water":{const o=[5945576,4892636,4035531,3375547,2912681,2581399];return t<o.length?(e+t*3)%7===0&&t<4?10477823:o[t]:t<9?s([14270604,13480572,14994844]):s(Fr)}}}function Dx(A,e,t,n=null,s=null){const o=Si(1),r=(u,C)=>new Y(u.x,C,u.y),i=n?JD[n].mortar:Hi.base,v=Si(),c=Si(os-D0),g=new Y(0,0,0);for(let u=0;u<6;u++){const C=c[u],E=c[(u+1)%6];A.tri(g,new Y(E.x,0,E.y),new Y(C.x,0,C.y),Xr,i)}const P=.095,B=Math.ceil(os/P),a=fn-D0;for(let u=-B;u<B&&!n;u++)for(let C=-B;C<B;C++){const E=u*P,h=C*P;if(!zi(E,h,a)||!zi(E+P,h,a)||!zi(E,h+P,a)||!zi(E+P,h+P,a)||t.next()>.5)continue;const d=Hi.speckle[t.int(Hi.speckle.length)],x=0+.002+t.int(2)*.003;A.quad(new Y(E,x,h+P),new Y(E+P,x,h+P),new Y(E+P,x,h),new Y(E,x,h),Xr,d)}for(let u=0;u<6;u++){const C=(u+1)%6;if(tr(s,u)){A.quad(r(c[u],0),r(c[C],0),r(o[C],0),r(o[u],0),Xr,i);continue}const[E,h]=n0(s,u,v[u],v[C]),[d,x]=n0(s,u,c[u],c[C]);A.quad(r(d,tf),r(x,tf),r(h,tf),r(E,tf),Xr,Hi.rim),A.quad(r(d,0),r(x,0),r(x,tf),r(d,tf),new Y(-Jf[u].x,0,-Jf[u].y),Hi.lip)}const Q=(uv+tf)/R8;for(let u=0;u<6;u++){if(tr(s,u))continue;const[C,E]=n0(s,u,v[u],v[(u+1)%6]),h=new Y(Jf[u].x,0,Jf[u].y);for(let d=0;d<Cv;d++){const x=new VA().lerpVectors(C,E,d/Cv),M=new VA().lerpVectors(C,E,(d+1)/Cv);for(let z=0;z<R8;z++){const p=tf-z*Q,H=tf-(z+1)*Q,I=wx(e.terrain,u*Cv+d,z,t);A.quad(new Y(M.x,H,M.y),new Y(x.x,H,x.y),new Y(x.x,p,x.y),new Y(M.x,p,M.y),h,I)}}}const D=new Y(0,0-uv,0),l=e.terrain==="desert"?9398844:e.terrain==="ice"?8366532:4540751;for(let u=0;u<6;u++){const C=v[u],E=v[(u+1)%6];A.tri(D,new Y(C.x,0-uv,C.y),new Y(E.x,0-uv,E.y),Px,l)}}function P1(A,e,t=null){e=new ee(e).multiplyScalar(t!=null&&t.size?.8:.62).getHex();const n=Si(os-D0-.015),s=Si(os-D0-.06);for(let f=0;f<6;f++){if(tr(t,f))continue;const[o,r]=n0(t,f,n[f],n[(f+1)%6]),[i,v]=n0(t,f,s[f],s[(f+1)%6]);A.glowQuad(new Y(i.x,.012,i.y),new Y(v.x,.012,v.y),new Y(r.x,.012,r.y),new Y(o.x,.012,o.y),Xr,e)}}function KD(A,e,t=2){const n=Math.floor(fn/Ie)-t;for(let s=0;s<20;s++){const f=A.int(n*2)-n,o=A.int(n*2)-n;if(!(Math.max(Math.abs(f),Math.abs(o))<e)&&zi((f+1.5)*Ie,(o+1.5)*Ie,fn-t*Ie))return[f,o]}return null}function ls(A,e,t,n,s=1){const f=2+n.int(2);A.box(e+1,0,t+1,1,f,1,j.woodDark);const o=s>1?4:3,r=[j.leaf,j.leafDark,j.leafLight][n.int(3)];A.box(e+1-(o-1)/2,f,t+1-(o-1)/2,o,2,o,r),A.box(e+1-(o-3)/2-.5,f+2,t+1-(o-3)/2-.5,2,1,2,r===j.leafDark?j.leaf:j.leafLight)}function Qx(A,e,t,n,s){const f=n?1:3;for(let o=0;o<f;o++){const r=KD(t,n,3);r&&(A.box(r[0],0,r[1],1,.35,1,[11117461,10459531,11775391][t.int(3)]),t.next()<.5&&A.box(r[0]+1,0,r[1]+.5,.6,.25,.6,11183254))}}function lx(A,e,t,n){const s=ke[e],f=parseInt(s.color.slice(1),16),o=KD(t,n?n+1:2,3)??[5,4],[r,i]=o;if(e==="wheat"||e==="cotton"){for(let v=0;v<3;v++)A.box(r-2,0,i-2+v*2,5,1,1,f);return}if(e==="timber"){A.box(r-1,0,i,4,1,1,j.wood),A.box(r-1,1,i,4,1,1,j.woodDark);return}if(e==="oil"||e==="gas"?(A.box(r-1,0,i-1,3,.2,3,f),A.box(r,0,i,1,2,1,j.metalDark)):(A.box(r-1,0,i-1,2,1,2,f),A.box(r+1,0,i,1,2,1,f),A.box(r-1,1,i-1,1,1,1,f)),s.tier>=2){const v=s.tier===4?16744368:s.tier===3?16761963:13873919;A.cglow(r+.5,3,i+.5,.7,1.2,.7,v,t.next())}}const ux=[[0,1],[5,0],[4,5],[3,4],[2,3],[1,2]];function hv(A,e){const t=Math.PI/180*(60*A-30);return[e*Math.cos(t),e*Math.sin(t)]}function Cx(A,e){return`${A.tiles.filter(t=>t.unlocked).length}|${e.supplyEdges.map(t=>`${t.a}-${t.b}:${t.level}`).join(",")}|${e.publicEdges.map(t=>`${t.a}-${t.b}`).join(",")}|${A.tiles.filter(t=>t.unlocked).map(t=>t.id).join(",")}`}function hx(A,e,t,n){const s=[],f=[],o=[],r=[],i=[],v=[],c=new Map;for(const a of e.supplyEdges)c.set(`${Math.min(a.a,a.b)}-${Math.max(a.a,a.b)}`,a.level);for(const a of e.publicEdges){const Q=`${Math.min(a.a,a.b)}-${Math.max(a.a,a.b)}`;c.has(Q)||c.set(Q,10)}const g=(a,Q,D,l,u,C,E,h,d,x)=>{const M=s.length/3;s.push(a-u*x,d,Q-C*x,D-u*x,d,l-C*x,D+u*x,d,l+C*x,a+u*x,d,Q+C*x),f.push(0,1,1,0),o.push(-1,-1,1,1);for(let z=0;z<4;z++)r.push(E),i.push(h);v.push(M,M+1,M+2,M,M+2,M+3)};for(const a of A.tiles){if(!a.unlocked)continue;const Q=ss(a.q,a.r);for(let D=0;D<6;D++){const l=t[a.id][D],u=l>=0?A.tiles[l]:null,[C,E]=ux[D];if(u!=null&&u.unlocked){if(l<a.id)continue;const h=hv(C,1),d=hv(E,1),x=(h[0]+d[0])/2,M=(h[1]+d[1])/2,z=Math.hypot(x,M),p=c.get(`${a.id}-${l}`)??-2,H=.86;g(Q.x+x+(h[0]-x)*H,Q.z+M+(h[1]-M)*H,Q.x+x+(d[0]-x)*H,Q.z+M+(d[1]-M)*H,x/z,M/z,p,(a.id*7+l*13)%17/17,p>=0?.022:-.02,p>=0?.056+(p===10?0:p*.009):.022)}else{const h=hv(C,os+.005),d=hv(E,os+.005),[x,M]=Ri[D],z=ss(x,M),p=Math.hypot(z.x,z.z);g(Q.x+h[0],Q.z+h[1],Q.x+d[0],Q.z+d[1],z.x/p,z.z/p,-1,(a.id*3+D)%11/11,a.terrain==="water"?-.045:.004,.022)}}}const P=new Vt;P.setAttribute("position",new Ve(s,3)),P.setAttribute("aAlong",new Ve(f,1)),P.setAttribute("aAcross",new Ve(o,1)),P.setAttribute("aLevel",new Ve(r,1)),P.setAttribute("aSeed",new Ve(i,1)),P.setIndex(v);const B=new Ye(P,n);return B.frustumCulled=!1,B.renderOrder=5,B}function Ex(){return new Lt({uniforms:{uTime:{value:0},uSkin:{value:0},uBoost:Rc},transparent:!0,depthWrite:!1,blending:Jn,vertexShader:`
+    `})}const Rc={value:1},os=.95,uv=.92,fn=os*Math.sqrt(3)/2,Hi={base:12433321,speckle:[12893873,11972770,13157303,11709599],rim:14472647,lip:13617337},D0=.07,tf=.03,Ii=.6,qB=(os-D0-.068)*Math.sqrt(3)/2,JD={stone:{cols:[7172213,6843248,7501435,6514283],mortar:4935251,step:2,gap:.1,lo:.4},paver:{cols:[10262154,9801859,10722705,9341309],mortar:7301986,step:2,gap:.1,lo:.42},asphalt:{cols:[5198682,4869717,5527647],mortar:3816771,step:3,gap:.06,lo:.5},soil:{cols:[9071176,8413503,9663056,8019004],mortar:6967350,step:2,gap:0,lo:.42},grass:{cols:[6463559,6792779,6134339,6990158],mortar:5212730,step:1.5,gap:0,lo:.4},forest:{cols:[5013568,4552507,5474117,4156983],mortar:3695151,step:1.5,gap:0,lo:.36},sand:{cols:[14468756,13942154,14929823,13612931],mortar:12560504,step:2,gap:0,lo:.44},snow:{cols:[15660023,14937074,16185851,14411502],mortar:13228259,step:2,gap:0,lo:.4},site:{cols:[9274743,8814193,9603708,8353643],mortar:6446161,step:2,gap:.1,lo:.38},tech:{cols:[5857387,5462629,6252402,5067870],mortar:3554115,step:2,gap:.12,lo:.46}},Ps=Math.sqrt(3)/2,Jf=Array.from({length:6},(A,e)=>new VA(Math.cos(Math.PI/3*e),Math.sin(Math.PI/3*e))),tr=(A,e)=>!!A&&A.has((e%6+6)%6);function a1(A,e,t){const n=Jf[(t%6+6)%6],s=(Ps-A.dot(n))/e.dot(n);return new VA(A.x+e.x*s,A.y+e.y*s)}function n0(A,e,t,n){if(!(A!=null&&A.size))return[t,n];const s=n.clone().sub(t).normalize();return[tr(A,e-1)?a1(t,s.clone().negate(),e-1):t,tr(A,e+1)?a1(n,s,e+1):n]}function ax(A,e,t,n=null){const s=JD[e],f=!!(n!=null&&n.size),o=Jf.map((P,B)=>tr(n,B)?Ps:qB),r=f?(P,B)=>Jf.every((a,Q)=>P*a.x+B*a.y<=o[Q]):(P,B)=>zi(P,B,qB),i=(P,B,a)=>r(P*Ie,B*Ie)&&r((P+a)*Ie,B*Ie)&&r(P*Ie,(B+a)*Ie)&&r((P+a)*Ie,(B+a)*Ie),v=(P,B,a)=>A.slab(P+s.gap/2,0,B+s.gap/2,a-s.gap,s.lo+t.next()*(Ii-s.lo),a-s.gap,s.cols[t.int(s.cols.length)]),c=(P,B,a,Q)=>{if(i(P,B,a))v(P,B,a);else if(Q<2)for(const[D,l]of[[0,0],[a/2,0],[0,a/2],[a/2,a/2]])c(P+D,B+l,a/2,Q+1)},g=Math.ceil((f?1:qB)/Ie/s.step)+1;for(let P=-g;P<g;P++)for(let B=-g;B<g;B++)c(P*s.step,B*s.step,s.step,0)}const Xr=new Y(0,1,0),Px=new Y(0,-1,0);function Si(A=os){const e=[];for(let t=0;t<6;t++){const n=Math.PI/180*(60*t-30);e.push(new VA(A*Math.cos(n),A*Math.sin(n)))}return e}function zi(A,e,t=fn){return Math.abs(A)<=t&&Math.abs(.5*A+.866*e)<=t&&Math.abs(-.5*A+.866*e)<=t}const Cv=9,R8=14,Fr=[6448749,5725026,7238522];function wx(A,e,t,n){const s=(o,r=.26)=>n.next()<r?o[1+n.int(o.length-1)]:o[0],f=t>=R8-4;switch(A){case"plain":return t<2?s([7315530,6130750,8827994],.4):s(f?Fr:[9069120,8017206,10515536]);case"hill":{const o=5+Math.round(1.3*Math.sin(e*.75)),r=9+Math.round(1.2*Math.sin(e*.55+1.3));return t<2?s([8036940,6983999,9484384],.4):t<o?s([11569742,10648900,12425820]):t<r?s([9071168,8084791]):s(Fr)}case"forest":return t<3?s([4156986,5209922,3366192],.4):!f&&(e*7+t*3)%11===0?3811868:s(f?Fr:[6177840,5389097,7032375]);case"mountain":{if(t<1)return s([15660023,14673902],.3);if(t<2&&e%3!==2)return 15134195;const o=(e+(t%6<3?t:6-t%6))%5;return n.next()<.07?5001560:o<2?10133930:o<4?8225933:6712436}case"desert":{const o=t+Math.round(Math.sin(e*.6)*.8),r=o<1?15717787:o<4?14861450:o<5?13938030:o<8?14728576:o<10?13212252:11829834;return n.next()<.12?15982512:r}case"valley":return t<2?s([6989402,6001997,8699244],.4):t===5||t===6?s([4166608,3112892,9425919],.3):s(f?Fr:[9069120,8017206,6965807]);case"ice":return t<2?s([16186367,15135482],.3):(e+t)%7===0&&t>2&&!f?t%2?15334399:8369110:s([12574962,11129836,13888504]);case"water":{const o=[5945576,4892636,4035531,3375547,2912681,2581399];return t<o.length?(e+t*3)%7===0&&t<4?10477823:o[t]:t<9?s([14270604,13480572,14994844]):s(Fr)}}}function Dx(A,e,t,n=null,s=null){const o=Si(1),r=(u,C)=>new Y(u.x,C,u.y),i=n?JD[n].mortar:Hi.base,v=Si(),c=Si(os-D0),g=new Y(0,0,0);for(let u=0;u<6;u++){const C=c[u],E=c[(u+1)%6];A.tri(g,new Y(E.x,0,E.y),new Y(C.x,0,C.y),Xr,i)}const P=.095,B=Math.ceil(os/P),a=fn-D0;for(let u=-B;u<B&&!n;u++)for(let C=-B;C<B;C++){const E=u*P,h=C*P;if(!zi(E,h,a)||!zi(E+P,h,a)||!zi(E,h+P,a)||!zi(E+P,h+P,a)||t.next()>.5)continue;const d=Hi.speckle[t.int(Hi.speckle.length)],x=0+.002+t.int(2)*.003;A.quad(new Y(E,x,h+P),new Y(E+P,x,h+P),new Y(E+P,x,h),new Y(E,x,h),Xr,d)}for(let u=0;u<6;u++){const C=(u+1)%6;if(tr(s,u)){A.quad(r(c[u],0),r(c[C],0),r(o[C],0),r(o[u],0),Xr,i);continue}const[E,h]=n0(s,u,v[u],v[C]),[d,x]=n0(s,u,c[u],c[C]);A.quad(r(d,tf),r(x,tf),r(h,tf),r(E,tf),Xr,Hi.rim),A.quad(r(d,0),r(x,0),r(x,tf),r(d,tf),new Y(-Jf[u].x,0,-Jf[u].y),Hi.lip)}const Q=(uv+tf)/R8;for(let u=0;u<6;u++){if(tr(s,u))continue;const[C,E]=n0(s,u,v[u],v[(u+1)%6]),h=new Y(Jf[u].x,0,Jf[u].y);for(let d=0;d<Cv;d++){const x=new VA().lerpVectors(C,E,d/Cv),M=new VA().lerpVectors(C,E,(d+1)/Cv);for(let z=0;z<R8;z++){const p=tf-z*Q,H=tf-(z+1)*Q,I=wx(e.terrain,u*Cv+d,z,t);A.quad(new Y(M.x,H,M.y),new Y(x.x,H,x.y),new Y(x.x,p,x.y),new Y(M.x,p,M.y),h,I)}}}const D=new Y(0,0-uv,0),l=e.terrain==="desert"?9398844:e.terrain==="ice"?8366532:4540751;for(let u=0;u<6;u++){const C=v[u],E=v[(u+1)%6];A.tri(D,new Y(C.x,0-uv,C.y),new Y(E.x,0-uv,E.y),Px,l)}}function P1(A,e,t=null){e=new ee(e).multiplyScalar(t!=null&&t.size?.8:.62).getHex();const n=Si(os-D0-.015),s=Si(os-D0-.06);for(let f=0;f<6;f++){if(tr(t,f))continue;const[o,r]=n0(t,f,n[f],n[(f+1)%6]),[i,v]=n0(t,f,s[f],s[(f+1)%6]);A.glowQuad(new Y(i.x,.012,i.y),new Y(v.x,.012,v.y),new Y(r.x,.012,r.y),new Y(o.x,.012,o.y),Xr,e)}}function KD(A,e,t=2){const n=Math.floor(fn/Ie)-t;for(let s=0;s<20;s++){const f=A.int(n*2)-n,o=A.int(n*2)-n;if(!(Math.max(Math.abs(f),Math.abs(o))<e)&&zi((f+1.5)*Ie,(o+1.5)*Ie,fn-t*Ie))return[f,o]}return null}function ls(A,e,t,n,s=1){const f=2+n.int(2);A.box(e+1,0,t+1,1,f,1,j.woodDark);const o=s>1?4:3,r=[j.leaf,j.leafDark,j.leafLight][n.int(3)];A.box(e+1-(o-1)/2,f,t+1-(o-1)/2,o,2,o,r),A.box(e+1-(o-3)/2-.5,f+2,t+1-(o-3)/2-.5,2,1,2,r===j.leafDark?j.leaf:j.leafLight)}function Qx(A,e,t,n,s){const f=n?1:3;for(let o=0;o<f;o++){const r=KD(t,n,3);r&&(A.box(r[0],0,r[1],1,.35,1,[11117461,10459531,11775391][t.int(3)]),t.next()<.5&&A.box(r[0]+1,0,r[1]+.5,.6,.25,.6,11183254))}}function lx(A,e,t,n){const s=ke[e];if(!s)return;const f=parseInt(s.color.slice(1),16),o=KD(t,n?n+1:2,3)??[5,4],[r,i]=o;if(e==="wheat"||e==="cotton"||e==="sugarcane"||e==="tobacco_leaf"||e==="herbs"||e==="coffee")for(let v=0;v<3;v++)A.box(r-2,0,i-2+v*2,5,.8,1,f);else if(e==="timber"||e==="bamboo_pulp"||e==="rubber")A.box(r-1,0,i,4,1,1,e==="bamboo_pulp"?f:j.wood),A.box(r-1,1,i,4,1,1,j.woodDark);else if(e==="spring"||e==="salt"||e==="geothermal"||e==="harbor"||e==="abyssal_vent")A.box(r-1,0,i-1,3,.28,3,f),A.box(r-.5,.28,i-.5,1.4,.9,1.4,f);else e==="oil"||e==="gas"||e==="hydrate"?(A.box(r-1,0,i-1,3,.2,3,f),A.box(r,0,i,1,2,1,j.metalDark)):(A.box(r-1,0,i-1,2,1,2,f),A.box(r+1,0,i,1,2,1,f),A.box(r-1,1,i-1,1,1,1,f));if(s.tier>=2){const v=s.tier===4?16744368:s.tier===3?16761963:13873919;A.cglow(r+.5,3,i+.5,.7,1.2,.7,v,t.next())}}const ux=[[0,1],[5,0],[4,5],[3,4],[2,3],[1,2]];function hv(A,e){const t=Math.PI/180*(60*A-30);return[e*Math.cos(t),e*Math.sin(t)]}function Cx(A,e){return`${A.tiles.filter(t=>t.unlocked).length}|${e.supplyEdges.map(t=>`${t.a}-${t.b}:${t.level}`).join(",")}|${e.publicEdges.map(t=>`${t.a}-${t.b}`).join(",")}|${A.tiles.filter(t=>t.unlocked).map(t=>t.id).join(",")}`}function hx(A,e,t,n){const s=[],f=[],o=[],r=[],i=[],v=[],c=new Map;for(const a of e.supplyEdges)c.set(`${Math.min(a.a,a.b)}-${Math.max(a.a,a.b)}`,a.level);for(const a of e.publicEdges){const Q=`${Math.min(a.a,a.b)}-${Math.max(a.a,a.b)}`;c.has(Q)||c.set(Q,10)}const g=(a,Q,D,l,u,C,E,h,d,x)=>{const M=s.length/3;s.push(a-u*x,d,Q-C*x,D-u*x,d,l-C*x,D+u*x,d,l+C*x,a+u*x,d,Q+C*x),f.push(0,1,1,0),o.push(-1,-1,1,1);for(let z=0;z<4;z++)r.push(E),i.push(h);v.push(M,M+1,M+2,M,M+2,M+3)};for(const a of A.tiles){if(!a.unlocked)continue;const Q=ss(a.q,a.r);for(let D=0;D<6;D++){const l=t[a.id][D],u=l>=0?A.tiles[l]:null,[C,E]=ux[D];if(u!=null&&u.unlocked){if(l<a.id)continue;const h=hv(C,1),d=hv(E,1),x=(h[0]+d[0])/2,M=(h[1]+d[1])/2,z=Math.hypot(x,M),p=c.get(`${a.id}-${l}`)??-2,H=.86;g(Q.x+x+(h[0]-x)*H,Q.z+M+(h[1]-M)*H,Q.x+x+(d[0]-x)*H,Q.z+M+(d[1]-M)*H,x/z,M/z,p,(a.id*7+l*13)%17/17,p>=0?.022:-.02,p>=0?.056+(p===10?0:p*.009):.022)}else{const h=hv(C,os+.005),d=hv(E,os+.005),[x,M]=Ri[D],z=ss(x,M),p=Math.hypot(z.x,z.z);g(Q.x+h[0],Q.z+h[1],Q.x+d[0],Q.z+d[1],z.x/p,z.z/p,-1,(a.id*3+D)%11/11,a.terrain==="water"?-.045:.004,.022)}}}const P=new Vt;P.setAttribute("position",new Ve(s,3)),P.setAttribute("aAlong",new Ve(f,1)),P.setAttribute("aAcross",new Ve(o,1)),P.setAttribute("aLevel",new Ve(r,1)),P.setAttribute("aSeed",new Ve(i,1)),P.setIndex(v);const B=new Ye(P,n);return B.frustumCulled=!1,B.renderOrder=5,B}function Ex(){return new Lt({uniforms:{uTime:{value:0},uSkin:{value:0},uBoost:Rc},transparent:!0,depthWrite:!1,blending:Jn,vertexShader:`
       attribute float aAlong;
       attribute float aAcross;
       attribute float aLevel;
@@ -27901,7 +28387,8 @@ function makeGdpSnap(A, m) {
       if (tl.financeLeft > 0) finCnt++;
     }
   }
-  for (const cnt of Object.values(byInd)) if (cnt > O.crowdFree) crowdCnt += cnt - O.crowdFree;
+  const effFree = O.crowdFree + (((be(A).mods && be(A).mods.noCrowdAll) || 0) > 0 ? 3 : 0);
+  for (const cnt of Object.values(byInd)) if (cnt > effFree) crowdCnt += cnt - effFree;
   let buffOut = 0;
   for (const b of A.buffs || []) if (b.stat === "output") buffOut += b.value || 0;
   return {
@@ -28026,7 +28513,9 @@ function explainGdpDelta(A, m) {
   cur.powCut > 0.001 && drags.push(`电力不足减产 −${SA(cur.powCut)}`);
   cur.watCut > 0.001 && drags.push(`供水不足减产 −${SA(cur.watCut)}`);
   cur.stoppedCnt > 0 && drags.push(`${cur.stoppedCnt} 处产业缺料停产`);
-  cur.crowdCnt > 0 && !(be(A).mods.noCrowdAll > 0) && drags.push(`${cur.crowdCnt} 处超额同业扎堆折损`);
+  (mm.supplyShortCnt || 0) > 0 && drags.push(`${mm.supplyShortCnt} 处下游产业因上游原料配额不足降效`);
+  (mm.civicCover ?? 1) < 0.995 && drags.push(`民生消费配套偏低（${Math.round(mm.civicCover * 100)}%），高阶产业人力效率受限`);
+  cur.crowdCnt > 0 && drags.push(`${cur.crowdCnt} 处超额同业饱和折损`);
   cur.finCnt > 0 && drags.push(`${cur.finCnt} 处融资期按 ${SA(O.financeUtil)} 产能运行`);
   cur.sDiv > 0.03 && A.treasury <= mm.reserveCap && drags.push("国库低于满储线，满储消费分红回落中");
   cur.aust && drags.push("C 级债务紧缩：三轨预算加成已暂停");
@@ -28074,6 +28563,16 @@ function N8(A, e = Date.now()) {
         c.build.left <= 0)
       ) {
         const P = f7(A, c);
+        P && n.completed.push(P);
+      }
+    } else if (c.upBuild) {
+      let g = (t.buildSpeed ?? 1) / Math.max(0.3, 1 + C0(A, c.id, "buildTime"));
+      if (
+        ((s.mods.stayBuild || 0) > 0 && A.lord.tile === c.id && (g *= 1 + (s.mods.stayBuild || 0)),
+        (c.upBuild.left -= g),
+        c.upBuild.left <= 0)
+      ) {
+        const P = completeUpBuild(A, c);
         P && n.completed.push(P);
       }
     }
@@ -28273,15 +28772,19 @@ function lQ(A) {
       f.industry && !HA[f.industry] && (f.industry = null),
       f.public && !it[f.public] && (f.public = null),
       f.build && !(f.build.kind === "public" ? it[f.build.id] : HA[f.build.id]) && (f.build = null),
-      f.resource && !ke[f.resource] && (f.resource = null),
+      f.resource && (f.resource = migrateTileRes(f)),
+      f.spec !== "scale" && f.spec !== "craft" && (f.spec = f.industry && f.level >= 4 ? "scale" : null),
+      f.upBuild &&
+        (!f.industry || f.build || typeof f.upBuild.left != "number" || f.upBuild.left <= 0) &&
+        (f.upBuild = null),
       f.card && !se[f.card] && (f.card = null));
     if (f.capital) {
-      ((f.industry = null), (f.public = null), (f.wonderHost = null), (f.wonderTri = null));
+      ((f.industry = null), (f.public = null), (f.upBuild = null), (f.spec = null), (f.wonderHost = null), (f.wonderTri = null));
       f.cardLocked = Boolean(f.cardLocked);
     } else if (f.public) {
-      ((f.industry = null), (f.wonderHost = null), (f.card = null), (f.cardLocked = !1));
+      ((f.industry = null), (f.upBuild = null), (f.spec = null), (f.wonderHost = null), (f.card = null), (f.cardLocked = !1));
     } else if (!f.industry || f.build) {
-      ((f.card = null), (f.cardLocked = !1));
+      ((f.upBuild = null), (f.spec = null), (f.card = null), (f.cardLocked = !1));
     } else {
       f.cardLocked = Boolean(f.cardLocked);
     }
@@ -29340,9 +29843,9 @@ class fp {
     }
     if (e === "govern") ((this._govTab = "decrees"), (this.modal = null), (this.panel = "policy"), this.emit());
     else if (e === "supervise")
-      t.tiles.some((s) => s.build)
+      t.tiles.some((s) => s.build || s.upBuild)
         ? this.openModal({ type: "supervise" })
-        : this.toast("现在没有在建工程，督办用不上", "info");
+        : this.toast("现在没有在建或技改工程，暂无需督办", "info");
     else if (e === "mentor")
       Object.keys(t.cards).length
         ? this.openModal({ type: "mentor" })
@@ -29365,7 +29868,7 @@ class fp {
     if (!t.ok) return !1;
     const n = t.data;
     (Ht(n.done ? "complete" : "build"), n.done && this.pulse++);
-    const s = this.state.tiles.some((o) => o.build) && !Tt(this.state, "supervise").block;
+    const s = this.state.tiles.some((o) => o.build || o.upBuild) && !Tt(this.state, "supervise").block;
     return (
       ((f = this.modal) == null ? void 0 : f.type) === "supervise" && !s && (this.modal = null),
       this.emit(),
@@ -29715,7 +30218,9 @@ function op() {
   const A = Pe(),
     e = A.state,
     t = A.metrics,
-    n = e.tiles.filter((o) => o.build).sort((o, r) => o.build.left - r.build.left),
+    n = e.tiles
+      .filter((o) => o.build || o.upBuild)
+      .sort((o, r) => (o.build || o.upBuild).left - (r.build || r.upBuild).left),
     s = Math.max(0, t.buildSlots - n.length),
     f = () => {
       if (
@@ -29734,7 +30239,7 @@ function op() {
     children: [
       w("span", {
         class: "crews-title",
-        title: "施工队：同时能开工的工程数，可通过升级首都、基建预算、世纪大桥奇观或主公技能增加",
+        title: "施工队：同时能推进的新建与高阶技改工程数，可通过升级首都、基建预算、世纪大桥奇观或主公技能增加",
         children: [
           w(NA, { node: Ae.hardhat, size: 15 }),
           "施工队",
@@ -29742,25 +30247,27 @@ function op() {
         ],
       }),
       n.map((o) => {
-        const r = o.build,
-          i = Math.max(0.04, Math.min(1, (r.total - r.left) / Math.max(0.01, r.total)));
+        const isUp = !o.build && !!o.upBuild,
+          r = o.build || o.upBuild,
+          i = Math.max(0.04, Math.min(1, (r.total - r.left) / Math.max(0.01, r.total))),
+          bTitle = isUp ? `${o.industry ? HA[o.industry].short : "设施"}→Lv.${r.targetLv}` : Ws(o);
         return w(
           "button",
           {
             class: "crew busy",
-            title: `${Ws(o)}施工中，还需约 ${Math.ceil(r.left)} 季。点一下去看工地`,
+            title: `${bTitle}${isUp ? "技改扩建中" : "施工中"}，还需约 ${Math.ceil(r.left)} 季。点击跳转地块`,
             onClick: () => CQ(o.id),
             children: [
               w(vn, {
-                industry: r.kind === "industry" ? r.id : void 0,
-                pub: r.kind === "public" ? r.id : void 0,
+                industry: isUp ? o.industry : r.kind === "industry" ? r.id : void 0,
+                pub: !isUp && r.kind === "public" ? r.id : void 0,
                 size: 24,
               }),
               w("span", {
                 class: "crew-text",
                 children: [
-                  w("b", { children: Ws(o) }),
-                  w("small", { children: ["还剩 ", Math.ceil(r.left), " 季"] }),
+                  w("b", { children: bTitle }),
+                  w("small", { children: [isUp ? "技改 " : "还剩 ", Math.ceil(r.left), " 季"] }),
                 ],
               }),
               w("i", { class: "crew-bar", children: w("i", { style: { width: `${i * 100}%` } }) }),
@@ -29908,7 +30415,7 @@ function dQ({ act: A, wide: e }) {
     o = lc[A],
     r = A === "survey" && !!s.pendingEvent,
     i = A === "survey" && !r ? s.roll : void 0,
-    nb = A === "supervise" && !n.tiles.some((B) => B.build),
+    nb = A === "supervise" && !n.tiles.some((B) => B.build || B.upBuild),
     v = (!!f.block || nb) && !i && !r;
   rp(f.maxCharges <= 0 || f.charges >= f.maxCharges);
   const c = r ? "办事件" : i ? `飞 ${i} 格` : o,
@@ -29919,7 +30426,7 @@ function dQ({ act: A, wide: e }) {
       ? "主公遇到了一件事，先去定夺"
       : i
         ? `已掷出 ${i} 点，点一下选主公要飞去的地块`
-        : f.block || (nb ? `现在没有在建工程，开工后可用来砍掉 ${cutPct}% 工期` : "");
+        : f.block || (nb ? `现在没有在建或技改工程，开工后可用来砍掉 ${cutPct}% 工期` : "");
   return w("button", {
     class: `act-btn act-${A}${e ? " wide" : ""}${v ? " off" : ""}${i ? " rolled" : ""}${r ? " alert" : ""}`,
     "aria-label": `${o}：花 ${f.cost} 点体力，${g}`,
@@ -33989,35 +34496,54 @@ function bp() {
   const A = Pe(),
     e = A.state,
     t = Tt(e, "supervise"),
-    n = e.tiles.filter((s) => s.build).sort((s, f) => f.build.left - s.build.left);
+    n = e.tiles
+      .filter((s) => s.build || s.upBuild)
+      .sort((s, f) => (f.build || f.upBuild).left - (s.build || s.upBuild).left);
   return w(Cn, {
     cls: "act-modal",
     title: F0("supervise"),
     sub: T0.supervise,
     children: [
       w(vB, { act: "supervise" }),
-      !n.length && w("p", { class: "empty", children: "现在没有在建工程。" }),
+      !n.length && w("p", { class: "empty", children: "现在没有在建或技改工程。" }),
       w("ul", {
         class: "act-list",
         children: n.map((s) => {
-          const f = s.build,
+          const isUp = !s.build && !!s.upBuild,
+            f = s.build || s.upBuild,
             o = Math.ceil(f.left),
-            r = aa(f.left);
+            r = aa(f.left, e),
+            itemTitle = isUp
+              ? `${s.industry ? HA[s.industry].name : "设施"} · Lv.${f.targetLv} 技改`
+              : f.kind === "industry"
+                ? HA[f.id].name
+                : Ws(s);
           return w(
             "li",
             {
               children: [
                 w(vn, {
-                  industry: f.kind === "industry" ? f.id : void 0,
-                  pub: f.kind === "public" ? f.id : void 0,
+                  industry: isUp ? s.industry : f.kind === "industry" ? f.id : void 0,
+                  pub: !isUp && f.kind === "public" ? f.id : void 0,
                   size: 40,
                 }),
                 w("div", {
                   class: "al-main",
                   children: [
-                    w("b", { children: f.kind === "industry" ? HA[f.id].name : Ws(s) }),
+                    w("b", { children: itemTitle }),
                     w("small", {
-                      children: [Ge[s.terrain].name, " #", s.id, f.financed ? " · 融资项目" : ""],
+                      children: [
+                        Ge[s.terrain].name,
+                        " #",
+                        s.id,
+                        isUp
+                          ? f.targetLv === 4 && f.spec && SPEC_DEFS[f.spec]
+                            ? ` · ${SPEC_DEFS[f.spec].name}`
+                            : " · 在产技改"
+                          : f.financed
+                            ? " · 融资项目"
+                            : "",
+                      ],
                     }),
                   ],
                 }),
@@ -35249,9 +35775,9 @@ function Sp() {
   const fTiles = e.tiles.filter(
     (tl) => tl.unlocked && !tl.build && tl.public && it[tl.public] && !it[tl.public].wonder,
   );
-  const autoTipTitle = "自动升级产业规则",
+  const autoTipTitle = "自动基础扩建规则（Lv.1–3）",
     autoTipBody =
-      "开启后每季度最多自动升级 2 块产业地，最多动用当前国库现金的 50%，优先升级「每亿投入换来边际 GDP 最多」的地块。";
+      "开启后每季度最多自动扩建 2 处 Lv.1–2 产业至 Lv.3（最多动用国库现金的 50%）；Lv.4 及以上高阶技改涉及施工队占用与产线定型，由玩家手动决策。";
   return w(Qt, {
     title: "国家奇观",
     extra: w("span", {
@@ -35307,7 +35833,7 @@ function Sp() {
               ((e.settings.autoUpgrade = s.target.checked), A.refresh());
             },
           }),
-          w("b", { children: "自动升级产业" }),
+          w("b", { children: "自动基础扩建（Lv.1–3）" }),
           _p6bQTip(autoTipTitle, autoTipBody, !0),
           w("em", {
             class: `tr-state${e.settings.autoUpgrade ? " on" : ""}`,
@@ -35344,6 +35870,8 @@ function Np() {
     r = o.length,
     i = o.filter((B) => B.built > 0).length,
     v = o.filter((B) => B.ready && !B.built).length,
+    compSec = t.completedSectors || 0,
+    civK = t.civicKinds || 0,
     c = (B) =>
       n === "all"
         ? !0
@@ -35357,11 +35885,11 @@ function Np() {
     g = o.filter(c),
     P = hf.map((B) => ({ sid: B, list: g.filter((a) => a.ind.sector === B) })).filter((B) => B.list.length),
     sumTipTitle = `全国产业图谱 (${i}/${r})`,
-    sumTipBody = `• 已建成行业：${i} / ${r} 种\n• 当前满足前置可新建：${v} 种\n• 架空未来产业：${
+    sumTipBody = `• 已建成行业：${i} / ${r} 种 · 可新建：${v} 种\n• 板块全链贯通：${compSec} / 11 个板块（点亮单板块常规全链享 +18% 本板块与 +1.5% 全国加成）\n• 民生基础门类：${civK} / 12 类（民生承载度 ${Math.round((t.civicCover ?? 1) * 100)}%，每类提供 +1.5% 全国协同与人口加成）\n• 架空未来产业：${
       ficOpen
         ? f
           ? `未达门槛（${f}）`
-          : "✓ 已全面开放建造"
+          : "已开放建造"
         : `随发展阶段开放（需首都 Lv.${O.fictionCapital}、${O.fictionDiversity} 种行业）`
     }`;
   return w(he, {
@@ -35378,12 +35906,14 @@ function Np() {
               w("div", {
                 class: "ind-sum-pills",
                 children: [
-                  w("span", { class: "is-pill built", children: ["🏭 已建 ", w("b", { children: `${i}/${r}` })] }),
+                  w("span", { class: "is-pill built", children: ["已建 ", w("b", { children: `${i}/${r}` })] }),
                   w("span", { class: "is-pill ready", children: ["可建 ", w("b", { children: v })] }),
+                  w("span", { class: "is-pill", children: ["板块 ", w("b", { children: `${compSec}/11` })] }),
+                  w("span", { class: "is-pill", children: ["民生 ", w("b", { children: `${civK}/12` })] }),
                   ficOpen &&
                     w("span", {
                       class: `is-pill fic${f ? " off" : ""}`,
-                      children: f ? "🔒 架空" : "✨ 架空",
+                      children: f ? "架空未开" : "架空已开",
                     }),
                   _p6bQTip(sumTipTitle, sumTipBody),
                 ],
@@ -38693,18 +39223,18 @@ function xi(A, e) {
       n,
     ];
   const f = {
-      q: "勘探与奇异资源是什么？",
-      a: `花星钻在本格探矿（本格每次 ◇${h0(A, e)}）：每次给出最多 ${O.prospectOptions} 种符合${t}地形的候选资源，挑一种采用或保持原样。除常规矿产外，当首都 ≥Lv.3 且国土 ≥25 块（或位于外环边疆）时，可勘探出氦-3、室温超导晶、振金等 6 种「奇异资源」，用于支撑架空与高阶产业，部分附带额外供电或原料替代效果。`,
+      q: "自然禀赋、勘探与奇异资源是什么？",
+      a: `常规自然禀赋共 34 种（含 9 种核心矿产与 25 种农林、药材、风廊、地热、航道、奇观及散热带等非矿禀赋），花星钻在本格勘探（每次 ◇${h0(A, e)}）会给出最多 ${O.prospectOptions} 种符合${t}地形的候选禀赋供选择。当首都 ≥Lv.3 且国土 ≥25 块（或位于外环边疆）时，还可探出氦-3、室温超导晶等 6 种 T4 奇异资源。`,
     },
     o = {
-      q: "资源不合适怎么用「贸易」置换？",
-      a: `主公行动「贸易」可将本格已有资源置换成符合本格地形的同品质资源（T4 奇异资源需满足首都 Lv.3 且国土 ≥25 块或位于外环边疆）。每次花 ${O.lordActs.trade.cost} 点体力，每 3 小时充能 1 次（最多囤积 ${O.lordActs.trade.maxCharges || 4} 次），置换前会实时预演全国 GDP 与停复产变化。`,
+      q: "资源不匹配怎么用「贸易」置换？",
+      a: `行动「贸易」可将本格资源置换成符合${t}地形的同品质其他禀赋（每种地形与品质档位均至少保证多种可互换禀赋，可在矿产、农林药源、能源与区位禀赋间灵活转换）。每次消耗 ${O.lordActs.trade.cost} 点体力，每 3 小时充能 1 次（上限 ${O.lordActs.trade.maxCharges || 4} 次），置换前实时预演全国 GDP 与供需变化。`,
     };
   return e.capital
     ? [
         {
           q: "升级首都有哪些核心收益？",
-          a: `① 提升首都自身产出、人口、自带水电与全国国土上限（Lv.1–5 解锁 37 / 75 / 127 / 169 / 217 格满图）；② 主公体力上限 +${O.staminaPerCapital} 并当场回满体力；③ 全国施工队上限 +1（当前共 ${m ? m.buildSlots : 2} 支）；④ Lv.3 自动解锁四大税制、首座经济特区名额、16 种架空未来产业与第 2 政策槽，Lv.5 解锁第 3 政策槽；⑤ 提高国家奇观扩建上限（奇观升至 Lv.k 需首都达到 Lv.k+1）。`,
+          a: `① 提升首都自身产出、人口、自带水电与全国国土上限（Lv.1–5 解锁 37 / 75 / 127 / 169 / 217 格满图）；② 体力上限 +${O.staminaPerCapital} 并当场回满体力；③ 全国施工队上限 +1（当前共 ${m ? m.buildSlots : 2} 支）；④ Lv.3 解锁四大税制、经济特区、16 种架空未来产业（需点亮 ${O.fictionDiversity} 种行业）与第 2 政策槽，Lv.5 解锁第 3 政策槽。`,
         },
         {
           q: "升级首都要什么条件？",
@@ -38723,11 +39253,11 @@ function xi(A, e) {
       ? [
           {
             q: "市政设施与国家奇观有什么区别？",
-            a: `• 24 座市政设施：占 1 格，最高 Lv.3；提供全国宜居度、带动相邻对口产业，且全国被动词条随等级按 1 + 0.35×(等级−1) 放大（同名市政全国被动最多叠加 3 座）。\n• 8 座国家奇观：全国唯一，占用相连 3 格三角形空地，最高 Lv.5；同时带动三格全部外圈相邻产业，并提供强力国家级规则增益。全国当前宜居上限为 ${fe(livCap, 0)}%（可通过民生预算、紫禁宫殿奇观与政策卡抬升）。`,
+            a: `• 24 座市政设施：占 1 格，最高 Lv.3；提供全国宜居度、带动相邻对口产业，且全国被动词条随等级按 1 + 0.35×(等级−1) 放大（同名市政全国被动最多叠加 3 座）。\n• 8 座国家奇观：全国唯一，占用相连 3 格三角形空地，最高 Lv.5；同时带动三格全部外圈相邻产业，并提供国家级规则增益。全国当前宜居上限为 ${fe(livCap, 0)}%。`,
           },
           {
             q: "市政与奇观怎么升级？",
-            a: `普通市政最高升至 Lv.3；国家奇观最高升至 Lv.5，且奇观扩建受首都等级门控——奇观升至 Lv.k 需要首都达到 Lv.(k+1)（例如升满 Lv.5 奇观需 Lv.6 首都）。宜居与周边带动倍率 Lv.1–5 为 ×${Pc.join(" / ×")}。`,
+            a: `普通市政最高升至 Lv.3；国家奇观最高升至 Lv.5，且奇观扩建受首都等级门控——奇观升至 Lv.k 需要首都达到 Lv.(k+1)。宜居与周边带动倍率 Lv.1–5 为 ×${Pc.join(" / ×")}。`,
           },
           {
             q: "拆除市政或奇观退还多少？",
@@ -38737,12 +39267,12 @@ function xi(A, e) {
       : e.build
         ? [
             {
-              q: "如何加快在建工程进度？",
-              a: `① 主公「督办」：花 ${O.lordActs.supervise.cost} 点体力（每 60 分钟充能 1 次，最多囤积 ${O.lordActs.supervise.maxCharges || 6} 次），当场砍掉剩余工期 ${Math.round(O.superviseCut * 100)}%，不足 1 季直接竣工。\n② 宏观提速：在「施政」调高「基建专项预算」（提速/强基建/超级工程）、改制「产业基建制」、签发五年规划「重工强基」或颁布政令「基建提速」；主公飞艇视察交通类市政也会推进全国在建工期。`,
+              q: "如何加快在建或技改工程进度？",
+              a: `① 行动「督办」：消耗 ${O.lordActs.supervise.cost} 点体力（每 60 分钟充能 1 次，上限 ${O.lordActs.supervise.maxCharges || 6} 次），当场削减剩余工期 ${Math.round(O.superviseCut * 100)}%，不足 1 季直接竣工（对新建与高阶产业技改均生效）。\n② 宏观提速：在「施政」调高「基建专项预算」、切换「产业基建制」、立项「重工强基」规划或颁布「基建提速」政令。`,
             },
             {
               q: "取消工程能退回多少资金？",
-              a: "严格按开工时实际支付金额退还 80%（扣除 20% 违约金）；主公经验、开国半价名额与五年规划建成计数均在工程竣工落成时结算。",
+              a: "严格按开工时实际支付金额退还 80%（扣除 20% 违约金）；经验、开国半价名额与五年规划建成计数均在工程竣工落成时结算。",
             },
             {
               q: "融资建设的还款与拆迁规则？",
@@ -38752,16 +39282,16 @@ function xi(A, e) {
         : e.industry
           ? [
               {
-                q: "产业升级条件与驻守人物上限？",
-                a: `升级除资金外需满足：Lv.2 投产满 ${O.upgradeAge} 季；Lv.3 至少 1 条供需边；Lv.4 驻守人物达 Lv.${O.upgradeCardLevel}；Lv.5 形成同业集群或有 2 条供需边；Lv.6 紧邻市政设施或国家奇观。${s}`,
+                q: "产业升级条件、技改工期与 Lv.4 产线定型？",
+                a: `• Lv.1→3 基础扩建即时完成：Lv.2 需投产满 ${O.upgradeAge} 季；Lv.3 需 1 条供需边且全国具备「建材/钢材」。\n• Lv.4–6 高阶技改需占用 1 支施工队（耗时 2–3 季，期间原产线照常运转）：Lv.4 需驻守人才 Lv.${O.upgradeCardLevel} 及「电气/机械设备」，并在「规模产线（高产出高集群、水电与原料消耗 ×1.6）」与「精工产线（税收 ×1.30、供需边 +25%、不享集群）」中二选一定型；Lv.5 需集群或 2 条边及「信贷/软件/芯片」；Lv.6 需相邻市政、人才 Lv.20 及「IT/工业服务/资管」。${s}`,
               },
               {
-                q: "水电供给与「需水产业」要注意什么？",
-                a: `运转产业每级消耗 1 电 1 水，水电总供给不足会按比例拉低全国产出（水务建在河谷/海湾享 1.5× 供水加成）。特别注意：化工、钢材、半导体、饮料、家化、纺织、房建、生物制药、医疗、地产开发、水气营销共 11 个涉水产业，必须全国建有水厂提供「供水」产品才能正常运转。`,
+                q: "上游原料配额、民生承载与板块协同怎么算？",
+                a: `• 原料配额：上游每有效级提供 ${O.supplyPerLv} 单位供货配额（对口资源格额外 +${O.supplyResBonus}），下游每有效级消耗 1 单位（规模产线 ×1.6）；配额不足时下游按满足率乘算降效（保底 ${SA(O.supplyFloor)}）。\n• 民生与板块：12 类基础消费、医疗、文旅与居住行业提供人口加成并支撑高阶产业人力承载；点亮同一板块常规全链条可激活 +18% 板块贯通与 +1.5% 全局协同加成。`,
               },
               {
                 q: "供需边与高速路网怎么算加成？",
-                a: `相邻上下游地块自动结成供需边，双方各 +${SA(O.supplyEdge)}（配套型参与则高达 +${SA(O.supplyEdgeSupport)}），每格最多计入最优 ${O.supplyEdgeMax} 条，且双方等级越高还有等级协同加成。展开「详情」可将供需边修筑升级至满级高速路，每级额外提升两端产出。`,
+                a: `相邻上下游地块自动结成供需边，双方各 +${SA(O.supplyEdge)}（配套型参与为 +${SA(O.supplyEdgeSupport)}），每格最多计入最优 ${O.supplyEdgeMax} 条。展开「详情」可将供需边升级至满级高速走廊，进一步放大链路收益。`,
               },
               {
                 q: "同业集群与扎堆衰减怎么平衡？",
@@ -39261,16 +39791,85 @@ function _p() {
           s.status === "running" && w(nf, { kind: "ok", children: "运转中" }),
           s.status === "stopped" &&
             w(nf, { kind: "warn", children: ["停产 · 缺少", s.missing.map((h) => h.join("/")).join("、")] }),
-          s.status === "paused" && w(nf, { kind: "warn", children: ["搬迁中，停产 ", n.paused, " 季"] }),
+          s.status === "paused" && w(nf, { kind: "warn", children: ["调试/搬迁中，停产 ", n.paused, " 季"] }),
           w(ar, { p: c.personality }),
+          n.level >= 4 &&
+            n.spec &&
+            SPEC_DEFS[n.spec] &&
+            w(nf, {
+              kind: n.spec === "craft" ? "info" : "gold",
+              children: SPEC_DEFS[n.spec].name,
+            }),
+          (s.supplyFit ?? 1) < 0.995 &&
+            w(nf, {
+              kind: "warn",
+              children: [`原料配额 ${Math.round((s.supplySat ?? 1) * 100)}%`],
+            }),
+          (s.civicFit ?? 1) < 0.995 &&
+            w(nf, {
+              kind: "warn",
+              children: [`民生承载 ${Math.round((t.civicCover ?? 1) * 100)}%`],
+            }),
           c.consumer && w(nf, { kind: "muted", children: "面向居民" }),
           n.financeLeft > 0 && w(nf, { kind: "info", children: ["融资还款 · ", n.financeLeft, " 季 · 80%"] }),
           s.cluster >= 0 &&
+            !(n.level >= 4 && n.spec === "craft") &&
             w(nf, { kind: "gold", children: ["集群 · ", t.clusters[s.cluster].tiles.length, " 格"] }),
           i && w(nf, { kind: "gold", children: isZoneCenter ? "特区中心" : "特区" }),
           s.exclusiveActive && w(nf, { kind: "gold", children: ["专属 ×", g.exclusive.mult] }),
         ],
       }),
+      n.upBuild &&
+        (() => {
+          const ub = n.upBuild,
+            supAct = Tt(e, "supervise"),
+            supMax = supAct.maxCharges || 0,
+            supCur = supAct.charges ?? supAct.left ?? 0,
+            afterQ = aa(ub.left, e),
+            specTag = ub.targetLv === 4 && ub.spec && SPEC_DEFS[ub.spec] ? ` · ${SPEC_DEFS[ub.spec].name}` : "";
+          return w("div", {
+            class: "upbuild-box",
+            style: "margin:6px 0;padding:8px 10px;border-radius:8px;background:rgba(240,197,82,0.08);border:1px solid rgba(240,197,82,0.28)",
+            children: [
+              w(ei, {
+                value: ub.total - ub.left,
+                max: ub.total,
+                color: "var(--gold)",
+                label: `技改 → Lv.${ub.targetLv}${specTag}（剩 ${Math.ceil(ub.left)} 季 · 原产线照常运转）`,
+              }),
+              w("div", {
+                class: "actions",
+                style: "margin-top:6px",
+                children: [
+                  w("button", {
+                    class: `btn small gold act-inline${supAct.block ? " off" : ""}`,
+                    "data-tip-title": `督办技改 · 体力 ${supAct.cost} · 充能 ${supCur}/${supMax}`,
+                    "data-tip": `推进该处技改工程：剩余 ${Math.ceil(ub.left)} 季 → ${afterQ > 0 ? `${afterQ} 季` : "当场完工"}${supAct.block ? `\n! ${supAct.block}` : ""}`,
+                    onClick: () => (supAct.block ? A.toast(supAct.block, "warn") : A.superviseAt(n.id)),
+                    children: [
+                      w(NA, { node: fo.supervise, size: 13 }),
+                      " 督办",
+                      afterQ > 0 ? `：剩 ${afterQ} 季` : "：当场完工",
+                    ],
+                  }),
+                  w("button", {
+                    class: "btn small ghost",
+                    onClick: () =>
+                      A.openModal({
+                        type: "confirm",
+                        title: "取消技改扩建？",
+                        body: "取消后保留当前等级继续运转，并退还本次技改实付资金的 80%。",
+                        okText: "取消技改",
+                        danger: !0,
+                        onOk: () => A.act((z0) => cancelUpBuild(z0, n.id)),
+                      }),
+                    children: "取消技改",
+                  }),
+                ],
+              }),
+            ],
+          });
+        })(),
       (() => {
         const eLinks = t.supplyEdges.filter((x) => x.a === n.id || x.b === n.id),
           pot =
@@ -39342,7 +39941,7 @@ function _p() {
           children: [hasRboxInd && w(u9, { tile: n }), cardsOpenInd && w(xg, { tile: n })],
         }),
       C && !C.ok && w("p", { class: "hint ex-hint", children: ["满级专属「", u.name, "」：", C.reason] }),
-      n.level < 6 && !D && w(dg, { tile: n }),
+      n.level < 6 && !n.upBuild && !D && w(dg, { tile: n }),
       w("div", {
         class: "actions",
         children: [
@@ -39354,13 +39953,45 @@ function _p() {
               children: ["专属进阶「", u.name, "」 ", w(Hn, { v: kg(n) })],
             }),
           n.level < 6 &&
+            !n.upBuild &&
             (Q.ok
-              ? w("button", {
-                  class: "btn primary",
-                  disabled: !canPay(e, a, t),
-                  onClick: () => A.act((h) => yi(h, n.id)),
-                  children: [w(_e, { name: "up", size: 12 }), " 升到 Lv.", B, " ", w(Hn, { v: a })],
-                })
+              ? n.level === 3
+                ? w(he, {
+                    children: [
+                      w("button", {
+                        class: "btn primary",
+                        disabled: !canPay(e, a, t),
+                        "data-tip-title": "升至 Lv.4 · 定型「规模产线」（技改 2 季）",
+                        "data-tip": `${SPEC_DEFS.scale.desc}\n• 占用 1 支施工队，期间当前 Lv.3 产线照常运转`,
+                        onClick: () => A.act((h) => yi(h, n.id, !1, void 0, !1, "scale")),
+                        children: [w(_e, { name: "up", size: 12 }), " Lv.4·规模 ", w(Hn, { v: a })],
+                      }),
+                      w("button", {
+                        class: "btn primary",
+                        disabled: !canPay(e, a, t),
+                        "data-tip-title": "升至 Lv.4 · 定型「精工产线」（技改 2 季）",
+                        "data-tip": `${SPEC_DEFS.craft.desc}\n• 占用 1 支施工队，期间当前 Lv.3 产线照常运转`,
+                        onClick: () => A.act((h) => yi(h, n.id, !1, void 0, !1, "craft")),
+                        children: [w(_e, { name: "up", size: 12 }), " Lv.4·精工 ", w(Hn, { v: a })],
+                      }),
+                    ],
+                  })
+                : w("button", {
+                    class: "btn primary",
+                    disabled: !canPay(e, a, t),
+                    "data-tip-title":
+                      n.level >= 4
+                        ? `启动 Lv.${B} 技改扩建（预计 ${(O.upgradeTime && O.upgradeTime[n.level]) || 2} 季）`
+                        : void 0,
+                    "data-tip":
+                      n.level >= 4 ? "占用 1 支施工队推进高阶技改，期间当前产线照常运转" : void 0,
+                    onClick: () => A.act((h) => yi(h, n.id)),
+                    children: [
+                      w(_e, { name: "up", size: 12 }),
+                      n.level >= 4 ? ` 技改 Lv.${B} ` : ` 升到 Lv.${B} `,
+                      w(Hn, { v: a }),
+                    ],
+                  })
               : l
                 ? w("button", {
                     class: "btn primary",
@@ -39382,6 +40013,7 @@ function _p() {
                     : w("button", {
                         class: "btn",
                         disabled: !0,
+                        "data-tip": Q.reason || void 0,
                         children: [w(_e, { name: "up", size: 12 }), " 升到 Lv.", B, " ", w(Hn, { v: a })],
                       })),
           unzoneBtn,
@@ -39569,7 +40201,7 @@ function u9({ tile: A }) {
     });
   const C = exMatch
       ? n.bonus + (be(t).mods.exoticAdd ?? 0)
-      : Ms[n.tier] + (s != null && s.harvestOptional ? 0.1 : 0),
+      : Ms[n.tier] + (s != null && s.harvestOptional ? (O.optHarvestBonus ?? 0.2) : 0),
     E = Tt(t, "trade"),
     eMax = E.maxCharges || 0,
     eCur = E.charges ?? E.left ?? 0,
@@ -39996,6 +40628,8 @@ function nL({ tile: A }) {
               " ",
               O.personality[f.personality].gdp,
               s.util < 1 ? " × 融资 0.8" : "",
+              (s.supplyFit ?? 1) < 0.995 ? ` × 原料 ${s.supplyFit.toFixed(2)}` : "",
+              (s.civicFit ?? 1) < 0.995 ? ` × 民生 ${s.civicFit.toFixed(2)}` : "",
               s.exclusiveActive ? ` × 专属 ${se[A.card].exclusive.mult}` : "",
               " × (1 + 加成 ",
               SA(s.bonusTotal),
@@ -40029,6 +40663,23 @@ function nL({ tile: A }) {
               }),
             ],
           }),
+          A.level >= 4 &&
+            !A.upBuild &&
+            (() => {
+              const curSpec = A.spec === "craft" ? "craft" : "scale",
+                altSpec = curSpec === "scale" ? "craft" : "scale",
+                altDef = SPEC_DEFS[altSpec],
+                rtCost = Math.round(xf(f) * 0.6);
+              return w("button", {
+                class: "btn small ghost",
+                style: "margin-top:6px;width:100%",
+                disabled: !canPay(t, rtCost, n),
+                "data-tip-title": `产线改组 → ${altDef.name}`,
+                "data-tip": `${altDef.desc}\n• 改组费用：${rtCost} 亿（调试停产 1 季）`,
+                onClick: () => e.act((st0) => retoolSpec(st0, A.id, altSpec)),
+                children: ["改组为「", altDef.name, "」 ", w(Hn, { v: rtCost })],
+              });
+            })(),
         ],
       }),
       w("div", {
@@ -40039,21 +40690,37 @@ function nL({ tile: A }) {
             class: "chain",
             children: [
               f.harvest &&
-                !f.harvestOptional &&
                 w("div", {
-                  class: `chain-need ${A.resource && f.harvest.includes(A.resource) ? "ok" : "bad"}`,
-                  children: ["本地资源：", f.harvest.map((v) => ke[v].name).join(" / ")],
+                  class: `chain-need ${A.resource && f.harvest.includes(A.resource) ? "ok" : f.harvestOptional ? "muted" : "bad"}`,
+                  children: [
+                    f.harvestOptional ? "增产禀赋：" : "本地资源：",
+                    f.harvest.map((v) => (ke[v] ? ke[v].name : v)).join(" / "),
+                  ],
                 }),
-              f.needs.map((v, c) =>
-                w(
+              f.needs.map((v, c) => {
+                const hasAny = v.some((g) => n.tags.has(g)),
+                  tlMap = n.tagLoad || {},
+                  supSum = v.reduce((acc, g) => acc + ((tlMap[g] && tlMap[g].sup) || 0), 0),
+                  demSum = v.reduce((acc, g) => acc + ((tlMap[g] && tlMap[g].dem) || 0), 0),
+                  tight = hasAny && demSum > supSum + 0.05;
+                return w(
                   "div",
                   {
-                    class: `chain-need ${v.some((g) => n.tags.has(g)) ? "ok" : "bad"}`,
-                    children: ["需要：", v.map(bg).join(" / ")],
+                    class: `chain-need ${!hasAny ? "bad" : tight ? "warn" : "ok"}`,
+                    children: [
+                      "需要：",
+                      v.map(bg).join(" / "),
+                      hasAny &&
+                        supSum > 0 &&
+                        w("small", {
+                          style: "margin-left:4px;opacity:0.82",
+                          children: `（配额 ${supSum.toFixed(1)}/${demSum.toFixed(1)}）`,
+                        }),
+                    ],
                   },
                   c,
-                ),
-              ),
+                );
+              }),
               !f.needs.length && !f.harvest && w("div", { class: "chain-need ok", children: "无前置条件" }),
               w("div", { class: "chain-make", children: ["产出：", bg(f.makes)] }),
               r.length > 0 &&
@@ -41700,6 +42367,15 @@ window.__eun = {
   ko,
   e7,
   yi,
+  H4,
+  g7,
+  lQ,
+  retoolSpec,
+  cancelUpBuild,
+  fs,
+  ke,
+  HA,
+  Ee,
 };
 </script>
     <style rel="stylesheet" crossorigin>
@@ -42575,6 +43251,14 @@ small {
 }
 .chain-need.ok {
   border-color: var(--green);
+}
+.chain-need.warn {
+  border-color: var(--gold);
+  color: #ffe09a;
+}
+.chain-need.muted {
+  border-color: rgba(160, 180, 205, 0.45);
+  color: var(--muted);
 }
 .chain-need.bad {
   border-color: var(--red);
