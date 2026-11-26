@@ -23,7 +23,8 @@ ALTER TABLE public.cloud_saves ADD COLUMN IF NOT EXISTS secret_hash TEXT;
 ALTER TABLE public.cloud_saves DROP CONSTRAINT IF EXISTS cloud_saves_gdp_plausible;
 ALTER TABLE public.cloud_saves
   ADD CONSTRAINT cloud_saves_gdp_plausible
-  CHECK (unlocked BETWEEN 1 AND 217 AND gdp >= 0 AND gdp <= GREATEST(260.0, unlocked::double precision * 3800.0));
+  CHECK (unlocked BETWEEN 1 AND 217 AND gdp >= 0 AND gdp <= GREATEST(260.0, unlocked::double precision * 3800.0))
+  NOT VALID;
 
 CREATE INDEX IF NOT EXISTS idx_cloud_saves_gdp ON public.cloud_saves (gdp DESC);
 
