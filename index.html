@@ -5327,7 +5327,7 @@ const Rl = [
     },
     {
       id: "w_megabridge",
-      name: "超级世纪大桥与运河枢",
+      name: "超级世纪大桥与运河枢纽",
       shortName: "世纪大桥",
       cat: "wonder",
       type: "国家奇观",
@@ -6157,7 +6157,7 @@ const WARDROBE_SKINS = [
       {
         name: "边疆拓荒团",
         type: "被动",
-        effect: "政令「边疆拓荒」折扣强化至 −65%，每开 1 块外环/飞地获 +1 民情洞察",
+        effect: "政令「边疆拓荒」折扣强化至 −65%，每开 1 块外环/飞地获 +1 体制洞察",
         mods: { expandExtra: 0.15, frontierInsight: 1 },
       },
       {
@@ -7040,10 +7040,18 @@ function checkFiveYearPlan(A, m) {
     );
     A.fyp = null;
   } else {
+    A._justExpiredFyp = {
+      id: plan.id,
+      planId: plan.id,
+      num: f.num,
+      name: plan.name,
+      prog: Math.round(prog * 100),
+      kpiDesc: plan.kpiDesc,
+    };
     pe(
       A,
-      `第 ${f.num} 轮五年规划「${plan.name}」届满结项（进度 ${Math.round(prog * 100)}%），可重新立项。`,
-      "info",
+      `第 ${f.num} 轮五年规划「${plan.name}」届满未达标结项（最终进度 ${Math.round(prog * 100)}%），常驻增益已结束，可重新立项。`,
+      "warn",
     );
     A.fyp = null;
   }
@@ -8696,6 +8704,28 @@ function Zf(A, e) {
   }
   return ((f *= 1 - o), Un(A)[e.id].some((r) => A.tiles[r].unlocked) || (f *= 1.5), f);
 }
+function findCheapestFrontierTile(A) {
+  if (!A || !Array.isArray(A.tiles)) return null;
+  let best = null,
+    bestCost = 1 / 0;
+  for (const tl of A.tiles) {
+    if (!ko(A, tl)) continue;
+    const cost = Zf(A, tl);
+    if (cost < bestCost || (cost === bestCost && tl.terrain === "plain" && best && best.terrain !== "plain")) {
+      bestCost = cost;
+      best = tl;
+    }
+  }
+  return best;
+}
+function fmtLordTitle(nm) {
+  const s = String(nm ?? "").trim();
+  return !s || s === "主公" ? "主公" : `主公 ${s}`;
+}
+function fmtLordInline(nm) {
+  const s = String(nm ?? "").trim();
+  return !s || s === "主公" ? "主公" : `主公${s}`;
+}
 function e4(A, e, t, n) {
   const s = oa(A),
     f = Ge[e.terrain];
@@ -9129,8 +9159,9 @@ function n7(A, e, t, n) {
   const s = be(A),
     f = t === "industry" ? O.buildTime[HA[n].level] : it[n].time,
     o = t === "industry" && $9(HA[n]) ? s.mods.autoBuildTime || 0 : t === "public" ? s.mods.pubBuildTime || 0 : 0,
-    r = Bo(A)[e.id] !== void 0 ? s.mods.zoneBuild || 0 : 0;
-  return Math.max(1, Math.round(f * Math.max(0.25, 1 + (s.mods.buildTime || 0) + o + r)));
+    r = Bo(A)[e.id] !== void 0 ? s.mods.zoneBuild || 0 : 0,
+    dur = Math.max(1, Math.round(f * Math.max(0.25, 1 + (s.mods.buildTime || 0) + o + r)));
+  return t === "industry" && jo(A) > 0 ? Math.max(1, dur - 1) : dur;
 }
 function s7(A, e, t) {
   const n = be(A);
@@ -9218,10 +9249,24 @@ function f7(A, e) {
     }
     const wGem = pDef && pDef.wonder ? be(A).mods.wonderGemBonus || 0 : 0;
     if (wGem > 0) A.gems = (A.gems || 0) + wGem;
+    if (pDef && pDef.wonder) {
+      A._justBuiltMonument = {
+        kind: "wonder",
+        id: pDef.id,
+        name: pDef.name,
+        shortName: pDef.shortName || pDef.name,
+        stat: pDef.stat || "",
+        desc: pDef.desc || "",
+        livability: pDef.livability || 0,
+        tile: e.id,
+        quarter: A.quarter || 0,
+        wGem,
+      };
+    }
     pe(
       A,
       `「${pDef.name}」建成投用${wGem > 0 ? `，地标工程奖励 ◇${wGem}` : ""}。`,
-      wGem > 0 ? "gold" : "good",
+      pDef && pDef.wonder ? "gold" : wGem > 0 ? "gold" : "good",
     );
     return pDef.name;
   }
@@ -9588,6 +9633,16 @@ function yi(A, e, t = !1, n, s = !1, spec = null) {
   if (f.capital) {
     checkNoviceCapitalUnlock(A, f);
     const v = $n(A);
+    if (!s && f.level === 6) {
+      A._justBuiltMonument = {
+        kind: "capital6",
+        name: "首都 · 中枢满级 Lv.6",
+        tile: f.id,
+        quarter: A.quarter || 0,
+        staminaCap: v,
+        maxTiles: A.tiles.length,
+      };
+    }
     return (
       (A.lord.stamina = Math.max(A.lord.stamina, v)),
       pe(
@@ -10454,24 +10509,34 @@ function achSummary(A) {
   return { done: doneSet.size, total: Wf.length, pts, maxPts, rankName, bonus };
 }
 function ensureDailyQ(A, now = Date.now()) {
-  const day = f0(now);
+  const day = f0(now),
+    lordId = A.lord ? A.lord.tile : 0,
+    builtOther = A.tiles.filter((t) => t.unlocked && !t.build && (t.industry || t.public) && t.id !== lordId),
+    builtAny = A.tiles.filter((t) => t.unlocked && !t.build && (t.industry || t.public)),
+    unlockedOther = A.tiles.filter((t) => t.unlocked && t.wonderHost == null && t.id !== lordId),
+    cap = A.tiles.find((t) => t.capital) || A.tiles[0];
   if (A.dailyQ && A.dailyQ.day === day) {
     const rawTg = A.tiles[A.dailyQ.targetTile],
-      tg = resolveWonderHost(A, rawTg);
-    if (tg && tg.unlocked && !tg.build && (tg.capital || tg.industry || tg.public)) {
+      tg = resolveWonderHost(A, rawTg),
+      visitDone = (A.dailyQ.prog && A.dailyQ.prog.visit) >= 1;
+    if (!visitDone && tg && tg.id === lordId && (builtOther.length || unlockedOther.length)) {
+      const rng = new tn(po(`dq-re:${day}:${A.quarter || 0}:${A.seed || 1}`)),
+        pool = builtOther.length ? builtOther : unlockedOther;
+      A.dailyQ.targetTile = rng.pick(pool).id;
+      return A.dailyQ;
+    }
+    if (tg && tg.unlocked && !tg.build && (tg.capital || tg.industry || tg.public || tg.id !== lordId)) {
       A.dailyQ.targetTile = tg.id;
       return A.dailyQ;
     }
-    const altCand = A.tiles.filter((t) => t.unlocked && !t.build && (t.industry || t.public)),
-      cap = A.tiles.find((t) => t.capital) || A.tiles[0],
-      rng = new tn(po(`dq-re:${day}:${A.quarter || 0}:${A.seed || 1}`));
-    A.dailyQ.targetTile = (altCand.length ? rng.pick(altCand) : cap).id;
+    const rng = new tn(po(`dq-re:${day}:${A.quarter || 0}:${A.seed || 1}`)),
+      pool = builtOther.length ? builtOther : builtAny.length ? builtAny : unlockedOther.length ? unlockedOther : [cap];
+    A.dailyQ.targetTile = rng.pick(pool).id;
     return A.dailyQ;
   }
-  const cand = A.tiles.filter((t) => t.unlocked && !t.build && (t.industry || t.public));
-  const cap = A.tiles.find((t) => t.capital) || A.tiles[0];
-  const rng = new tn(po(`dq:${day}:${A.seed || 1}`));
-  const pick = cand.length ? rng.pick(cand) : cap;
+  const rng = new tn(po(`dq:${day}:${A.seed || 1}`)),
+    pool = builtOther.length ? builtOther : builtAny.length ? builtAny : unlockedOther.length ? unlockedOther : [cap],
+    pick = rng.pick(pool);
   A.dailyQ = {
     day,
     targetTile: pick.id,
@@ -10495,8 +10560,77 @@ function dqOnLand(A, tileId) {
 }
 function getDailyQuests(A, now = Date.now()) {
   const dq = ensureDailyQ(A, now),
-    tg = resolveWonderHost(A, A.tiles[dq.targetTile]) || A.tiles.find((t) => t.capital) || A.tiles[0];
-  const tgName = tg.industry ? HA[tg.industry].short : tg.public ? it[tg.public].name : "首都";
+    unlockedCnt = A.tiles.filter((t) => t.unlocked).length,
+    visitProg = Math.min(1, dq.prog.visit ?? 0);
+  if (unlockedCnt <= 1 && visitProg < 1) {
+    const ft = findCheapestFrontierTile(A);
+    return [
+      {
+        id: "dq_visit",
+        key: "visit",
+        ico: "pin",
+        name: "拓荒巡察「首块邻地」",
+        desc: "先开拓首块相邻地块，再出巡抵达该地块",
+        target: 1,
+        reward: 70,
+        prog: 0,
+        tileId: ft ? ft.id : 0,
+        go: "frontier",
+      },
+      {
+        id: "dq_survey",
+        key: "survey",
+        ico: "flag",
+        name: "实地调研",
+        desc: "完成 2 次调研移动",
+        target: 2,
+        reward: 60,
+        prog: Math.min(2, dq.prog.survey ?? 0),
+        go: "survey",
+      },
+      {
+        id: "dq_act",
+        key: "act",
+        ico: "sparkles",
+        name: "现场调度",
+        desc: "今日完成 1 次人才指点或工程督办",
+        target: 1,
+        reward: 60,
+        prog: Math.min(1, dq.prog.act ?? 0),
+        go: "mentor",
+      },
+      {
+        id: "dq_gov",
+        key: "gov",
+        ico: "policy",
+        name: "宏观运作",
+        desc: "完成 1 次建筑落成、扩建、特区设立或政令颁布",
+        target: 1,
+        reward: 60,
+        prog: Math.min(1, dq.prog.gov ?? 0),
+        go: "policy",
+      },
+      {
+        id: "dq_fiscal",
+        key: "fiscal",
+        ico: "coin",
+        name: "财政稳健",
+        desc: "保持主权信用高于 C 预警完成 2 个季度结算",
+        target: 2,
+        reward: 60,
+        prog: Math.min(2, dq.prog.fiscal ?? 0),
+        go: "economy",
+      },
+    ];
+  }
+  const tg = resolveWonderHost(A, A.tiles[dq.targetTile]) || A.tiles.find((t) => t.capital) || A.tiles[0];
+  const tgName = tg.industry
+    ? HA[tg.industry].short
+    : tg.public
+      ? it[tg.public].name
+      : tg.capital
+        ? "首都"
+        : `${Ge[tg.terrain].name} #${tg.id}`;
   return [
     {
       id: "dq_visit",
@@ -10506,7 +10640,7 @@ function getDailyQuests(A, now = Date.now()) {
       desc: `前往并抵达「${tgName}」所在地块`,
       target: 1,
       reward: 70,
-      prog: Math.min(1, dq.prog.visit ?? 0),
+      prog: visitProg,
       tileId: tg.id,
       go: "tile",
     },
@@ -12362,10 +12496,11 @@ function O4(A, e = Date.now()) {
   const t = A.lord;
   if (t.pendingEvent) return UA("先处理眼前的事件");
   if (t.roll) return UA(`已掷出 ${t.roll} 点，请先选择落点`);
+  const ul = A.tiles.filter((o) => o.unlocked).length;
+  if (ul <= 1) return UA("当前仅解锁首都，请先开拓相邻地块后再出巡调研");
   if ((so(A, e), Tt(A, "survey", e).block)) return UA("体力不足，稍后再来");
   E0(A, "survey", e);
   const s = new tn(A.rng),
-    ul = A.tiles.filter((o) => o.unlocked).length,
     mb = ul >= 95 ? 2 : ul >= 50 ? 1 : 0,
     minRoll = ul >= 45 ? 3 : ul >= 15 ? 2 : 1;
   t.roll = Math.max(minRoll, 1 + s.int(O.diceMax) + mb);
@@ -13218,7 +13353,7 @@ function j4(A, e, t, n, opts) {
     syncActCharges(A),
     (A.lord.name = t.slice(0, 10)),
     n != null && n.trim() && (A.nationName = n.trim().slice(0, 14)),
-    pe(A, `主公${A.lord.name}的性格：${e.map((f) => Vi[f].name).join("、")}。`, "card"),
+    pe(A, `${fmtLordInline(A.lord.name)}的性格：${e.map((f) => Vi[f].name).join("、")}。`, "card"),
     qe()
   );
 }
@@ -23764,7 +23899,7 @@ window.CivicDesignsA = (() => {
       }
     },
 
-    // 30. 超级世纪大桥与运河枢：双巨型斜拉桥塔 + 跨海通途 + 蓝色航道
+    // 30. 超级世纪大桥与运河枢纽：双巨型斜拉桥塔 + 跨海通途 + 蓝色航道
     w_megabridge(A, lv) {
       const k = L(lv), y = P.plinth(A, 9.6, 1.0, C.navy, C.sky);
       A.cbox(0, y, 0, 17.8, 0.4, 17.8, C.royalBlue);
@@ -24160,7 +24295,7 @@ window.CivicDesignsC = (() => {
       }
     },
 
-    // 30. 超级世纪大桥与运河枢：全息悬浮磁力跨海通道 + 光拱门
+    // 30. 超级世纪大桥与运河枢纽：全息悬浮磁力跨海通道 + 光拱门
     w_megabridge(A, lv) {
       const k = L(lv), y = P.plinth(A, 9.6, 1.0, C.obsidian, C.cyan);
       A.cbox(0, y, 0, 18.0, 0.4, 18.0, C.navy);
@@ -25801,12 +25936,19 @@ class OI {
           (this.store.modal.type === "title" || this.store.modal.fromTitle),
       );
       if (isTitleBg) {
-        const titleDist = this.homeDist * 1.48;
-        !this._wasTitleBg && ((this.dist = titleDist), (this._wasTitleBg = !0));
-        this.goalYaw += e * 0.055;
+        const titleDist = this.homeDist * 0.92;
+        if (!this._wasTitleBg) {
+          this.dist = titleDist;
+          this.goalTarget.set(0, 0.12, 0);
+          this.target.set(0, 0.12, 0);
+          this._wasTitleBg = !0;
+        }
+        this.goalYaw += e * 0.052;
         this.goalDist = titleDist;
-      } else {
+      } else if (this._wasTitleBg) {
         this._wasTitleBg = !1;
+        this.goalDist = this.homeDist;
+        this.goalTarget.set(0, 0, 0);
       }
       const t = 1 - Math.pow(0.0015, e);
       (this.target.lerp(this.goalTarget, t),
@@ -28594,7 +28736,7 @@ function buildWonder3Hex(A, pubId, lv, uPts, W0) {
     }
   }
 
-  // 6. 超级世纪大桥与运河枢 (w_megabridge -> 方案 A：跨三格双H巨塔斜拉跨海大桥 + 垂直深水船闸与航管塔)
+  // 6. 超级世纪大桥与运河枢纽 (w_megabridge -> 方案 A：跨三格双H巨塔斜拉跨海大桥 + 垂直深水船闸与航管塔)
   else if (pubId === "w_megabridge") {
     const bridgeZ = leftW[1] * 0.82,
       dy = 10.2,
@@ -29607,6 +29749,8 @@ function s9(A, e = Date.now()) {
     ((B += u.levelUps.length), (a += u.completed.length), (Q += u.stopped.length), D.push(...u.hidden));
   }
   delete A._justCompletedFyp;
+  delete A._justExpiredFyp;
+  delete A._justBuiltMonument;
   return (
     Gi(A, e),
     (A.lastTick = v),
@@ -29624,11 +29768,42 @@ function s9(A, e = Date.now()) {
   );
 }
 const DQ = "eunopolis.v11";
-function isRankedEligible(A) {
-  return Boolean(A && A.originMode === "fresh" && !A.usedFreeGems);
+function maxPlausibleGdp(unlocked, quarter) {
+  const u = Math.max(1, Math.min(217, Number(unlocked) || 1)),
+    q = Math.max(0, Number(quarter) || 0),
+    perTile = u <= 3 ? 120 : u <= 15 ? 450 : u <= 45 ? 1500 : 3800,
+    byLand = u * perTile;
+  return q < 4 ? Math.min(byLand, 260) : q < 12 ? Math.min(byLand, 2400) : byLand;
+}
+function isPlausibleLadderRow(unlocked, quarter, gdp, pop) {
+  const u = Number(unlocked),
+    q = Number(quarter),
+    g = Number(gdp);
+  if (!Number.isFinite(u) || u < 1 || u > 217) return !1;
+  if (!Number.isFinite(q) || q < 0 || q > 1e5) return !1;
+  if (!Number.isFinite(g) || g < 0 || g > maxPlausibleGdp(u, q)) return !1;
+  if (pop !== void 0 && (!Number.isFinite(Number(pop)) || Number(pop) < 0 || Number(pop) > u * 3500)) return !1;
+  return !0;
+}
+function isRankedEligible(A, m) {
+  if (!A || A.originMode !== "fresh" || A.usedFreeGems) return !1;
+  if (!Array.isArray(A.tiles) || A.tiles.length !== 217) return !1;
+  if (!Number.isFinite(A.treasury) || Math.abs(A.treasury) > 1e8) return !1;
+  if (!Number.isFinite(A.gems) || A.gems < 0 || A.gems > 5e5) return !1;
+  for (const tl of A.tiles) {
+    if ((tl.level || 1) > 6) return !1;
+  }
+  if (m && !isPlausibleLadderRow(m.unlocked, A.quarter || 0, m.gdp, m.population)) return !1;
+  return !0;
 }
 function QQ(A) {
-  return JSON.stringify(A, (e, t) => (e === "_justCompletedFyp" ? void 0 : t === 1 / 0 ? "Infinity" : t));
+  return JSON.stringify(A, (e, t) =>
+    e === "_justCompletedFyp" || e === "_justExpiredFyp" || e === "_justBuiltMonument"
+      ? void 0
+      : t === 1 / 0
+        ? "Infinity"
+        : t,
+  );
 }
 function lQ(A) {
   var n, s;
@@ -29734,6 +29909,8 @@ function lQ(A) {
   delete e.ngVows;
   delete e._justNoviceUnlock;
   delete e._justCompletedFyp;
+  delete e._justExpiredFyp;
+  delete e._justBuiltMonument;
   if (e.fyp && typeof e.fyp == "object") {
     e.fyp.endQ = e.fyp.endQ ?? (e.fyp.startQ || e.quarter || 0) + 20;
     e.fyp.achieved = Boolean(e.fyp.achieved);
@@ -29816,8 +29993,77 @@ function f9(A) {
     return !1;
   }
 }
-if (typeof window < "u") {
-  window.isRankedEligible = isRankedEligible;
+let _titleBackdropCache = null;
+function getTitleBackdrop() {
+  if (_titleBackdropCache) return _titleBackdropCache;
+  try {
+    const st = d7(20261126, 1700000000000);
+    st.lord.ready = !0;
+    for (const tl of st.tiles) {
+      if (ks(tl.q, tl.r) <= 3) tl.unlocked = !0;
+    }
+    const cap = st.tiles.find((t) => t.capital) || st.tiles[0];
+    cap.level = 4;
+    if (typeof allWonderTriangles === "function") {
+      const wPick = ["w_skytower", "w_expo"];
+      for (const wid of wPick) {
+        const wDef = it[wid];
+        if (!wDef) continue;
+        const tris = allWonderTriangles(st).triangles;
+        const match = tris.find((tr) => {
+          const anc = st.tiles[tr[0]];
+          return anc && wDef.terrains.includes(anc.terrain);
+        });
+        if (match) {
+          const anc = st.tiles[match[0]];
+          anc.public = wid;
+          anc.level = 3;
+          anc.wonderTri = match;
+          for (const sid of match) {
+            if (sid !== anc.id && st.tiles[sid]) st.tiles[sid].wonderHost = anc.id;
+          }
+        }
+      }
+    }
+    const pubPool = ac.filter((x) => !x.wonder);
+    let pIdx = 0;
+    const indPool = Ee.filter((x) => x.level <= 4 && x.source !== "架空");
+    let iSeed = 7;
+    for (const tl of st.tiles) {
+      if (!tl.unlocked || tl.capital || tl.public || tl.industry || tl.wonderHost != null) continue;
+      iSeed = (iSeed * 1103515245 + 12345) & 0x7fffffff;
+      if (pIdx < 4 && iSeed % 5 === 0) {
+        const pd = pubPool.find((x, idx) => idx >= pIdx * 3 && x.terrains.includes(tl.terrain));
+        if (pd) {
+          tl.public = pd.id;
+          tl.level = 2 + (pIdx % 2);
+          pIdx++;
+          continue;
+        }
+      }
+      const suitInds = indPool.filter((x) => !x.suits || !x.suits.length || x.suits.includes(tl.terrain));
+      const pickList = suitInds.length ? suitInds : indPool;
+      if (pickList.length) {
+        const ind = pickList[iSeed % pickList.length];
+        tl.industry = ind.id;
+        tl.level = 1 + (iSeed % 4);
+      }
+    }
+    const nbrMap = Un(st);
+    for (const tl of st.tiles) {
+      if (!tl.unlocked || (!tl.industry && !tl.capital)) continue;
+      for (const nbId of nbrMap[tl.id] || []) {
+        const nb = st.tiles[nbId];
+        if (nb && nb.unlocked && (nb.industry || nb.capital) && tl.id < nb.id) {
+          st.edges[`${tl.id}-${nb.id}`] = 2;
+        }
+      }
+    }
+    _titleBackdropCache = { state: st, metrics: dt(st) };
+  } catch {
+    _titleBackdropCache = null;
+  }
+  return _titleBackdropCache;
 }
 const VI = [
     "陆家嘴",
@@ -29892,21 +30138,108 @@ const DEFAULT_CLOUD_CFG = {
 const SUPABASE_LADDER_SQL = `CREATE TABLE IF NOT EXISTS public.cloud_saves (
   player_id TEXT PRIMARY KEY,
   nation_name TEXT NOT NULL CHECK (char_length(nation_name) BETWEEN 1 AND 32),
-  gdp DOUBLE PRECISION NOT NULL CHECK (gdp >= 0 AND gdp < 1e9),
-  quarter INTEGER NOT NULL DEFAULT 0,
-  unlocked INTEGER NOT NULL DEFAULT 1,
+  gdp DOUBLE PRECISION NOT NULL CHECK (gdp >= 0 AND gdp <= 850000),
+  quarter INTEGER NOT NULL DEFAULT 0 CHECK (quarter >= 0 AND quarter <= 100000),
+  unlocked INTEGER NOT NULL DEFAULT 1 CHECK (unlocked BETWEEN 1 AND 217),
   population DOUBLE PRECISION NOT NULL DEFAULT 0,
   credit_rating TEXT NOT NULL DEFAULT 'AAA',
   ach_points INTEGER NOT NULL DEFAULT 0,
   industry_gdp JSONB NOT NULL DEFAULT '{}'::jsonb,
   save_json JSONB NOT NULL,
-  updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+  secret_hash TEXT,
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  CONSTRAINT cloud_saves_gdp_plausible CHECK (gdp <= GREATEST(260.0, unlocked::double precision * 3800.0))
 );
+ALTER TABLE public.cloud_saves ADD COLUMN IF NOT EXISTS secret_hash TEXT;
 CREATE INDEX IF NOT EXISTS idx_cloud_saves_gdp ON public.cloud_saves (gdp DESC);
 ALTER TABLE public.cloud_saves ENABLE ROW LEVEL SECURITY;
+REVOKE SELECT (secret_hash) ON public.cloud_saves FROM anon, authenticated;
+DROP POLICY IF EXISTS "public_read_cloud_saves" ON public.cloud_saves;
+DROP POLICY IF EXISTS "public_insert_cloud_saves" ON public.cloud_saves;
+DROP POLICY IF EXISTS "public_update_cloud_saves" ON public.cloud_saves;
 CREATE POLICY "public_read_cloud_saves" ON public.cloud_saves FOR SELECT TO anon, authenticated USING (true);
-CREATE POLICY "public_insert_cloud_saves" ON public.cloud_saves FOR INSERT TO anon, authenticated WITH CHECK (char_length(player_id) BETWEEN 6 AND 64 AND octet_length(save_json::text) <= 409600);
-CREATE POLICY "public_update_cloud_saves" ON public.cloud_saves FOR UPDATE TO anon, authenticated USING (char_length(player_id) BETWEEN 6 AND 64) WITH CHECK (char_length(player_id) BETWEEN 6 AND 64 AND octet_length(save_json::text) <= 409600);`;
+
+CREATE OR REPLACE FUNCTION public.upsert_cloud_save(p_write_key TEXT, p_row JSONB)
+RETURNS VOID
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public
+AS $$
+DECLARE
+  v_pid TEXT := trim(coalesce(p_row->>'player_id', ''));
+  v_hash TEXT;
+  v_old_hash TEXT;
+  v_gdp DOUBLE PRECISION := coalesce((p_row->>'gdp')::double precision, 0);
+  v_unlocked INTEGER := coalesce((p_row->>'unlocked')::integer, 1);
+  v_quarter INTEGER := coalesce((p_row->>'quarter')::integer, 0);
+BEGIN
+  IF char_length(p_write_key) < 12 OR char_length(p_write_key) > 80 THEN
+    RAISE EXCEPTION 'invalid write key';
+  END IF;
+  IF char_length(v_pid) < 6 OR char_length(v_pid) > 64 THEN
+    RAISE EXCEPTION 'invalid player_id';
+  END IF;
+  IF octet_length((p_row->'save_json')::text) > 409600 THEN
+    RAISE EXCEPTION 'save_json too large';
+  END IF;
+  IF v_unlocked < 1 OR v_unlocked > 217 OR v_gdp < 0 OR v_gdp > GREATEST(260.0, v_unlocked::double precision * 3800.0) THEN
+    RAISE EXCEPTION 'implausible gdp for unlocked tiles';
+  END IF;
+  v_hash := md5('euno_v11_secret:' || trim(p_write_key));
+  SELECT secret_hash INTO v_old_hash FROM public.cloud_saves WHERE player_id = v_pid;
+  IF FOUND AND v_old_hash IS NOT NULL AND v_old_hash <> v_hash THEN
+    RAISE EXCEPTION 'write credential mismatch for player_id';
+  END IF;
+  INSERT INTO public.cloud_saves (
+    player_id, nation_name, gdp, quarter, unlocked, population,
+    credit_rating, ach_points, industry_gdp, save_json, secret_hash, updated_at
+  ) VALUES (
+    v_pid,
+    left(coalesce(p_row->>'nation_name', '未命名国家'), 32),
+    v_gdp, v_quarter, v_unlocked,
+    coalesce((p_row->>'population')::double precision, 0),
+    coalesce(p_row->>'credit_rating', 'AAA'),
+    coalesce((p_row->>'ach_points')::integer, 0),
+    coalesce(p_row->'industry_gdp', '{}'::jsonb),
+    p_row->'save_json',
+    v_hash,
+    NOW()
+  )
+  ON CONFLICT (player_id) DO UPDATE SET
+    nation_name = EXCLUDED.nation_name,
+    gdp = EXCLUDED.gdp,
+    quarter = EXCLUDED.quarter,
+    unlocked = EXCLUDED.unlocked,
+    population = EXCLUDED.population,
+    credit_rating = EXCLUDED.credit_rating,
+    ach_points = EXCLUDED.ach_points,
+    industry_gdp = EXCLUDED.industry_gdp,
+    save_json = EXCLUDED.save_json,
+    secret_hash = COALESCE(public.cloud_saves.secret_hash, EXCLUDED.secret_hash),
+    updated_at = NOW();
+END;
+$$;
+GRANT EXECUTE ON FUNCTION public.upsert_cloud_save(TEXT, JSONB) TO anon, authenticated;`;
+
+function genCloudSyncKey() {
+  const seg = () =>
+    Math.floor((Math.random() * 0.9 + 0.1) * 36 ** 6)
+      .toString(36)
+      .toUpperCase()
+      .slice(0, 6);
+  return `EK-${seg()}-${seg()}-${seg()}`;
+}
+function derivePidFromSyncKey(wk) {
+  const clean = String(wk || "").trim().toUpperCase(),
+    h1 = (po("euno_pid_a|" + clean) >>> 0).toString(36).toUpperCase().padStart(6, "0"),
+    h2 = (po("euno_pid_b|" + clean) >>> 0).toString(36).toUpperCase().padStart(6, "0");
+  return `EU-${h1}${h2}`;
+}
+function maskPublicId(pid) {
+  const s = String(pid || "").trim();
+  if (s.length <= 7) return s || "EU-····";
+  return `${s.slice(0, 6)}····${s.slice(-2)}`;
+}
 
 const CloudLadder = {
   ver: 0,
@@ -29919,26 +30252,36 @@ const CloudLadder = {
   local: [],
   saveCache: new Map(),
   pid: "",
+  writeKey: "",
   init() {
     try {
-      let p = localStorage.getItem("eunopolis_pid");
-      if (!p || p.length < 6) {
-        p =
-          "EU-" +
-          Math.random().toString(36).slice(2, 7).toUpperCase() +
-          Math.random().toString(36).slice(2, 7).toUpperCase();
+      let wk = localStorage.getItem("eunopolis_write_key"),
+        p = localStorage.getItem("eunopolis_pid");
+      if (!wk || !wk.startsWith("EK-") || wk.length < 12) {
+        wk = genCloudSyncKey();
+        localStorage.setItem("eunopolis_write_key", wk);
+        if (!p || p.length < 6) {
+          p = derivePidFromSyncKey(wk);
+          localStorage.setItem("eunopolis_pid", p);
+        }
+      } else if (!p || p.length < 6) {
+        p = derivePidFromSyncKey(wk);
         localStorage.setItem("eunopolis_pid", p);
       }
+      this.writeKey = wk;
       this.pid = p;
       const lr = localStorage.getItem("eunopolis_local_rivals");
       if (lr) this.local = JSON.parse(lr, (k, v) => (k === "until" && v === "Infinity" ? 1 / 0 : v)) || [];
     } catch {
-      this.pid = "EU-LOCAL0001";
+      this.writeKey = "EK-LOCAL0-000001-000001";
+      this.pid = derivePidFromSyncKey(this.writeKey);
     }
     if (this.isConfigured()) setTimeout(() => this.fetchRemote(!0), 1200);
   },
-  isEligible(st) {
-    return isRankedEligible(st || (typeof ie < "u" ? ie.state : null));
+  isEligible(st, m) {
+    const target = st || (typeof ie < "u" ? ie.state : null),
+      met = m || (target && typeof ie < "u" && target === ie.state ? ie.metrics : null);
+    return isRankedEligible(target, met);
   },
   rowMeta(r) {
     const im = r && r.industry_gdp && r.industry_gdp.__meta,
@@ -29953,7 +30296,9 @@ const CloudLadder = {
         m.board_mode ||
         (r && r.save_json && r.save_json.board_mode) ||
         (schemaVer >= 10 ? "ranked" : "legacy"),
+      plausible = isPlausibleLadderRow(r && r.unlocked, r && r.quarter, r && r.gdp, r && r.population),
       nonRanked =
+        !plausible ||
         schemaVer < 10 ||
         rawMode === "sandbox" ||
         Boolean(m.used_free_gems) ||
@@ -29962,6 +30307,7 @@ const CloudLadder = {
     return {
       schemaVer,
       ranked: !nonRanked,
+      plausible,
       originMode: m.origin_mode || (r && r.save_json && r.save_json.originMode) || "fresh",
     };
   },
@@ -29989,16 +30335,28 @@ const CloudLadder = {
       typeof ie < "u" && ie.refresh();
     }
   },
-  setPid(newPid) {
-    const p = (newPid || "").trim();
-    if (p.length < 6 || p.length > 64) return !1;
-    this.pid = p;
+  applySyncKey(rawKey) {
+    const k = String(rawKey || "").trim().toUpperCase();
+    if (!k) return { ok: !0, unchanged: !0 };
+    if (k === this.writeKey) return { ok: !0, pid: this.pid };
+    if (!k.startsWith("EK-") || k.length < 12 || k.length > 64) {
+      return {
+        ok: !1,
+        msg: k.startsWith("EU-")
+          ? "公开展示编号不可用于写入或顶替存档，请填入 EK- 开头的专属迁移密钥"
+          : "迁移密钥格式无效（需为 EK- 开头的专属密钥）",
+      };
+    }
+    const derivedPid = derivePidFromSyncKey(k);
+    this.writeKey = k;
+    this.pid = derivedPid;
     try {
-      localStorage.setItem("eunopolis_pid", p);
+      localStorage.setItem("eunopolis_write_key", k);
+      localStorage.setItem("eunopolis_pid", derivedPid);
     } catch {}
     this.ver++;
     typeof ie < "u" && ie.refresh();
-    return !0;
+    return { ok: !0, pid: derivedPid };
   },
   isConfigured() {
     const c = this.getCfg();
@@ -30009,10 +30367,10 @@ const CloudLadder = {
       h = { apikey: c.key, "Content-Type": "application/json" };
     return (c.key.startsWith("eyJ") && (h.Authorization = "Bearer " + c.key), h);
   },
-  packSave(st, m) {
-    const met = m || dt(st),
+  packSave(st) {
+    const met = dt(st),
       meta = {
-        schema_ver: 10,
+        schema_ver: 11,
         board_mode: "ranked",
         origin_mode: "fresh",
         used_free_gems: !1,
@@ -30028,7 +30386,7 @@ const CloudLadder = {
     const slim = JSON.parse(
       QQ({
         ...st,
-        schema_ver: 10,
+        schema_ver: 11,
         board_mode: "ranked",
         __meta: meta,
         log: (st.log || []).slice(-20),
@@ -30061,6 +30419,7 @@ const CloudLadder = {
       if (meta.ranked) {
         list.push({
           ...r,
+          public_tag: maskPublicId(r.player_id),
           schema_ver: meta.schemaVer,
           origin_mode: meta.originMode,
         });
@@ -30098,28 +30457,36 @@ const CloudLadder = {
       typeof ie < "u" && ie.refresh();
     }
   },
-  async uploadSave(st, m) {
-    if (!isRankedEligible(st)) {
-      typeof ie < "u" && ie.toast("该历史存档无法参榜，请从原点开启新局", "warn");
-      return { ok: !1, msg: "存档不符合天梯条件" };
+  async uploadSave(st) {
+    const freshMet = st ? dt(st) : null;
+    if (!isRankedEligible(st, freshMet)) {
+      typeof ie < "u" && ie.toast("当前存档数据异常或不符合排位规则，无法上传天梯", "warn");
+      return { ok: !1, msg: "存档不符合天梯排位校验条件" };
     }
     if (!this.isConfigured()) {
       typeof ie < "u" && ie.openModal({ type: "cloudCfg" });
       return { ok: !1, msg: "请先配置 Supabase 云端地址与密钥" };
     }
     const c = this.getCfg(),
-      payload = this.packSave(st, m);
+      payload = this.packSave(st);
     ((this.uploading = !0), (this.error = null));
     typeof ie < "u" && ie.refresh();
     try {
-      const res = await fetch(`${c.url}/rest/v1/cloud_saves?on_conflict=player_id`, {
+      let rpcRes = await fetch(`${c.url}/rest/v1/rpc/upsert_cloud_save`, {
         method: "POST",
-        headers: { ...this.headers(), Prefer: "resolution=merge-duplicates,return=minimal" },
-        body: QQ(payload),
+        headers: this.headers(),
+        body: QQ({ p_write_key: this.writeKey, p_row: payload }),
       });
-      if (!res.ok) {
-        const txt = await res.text().catch(() => "");
-        throw new Error(`HTTP ${res.status} ${txt.slice(0, 80)}`);
+      if (rpcRes.status === 404) {
+        rpcRes = await fetch(`${c.url}/rest/v1/cloud_saves?on_conflict=player_id`, {
+          method: "POST",
+          headers: { ...this.headers(), Prefer: "resolution=merge-duplicates,return=minimal" },
+          body: QQ(payload),
+        });
+      }
+      if (!rpcRes.ok) {
+        const txt = await rpcRes.text().catch(() => "");
+        throw new Error(`HTTP ${rpcRes.status} ${txt.slice(0, 80)}`);
       }
       this.saveCache.set(this.pid, payload.save_json);
       await this.fetchRemote(!0);
@@ -30157,10 +30524,10 @@ const CloudLadder = {
   importLocalRival(rawText) {
     const parsed = lQ(rawText);
     if (!parsed) return { ok: !1, msg: "无法识别的存档文件" };
-    if (!isRankedEligible(parsed)) return { ok: !1, msg: "仅支持正常开荒存档导入天梯比拼" };
-    const m = dt(parsed),
-      meta = {
-        schema_ver: 10,
+    const m = dt(parsed);
+    if (!isRankedEligible(parsed, m)) return { ok: !1, msg: "仅支持数据合规的正常开荒存档导入天梯比拼" };
+    const meta = {
+        schema_ver: 11,
         board_mode: "ranked",
         origin_mode: "fresh",
         used_free_gems: !1,
@@ -30230,6 +30597,7 @@ function _I(A, e, t = Date.now(), realList = [], onlyReal = !0, meMeta = {}) {
     gdp: Number(r.gdp) || 0,
     real: !0,
     pid: r.player_id,
+    publicTag: r.public_tag || maskPublicId(r.player_id),
     credit: r.credit_rating || "AAA",
     achPts: r.ach_points || 0,
     quarter: r.quarter || 0,
@@ -30513,6 +30881,12 @@ class fp {
       }
       this.state.demoDay && (this.state.usedFreeGems = !0);
     }
+    if (f.ok && this.state._justBuiltMonument) {
+      const monData = this.state._justBuiltMonument;
+      delete this.state._justBuiltMonument;
+      Ht("complete");
+      this.modal = { type: "monumentComplete", data: monData };
+    }
     return (
       f.ok && sp(n, v9(this.state)),
       f.ok && !(f.data && Array.isArray(f.data.assignment)) && this.offerBackfill(s),
@@ -30726,6 +31100,16 @@ class fp {
       this.openModal({ type: "event" });
       return;
     }
+    if (e.tiles.filter((o) => o.unlocked).length <= 1) {
+      e.lord.roll = 0;
+      const ft = findCheapestFrontierTile(e);
+      this.panel = null;
+      this.modal = null;
+      if (ft) this.focusTile(ft.id);
+      this.toast("当前仅解锁首都：已定位首块可开拓邻格，开拓后即可出巡调研（未消耗体力）", "info");
+      this.emit();
+      return;
+    }
     if (e.lord.roll) {
       this.beginMove();
       return;
@@ -30863,6 +31247,16 @@ class fp {
   }
   beginMove() {
     const e = this.state;
+    if (e.tiles.filter((o) => o.unlocked).length <= 1) {
+      e.lord.roll = 0;
+      const ft = findCheapestFrontierTile(e);
+      this.panel = null;
+      this.modal = null;
+      if (ft) this.focusTile(ft.id);
+      this.toast("当前仅解锁首都：已定位首块可开拓邻格，开拓后即可出巡调研", "info");
+      this.emit();
+      return;
+    }
     if (!e.lord.roll) return;
     const t = p7(e, e.lord.roll);
     if (!t.size) {
@@ -30958,7 +31352,7 @@ class fp {
     );
   }
   get ladder() {
-    const elig = isRankedEligible(this.state),
+    const elig = isRankedEligible(this.state, this.metrics),
       rp = CloudLadder.allRealPlayers(),
       e = `${Math.floor(Date.now() / 36e5)}|${CloudLadder.ver}|${elig ? 1 : 0}|${this.state.nationName}|${this.metrics.gdp.toFixed(2)}|${this.metrics.creditRating}`;
     return (
@@ -31104,11 +31498,23 @@ class fp {
         { label: "看看", run: () => this.focusTile(n) },
       );
     }
+    if (this.state._justBuiltMonument) {
+      const monData = this.state._justBuiltMonument;
+      delete this.state._justBuiltMonument;
+      Ht("complete");
+      if (!this.modal) this.modal = { type: "monumentComplete", data: monData };
+    }
     if (this.state._justCompletedFyp) {
       const fypData = this.state._justCompletedFyp;
       delete this.state._justCompletedFyp;
       Ht("complete");
       if (!this.modal) this.modal = { type: "fypCelebrate", data: fypData };
+    }
+    if (this.state._justExpiredFyp) {
+      const expData = this.state._justExpiredFyp;
+      delete this.state._justExpiredFyp;
+      Ht("event");
+      if (!this.modal) this.modal = { type: "fypExpire", data: expData };
     }
     this.refresh();
   }
@@ -31181,17 +31587,22 @@ function op() {
       .filter((o) => o.build || o.upBuild)
       .sort((o, r) => (o.build || o.upBuild).left - (r.build || r.upBuild).left),
     s = Math.max(0, t.buildSlots - n.length),
+    hasEmpty = e.tiles.some(
+      (r) => r.unlocked && !r.capital && !r.industry && !r.public && !r.build && r.wonderHost == null,
+    ),
     f = () => {
-      if (
-        !e.tiles.some(
-          (r) =>
-            r.unlocked && !r.capital && !r.industry && !r.public && !r.build && r.wonderHost == null,
-        )
-      ) {
-        A.toast("国内没有空地了，先开拓一块新的土地", "info");
+      if (!hasEmpty) {
+        const ft = findCheapestFrontierTile(e);
+        if (ft) {
+          A.filter = null;
+          CQ(ft.id);
+          A.toast(`当前暂无空地，已定位可开拓邻格 #${ft.id}`, "info");
+        } else {
+          A.toast("当前暂无可开拓空地，请先升级首都提升疆域上限", "info");
+        }
         return;
       }
-      ((A.filter = "empty"), A.select(null), A.toast("拎起来的都是空地，点一块就能开工", "info"));
+      ((A.filter = "empty"), A.select(null), A.toast("已高亮全部可建设空地，点选即可开工", "info"));
     };
   return w("div", {
     class: `crews${s ? " has-idle" : ""}`,
@@ -31242,14 +31653,17 @@ function op() {
       }),
       s > 0 &&
         w("button", {
-          class: "crew idle",
-          title: "点击高亮全国可建设空地",
+          class: `crew idle${!hasEmpty ? " go-expand" : ""}`,
+          title: hasEmpty ? "点击高亮全国可建设空地" : "国内暂无空地，点击定位造价最低的可开拓邻格",
           onClick: f,
           children: [
             w(NA, { node: Ae.hammer, size: 14 }),
             w("span", {
               class: "crew-text",
-              children: [w("b", { children: [s, " 支空闲"] }), w("small", { children: "定位空地" })],
+              children: [
+                w("b", { children: [s, " 支空闲"] }),
+                w("small", { children: hasEmpty ? "定位空地" : "去开拓" }),
+              ],
             }),
           ],
         }),
@@ -31260,11 +31674,13 @@ function ip() {
   const A = Pe(),
     e = A.state,
     t = e.lord,
-    n = e.tiles[t.tile];
+    n = e.tiles[t.tile],
+    lordLbl = fmtLordTitle(t.name),
+    lordInl = fmtLordInline(t.name);
   return w("button", {
     class: `lord-chip${t.pendingEvent ? " alert" : ""}`,
-    "aria-label": `主公${t.name}，现在在${n ? Ws(n) : "首都"}`,
-    "data-tip-title": `主公 ${t.name} · 在${n ? Ws(n) : "首都"}`,
+    "aria-label": `${lordInl}，现在在${n ? Ws(n) : "首都"}`,
+    "data-tip-title": `${lordLbl} · 在${n ? Ws(n) : "首都"}`,
     "data-tip": t.pendingEvent ? "! 有一件事等你定夺，点一下去处理" : "点一下，镜头移到主公所在的地块",
     onClick: () => (t.pendingEvent ? A.openModal({ type: "event" }) : CQ(t.tile)),
     children: w(hQ, { size: 46 }),
@@ -31272,7 +31688,7 @@ function ip() {
 }
 const EQ = ["survey", "supervise", "mentor", "trade", "govern"],
   T0 = {
-    survey: "掷骰子，掷出几点主公最多飞几格；路过有收获，停下积累民情洞察并可能触发巡察事件（不限次数）",
+    survey: "掷骰子，掷出几点主公最多飞几格；路过有收获，停下积累体制洞察并可能触发巡察事件（不限次数）",
     supervise: `督办一处在建、技改或扩建工程：常规工程削减剩余工期 ${Math.round(O.superviseCut * 100)}%，国家奇观每次推进 ${O.wonderSuperviseStep || 3}–${(O.wonderSuperviseStep || 3) + 1} 季（6 格充能池，每 60 分钟回复 1 次）`,
     mentor: `直接给一位人物升 1–${O.diceMax} 级（掷骰子），有机会一步升到关口（8 格充能池，每 40 分钟回复 1 次）`,
     trade: "把一块地的资源置换为符合本格地形的同品质资源并创汇入库（基础 4 格充能池，每 3 小时回复 1 次）",
@@ -31760,7 +32176,7 @@ function If(A, e, t, n = {}) {
         },
         {
           q: "产业、市政设施与国家奇观有什么区别？",
-          a: `75 种「产业」分五级（造价 ${Li(O.buildCost)} 亿，工期 ${Li(O.buildTime)} 季，开国前 ${O.foundingBuilds} 次建设半价${jo(e) > 0 ? `，还剩 ${jo(e)} 次` : ""}）；24 种「市政设施」占 1 格、每种全国限建 3 座、可升至 Lv.3；8 座「国家奇观」为唯一巨构，需相连 3 格空地三角（地图金色三角框高亮，点击任意合法角自动对齐锚点），最高可升至 Lv.5。`,
+          a: `75 种「产业」分五级（造价 ${Li(O.buildCost)} 亿，工期 ${Li(O.buildTime)} 季，开国前 ${O.foundingBuilds} 次建设半价且工期 −1 季${jo(e) > 0 ? `，还剩 ${jo(e)} 次` : ""}）；24 种「市政设施」占 1 格、每种全国限建 3 座、可升至 Lv.3；8 座「国家奇观」为唯一巨构，需相连 3 格空地三角（地图金色三角框高亮，点击任意合法角自动对齐锚点），最高可升至 Lv.5。`,
         },
         {
           q: "施工队上限怎么增加？怎么加快工期？",
@@ -31875,7 +32291,7 @@ function If(A, e, t, n = {}) {
         },
         Cg(),
         {
-          q: "15 个架空终局产业怎么解锁？",
+          q: "16 个架空终局产业怎么解锁？",
           a: `需首都升至 Lv.${O.fictionCapital}、国内拥有至少 ${O.fictionDiversity} 种运转产业，并备齐该产业所需的上游产物或外环奇异资源。`,
         },
       ];
@@ -32695,14 +33111,17 @@ function CloudInspectModal({ entry: E }) {
       live = !1;
     };
   }, [E.pid]);
+  const pubTag = E.publicTag || maskPublicId(E.pid);
   const dlSave = () => {
     if (!snap) return;
     const safeName = String(snap.state.nationName ?? "nation").slice(0, 32),
-      bl = new Blob([QQ(snap.state)], { type: "application/json" }),
+      cleanState = { ...snap.state };
+    delete cleanState.__meta;
+    const bl = new Blob([QQ(cleanState)], { type: "application/json" }),
       u = URL.createObjectURL(bl),
       a = document.createElement("a");
     ((a.href = u),
-      (a.download = `eunopolis_${safeName}_${E.pid}.json`),
+      (a.download = `eunopolis_${safeName}_${pubTag.replace(/·+/g, "_")}.json`),
       a.click(),
       setTimeout(() => URL.revokeObjectURL(u), 1e3));
     A.toast("已下载该玩家存档副本", "good");
@@ -32710,7 +33129,7 @@ function CloudInspectModal({ entry: E }) {
   return w(Cn, {
     cls: "cloud-modal",
     title: `国家参观 · ${E.name}`,
-    sub: `玩家 ID: ${E.pid} · ${E.source === "local" ? "本地导入存档" : "全球云端天梯"}`,
+    sub: `公开档案编号: ${pubTag} · ${E.source === "local" ? "本地导入存档" : "全球云端天梯"}`,
     children: [
       loading
         ? w("p", { class: "hint", children: "正在拉取并由游戏引擎实时验算该玩家存档…" })
@@ -32814,7 +33233,8 @@ function CloudConfigModal() {
     cfg = CloudLadder.getCfg();
   const [url, setUrl] = gt(cfg.url),
     [key, setKey] = gt(cfg.key),
-    [pid, setPid] = gt(CloudLadder.pid),
+    [syncKey, setSyncKey] = gt(CloudLadder.writeKey),
+    [showKey, setShowKey] = gt(!1),
     [busy, setBusy] = gt(!1),
     [showSqlBox, setShowSqlBox] = gt(!1),
     sqlRef = us(null);
@@ -32834,10 +33254,23 @@ function CloudConfigModal() {
       A.toast("剪贴板受限，已在下方展开建表 SQL 并自动全选，按 Ctrl+C / Cmd+C 复制即可", "info");
     }
   };
+  const copyMySyncKey = async () => {
+    try {
+      await navigator.clipboard.writeText(syncKey.trim());
+      A.toast("已复制专属迁移密钥，请妥善保管，切勿公开分享", "good");
+    } catch {
+      setShowKey(!0);
+      A.toast("已显示专属迁移密钥，可手动复制保存", "info");
+    }
+  };
   const onSave = () => {
-    CloudLadder.setPid(pid);
+    const res = CloudLadder.applySyncKey(syncKey);
+    if (!res.ok) {
+      A.toast(res.msg || "迁移密钥格式有误", "warn");
+      return;
+    }
     CloudLadder.saveCfg(url, key);
-    A.toast(url && key ? "云端配置已保存，正在连接 Supabase…" : "已清空云端配置，切回本地混合模式", "good");
+    A.toast(url && key ? "云端同步凭证已保存" : "已清空云端配置，切回离线模式", "good");
     A.openModal(null);
   };
   const onRestore = async () => {
@@ -32845,12 +33278,17 @@ function CloudConfigModal() {
       A.toast("请先填写并保存 Supabase 配置", "warn");
       return;
     }
+    const keyChk = CloudLadder.applySyncKey(syncKey);
+    if (!keyChk.ok) {
+      A.toast(keyChk.msg || "请填入有效的 EK- 专属迁移密钥", "warn");
+      return;
+    }
     setBusy(!0);
     try {
-      const raw = await CloudLadder.fetchPlayerSave(pid.trim() || CloudLadder.pid);
+      const raw = await CloudLadder.fetchPlayerSave(CloudLadder.pid);
       const parsed = raw && lQ(typeof raw === "string" ? raw : QQ(raw));
       if (!parsed) {
-        A.toast("云端未找到该玩家 ID 对应的存档", "warn");
+        A.toast("云端未找到该迁移密钥对应的存档", "warn");
         setBusy(!1);
         return;
       }
@@ -32860,7 +33298,6 @@ function CloudConfigModal() {
         body: `将用云端「${parsed.nationName}」（${Ng(parsed.quarter)}）覆盖当前本地进度。`,
         okText: "立即恢复",
         onOk: () => {
-          CloudLadder.setPid(pid);
           A.replaceState(parsed);
           A.toast("已从云端恢复存档", "gold");
         },
@@ -32877,16 +33314,51 @@ function CloudConfigModal() {
     cls: "cloud-modal",
     title: hasOfficial ? "全服云端档案与天梯" : "云端天梯设置（Supabase）",
     sub: hasOfficial
-      ? "已内置官方全球天梯服务器，无需配置即可直接上传存档参榜与跨设备同步"
+      ? "采用公开档案编号与私有迁移密钥分离机制，跨设备同步请使用专属迁移密钥"
       : "绑定任意免费 Supabase 项目即可开启全球玩家存档上传参榜与跨设备云存档",
     children: [
       w("div", {
         class: "cc-form",
         children: [
+          w("div", {
+            class: "fine",
+            style: "display:flex;justify-content:space-between;align-items:center;padding:6px 10px;border-radius:8px;background:rgba(255,255,255,.04);border:1px solid rgba(160,200,240,.14)",
+            children: [
+              w("span", { children: `公开展示编号：${maskPublicId(CloudLadder.pid)}` }),
+              w("span", { style: "color:var(--muted)", children: "仅用于榜单展示，不可写入" }),
+            ],
+          }),
           w("label", {
             children: [
-              w("span", { children: "我的玩家 ID（换设备填同一 ID 可同步云存档）" }),
-              w("input", { type: "text", value: pid, onInput: (ev) => setPid(ev.target.value) }),
+              w("span", {
+                style: "display:flex;justify-content:space-between;align-items:center;gap:8px",
+                children: [
+                  "专属跨设备迁移密钥（EK- 开头，请勿泄露）",
+                  w("span", {
+                    style: "display:inline-flex;gap:6px",
+                    children: [
+                      w("button", {
+                        type: "button",
+                        class: "btn tiny",
+                        onClick: () => setShowKey(!showKey),
+                        children: showKey ? "隐藏" : "显示",
+                      }),
+                      w("button", {
+                        type: "button",
+                        class: "btn tiny",
+                        onClick: copyMySyncKey,
+                        children: "复制密钥",
+                      }),
+                    ],
+                  }),
+                ],
+              }),
+              w("input", {
+                type: showKey ? "text" : "password",
+                value: syncKey,
+                placeholder: "EK-XXXXXX-XXXXXX-XXXXXX",
+                onInput: (ev) => setSyncKey(ev.target.value),
+              }),
             ],
           }),
           hasOfficial &&
@@ -32982,7 +33454,7 @@ function CloudConfigModal() {
           w("button", {
             class: "btn primary",
             onClick: onSave,
-            children: hasOfficial && !showAdv ? "保存玩家 ID" : "保存并连接",
+            children: hasOfficial && !showAdv ? "保存同步密钥" : "保存并连接",
           }),
         ],
       }),
@@ -33040,6 +33512,10 @@ function hp() {
       return typeof FypPreviewModal === "function" ? w(FypPreviewModal, { planId: e.planId, m: e }) : null;
     case "fypCelebrate":
       return typeof FypCelebrateModal === "function" ? w(FypCelebrateModal, { data: e.data, m: e }) : null;
+    case "fypExpire":
+      return typeof FypExpireModal === "function" ? w(FypExpireModal, { data: e.data, m: e }) : null;
+    case "monumentComplete":
+      return typeof MonumentCompleteModal === "function" ? w(MonumentCompleteModal, { data: e.data, m: e }) : null;
     case "debtConfirm":
       return typeof DebtConfirmModal === "function" ? w(DebtConfirmModal, { m: e }) : null;
     case "autoDeploy":
@@ -33136,10 +33612,70 @@ function dp() {
     .slice(0, Io)
     .map((e) => Rs[e * 2 + (Math.random() < 0.5 ? 0 : 1)].id);
 }
+const NATION_NAME_POOL = [
+    "澄海共和国",
+    "云泽联邦",
+    "东洲合众国",
+    "星湾共同体",
+    "澜沧共和国",
+    "北辰联邦",
+    "沧溟合众国",
+    "岱宗共和国",
+    "江淮共同体",
+    "昆仑联邦",
+    "海岳共和国",
+    "长风合众国",
+    "天枢共同体",
+    "镜湖共和国",
+    "朔方联邦",
+    "南溟合众国",
+    "青川共和国",
+    "钧天联邦",
+    "平澜共同体",
+    "九域共和国",
+    "昭明联邦",
+    "紫微合众国",
+    "云梦共和国",
+    "瀚海共同体",
+  ],
+  LORD_NAME_POOL = [
+    "林致远",
+    "沈怀瑾",
+    "周明哲",
+    "顾慎行",
+    "陈景行",
+    "苏清河",
+    "陆知行",
+    "叶崇光",
+    "方承泽",
+    "许慎之",
+    "谢观澜",
+    "温敬之",
+    "唐修远",
+    "秦望舒",
+    "江行简",
+    "宋承业",
+    "夏云帆",
+    "梁思齐",
+    "严复礼",
+    "纪衡",
+  ];
+function pickRandName(pool, cur) {
+  const flt = pool.filter((x) => x !== cur);
+  const src = flt.length ? flt : pool;
+  return src[Math.floor(Math.random() * src.length)];
+}
+let _mapViews = null;
 function xp() {
   const A = Pe(),
-    [e, t] = gt("主公"),
-    [n, s] = gt(A.modal && A.modal.fromTitle ? "经世共和国" : A.state.nationName),
+    isNewStart = Boolean(
+      (A.modal && A.modal.fromTitle) ||
+        (A.state.lord.ready === !1 && (!A.state.nationName || A.state.nationName === "经世共和国")),
+    ),
+    [e, t] = gt(() => (isNewStart ? pickRandName(LORD_NAME_POOL, "") : A.state.lord.name || "主公")),
+    [n, s] = gt(() =>
+      isNewStart ? pickRandName(NATION_NAME_POOL, "") : A.state.nationName || pickRandName(NATION_NAME_POOL, ""),
+    ),
     [f, o] = gt(Eg[0].ids),
     r = Eg.find((c) => c.ids.length === f.length && c.ids.every((g) => f.includes(g))),
     i = Dn(() => {
@@ -33157,7 +33693,7 @@ function xp() {
   return w(Cn, {
     wide: !0,
     title: "主公就任",
-    sub: "给国家和主公各起个名字，选一套性格就能开始。每条性格都有好处和代价，隐藏性格会在游戏中自动获得。",
+    sub: "拟定国号与执政者署名，并选定初始执政性格。每条性格兼具增益与代价，隐藏特质将在执政进程中自动获得。",
     onClose: () => {
       if (A.modal && A.modal.fromTitle) {
         ie.openModal({ type: "title" });
@@ -33178,11 +33714,26 @@ function xp() {
           w("label", {
             class: "field",
             children: [
-              "国家名字",
+              w("span", {
+                class: "field-lb-row",
+                children: [
+                  "国家名字",
+                  w("button", {
+                    type: "button",
+                    class: "dice-inline-btn",
+                    title: "随机更换国号",
+                    onClick: (ev) => {
+                      ev.preventDefault();
+                      s((cur) => pickRandName(NATION_NAME_POOL, cur));
+                    },
+                    children: [w(_e, { name: "dice", size: 12 }), " 随机"],
+                  }),
+                ],
+              }),
               w("input", {
                 value: n,
                 maxLength: 14,
-                placeholder: "经世共和国",
+                placeholder: "输入或随机生成国号",
                 onInput: (c) => s(c.target.value),
               }),
             ],
@@ -33190,8 +33741,28 @@ function xp() {
           w("label", {
             class: "field",
             children: [
-              "主公名字",
-              w("input", { value: e, maxLength: 10, placeholder: "主公", onInput: (c) => t(c.target.value) }),
+              w("span", {
+                class: "field-lb-row",
+                children: [
+                  "主公名字",
+                  w("button", {
+                    type: "button",
+                    class: "dice-inline-btn",
+                    title: "随机更换主公姓名",
+                    onClick: (ev) => {
+                      ev.preventDefault();
+                      t((cur) => pickRandName(LORD_NAME_POOL, cur));
+                    },
+                    children: [w(_e, { name: "dice", size: 12 }), " 随机"],
+                  }),
+                ],
+              }),
+              w("input", {
+                value: e,
+                maxLength: 10,
+                placeholder: "主公",
+                onInput: (c) => t(c.target.value),
+              }),
             ],
           }),
         ],
@@ -33217,7 +33788,7 @@ function xp() {
           w("button", {
             class: "preset random",
             onClick: () => o(dp()),
-            children: [w("b", { children: "随机" }), w("small", { children: "交给命运" })],
+            children: [w("b", { children: "随机" }), w("small", { children: "随机组合" })],
           }),
         ],
       }),
@@ -33272,14 +33843,16 @@ function xp() {
           w("button", {
             class: "btn primary",
             onClick: () => {
+              const finalNation = n.trim() || pickRandName(NATION_NAME_POOL, ""),
+                finalLord = e.trim() || "主公";
               if ((A.modal && A.modal.fromTitle) || A.state.lord.ready !== !1) {
                 A.newGame("fresh", {
                   traits: f,
-                  lordName: e.trim() || "主公",
-                  nationName: n.trim() || "经世共和国",
+                  lordName: finalLord,
+                  nationName: finalNation,
                 });
               } else {
-                A.act((g) => j4(g, f, e.trim() || "主公", n)).ok && A.openModal(null);
+                A.act((g) => j4(g, f, finalLord, finalNation)).ok && A.openModal(null);
               }
             },
             children: "就任",
@@ -33453,7 +34026,9 @@ function FypPreviewModal({ planId }) {
     metAfter = Y8(st, (sim) => {
       sim.fyp = { id: plan.id, startQ: sim.quarter, endQ: sim.quarter + 20 };
     }),
-    estCash = Math.round(Math.max(40, metAfter.gdp * (plan.gdpMult || 2))),
+    rawCash = metAfter.gdp * (plan.gdpMult || 2),
+    isFloorCash = rawCash < 40,
+    estCash = Math.round(Math.max(40, rawCash)),
     buffPills = (plan.pros || "").split(" · ").filter(Boolean),
     curUnlocks = met.unlocked ?? st.tiles.filter((z) => z.unlocked).length,
     maxT = st.tiles.length;
@@ -33507,7 +34082,12 @@ function FypPreviewModal({ planId }) {
           w("div", {
             class: "fyp-rwd-row",
             children: [
-              w("span", { class: "chip chip-gold", children: `国库拨付 +${fe(estCash, 0)} 亿（${plan.gdpMult} 季 GDP）` }),
+              w("span", {
+                class: "chip chip-gold",
+                children: isFloorCash
+                  ? "国库拨付 +40 亿（保底 40 亿）"
+                  : `国库拨付 +${fe(estCash, 0)} 亿（${plan.gdpMult} 季 GDP）`,
+              }),
               w("span", { class: "chip chip-info", children: `星钻 ◇${plan.gems}` }),
               insText && w("span", { class: "chip chip-ok", children: insText }),
             ],
@@ -33539,7 +34119,7 @@ function FypCelebrateModal({ data }) {
     plan = (d.id && FYP_MAP[d.id]) || (d.planId && FYP_MAP[d.planId]) || null,
     insText =
       d.dir === "all"
-        ? "四向民情洞察各 +1"
+        ? "四向体制洞察各 +1"
         : d.dir && INSIGHT_DIRS[d.dir]
           ? `${INSIGHT_DIRS[d.dir].name} +3`
           : "";
@@ -33600,6 +34180,205 @@ function FypCelebrateModal({ data }) {
             },
             children: "立项下一轮规划 →",
           }),
+        ],
+      }),
+    ],
+  });
+}
+function FypExpireModal({ data }) {
+  const A = Pe(),
+    d = data || {},
+    plan = (d.id && FYP_MAP[d.id]) || (d.planId && FYP_MAP[d.planId]) || null,
+    pName = d.name || (plan && plan.name) || "五年规划",
+    pct = Math.max(0, Math.min(99, Number(d.prog) || 0));
+  return w(Cn, {
+    cls: "fyp-celebrate-modal fyp-expire-modal",
+    title: "五年规划届满结项 · 未达标",
+    sub: `第 ${d.num || 1} 轮五年规划「${pName}」已满 20 个季度周期，考核指标未完全达成`,
+    children: [
+      w("div", {
+        class: "fyp-ribbon warn",
+        children: [
+          w("span", { class: "fr-badge warn", children: "届满未达标" }),
+          w("strong", { children: `「${pName}」最终完成度 ${pct}%` }),
+        ],
+      }),
+      w("div", {
+        class: "kpis",
+        children: [
+          w("div", {
+            class: "kpi warn",
+            children: [
+              w("span", { children: "指标完成度" }),
+              w("strong", { children: `${pct}%` }),
+            ],
+          }),
+          w("div", {
+            class: "kpi",
+            children: [
+              w("span", { children: "规划期常驻增益" }),
+              w("strong", { class: "muted", children: "20 季已结束" }),
+            ],
+          }),
+          w("div", {
+            class: "kpi",
+            children: [
+              w("span", { children: "结项拨款" }),
+              w("strong", { class: "muted", children: "未触发结算" }),
+            ],
+          }),
+        ],
+      }),
+      (d.kpiDesc || (plan && plan.kpiDesc)) &&
+        w("p", {
+          class: "hint",
+          children: `原考核要求：${d.kpiDesc || plan.kpiDesc}。立项新规划零国库零体力消耗，建议立即衔接下一轮五年规划以维持全局乘区增益。`,
+        }),
+      w("div", {
+        class: "actions end",
+        children: [
+          w("button", { class: "btn ghost", onClick: () => A.openModal(null), children: "稍后处理" }),
+          w("button", {
+            class: "btn gold",
+            onClick: () => {
+              ie._govTab = "cabinet";
+              A.openModal(null);
+              A.panel = "policy";
+              A.emit();
+              setTimeout(() => {
+                const el = document.getElementById("gov-sec-fyp");
+                el && el.scrollIntoView && el.scrollIntoView({ behavior: "smooth", block: "start" });
+              }, 60);
+            },
+            children: "重新立项 →",
+          }),
+        ],
+      }),
+    ],
+  });
+}
+function MonumentCompleteModal({ data }) {
+  const A = Pe(),
+    d = data || {},
+    isCap = d.kind === "capital6",
+    wDef = !isCap && d.id ? it[d.id] : null,
+    statSegs = !isCap && (d.stat || (wDef && wDef.stat))
+      ? String(d.stat || wDef.stat)
+          .replace(/^全国唯一\s*·\s*/, "")
+          .split(/\s*·\s*/)
+          .filter(Boolean)
+      : [];
+  return w(Cn, {
+    cls: "fyp-celebrate-modal monument-complete-modal",
+    title: isCap ? "国家中枢满级落成 · 首都 Lv.6" : "国家奇观落成典仪",
+    sub: isCap
+      ? `${Ng(d.quarter || A.state.quarter)} · 行政与经济中枢升至最高等级，全境终局建制正式开放`
+      : `${Ng(d.quarter || A.state.quarter)} · 三格国家级地标巨构「${d.name || (wDef && wDef.name) || "国家奇观"}」竣工投用`,
+    children: [
+      w("div", {
+        class: "fyp-ribbon monument-ribbon",
+        children: [
+          isCap
+            ? w("span", { class: "monument-ico cap", children: w(NA, { node: Ae.crown, size: 26, stroke: 2.2 }) })
+            : w(vn, { pub: d.id, size: 44 }),
+          w("div", {
+            class: "monument-head-txt",
+            children: [
+              w("span", { class: "fr-badge", children: isCap ? "中枢满级" : "国家奇观 · Lv.1" }),
+              w("strong", { children: isCap ? "首都升至最高等级 Lv.6" : d.name || (wDef && wDef.name) }),
+            ],
+          }),
+        ],
+      }),
+      isCap
+        ? w("div", {
+            class: "kpis",
+            children: [
+              w("div", {
+                class: "kpi",
+                children: [
+                  w("span", { children: "全境国土上限" }),
+                  w("strong", { class: "gold", children: `${d.maxTiles || 217} 格全开` }),
+                ],
+              }),
+              w("div", {
+                class: "kpi",
+                children: [
+                  w("span", { children: "终局产业图谱" }),
+                  w("strong", { class: "up", children: "16 项架空开放" }),
+                ],
+              }),
+              w("div", {
+                class: "kpi",
+                children: [
+                  w("span", { children: "主公执政体力" }),
+                  w("strong", { children: `上限 ${d.staminaCap || 18} 点` }),
+                ],
+              }),
+            ],
+          })
+        : w("div", {
+            class: "kpis",
+            children: [
+              w("div", {
+                class: "kpi",
+                children: [
+                  w("span", { children: "全国宜居提升" }),
+                  w("strong", { class: "up", children: `+${d.livability || (wDef && wDef.livability) || 12}` }),
+                ],
+              }),
+              w("div", {
+                class: "kpi",
+                children: [
+                  w("span", { children: "巨构扩建上限" }),
+                  w("strong", { class: "gold", children: "最高 Lv.5" }),
+                ],
+              }),
+              w("div", {
+                class: "kpi",
+                children: [
+                  w("span", { children: d.wGem > 0 ? "地标工程奖励" : "辐射基座" }),
+                  w("strong", {
+                    style: d.wGem > 0 ? "color:var(--violet)" : "",
+                    children: d.wGem > 0 ? `◇${d.wGem}` : "三格永久生效",
+                  }),
+                ],
+              }),
+            ],
+          }),
+      !isCap &&
+        statSegs.length > 0 &&
+        w("div", {
+          class: "fyp-doc-sec",
+          style: "margin-top:8px",
+          children: [
+            w("h4", { children: "永久国家增益与扩建成长" }),
+            w("div", {
+              class: "fyp-rwd-row",
+              children: statSegs.map((sg, idx) =>
+                w("span", { class: idx === 0 ? "chip chip-gold" : "chip chip-info", children: sg }, idx),
+              ),
+            }),
+          ],
+        }),
+      isCap &&
+        w("p", {
+          class: "hint ex-hint",
+          children: "首都已达最高行政建制：外环全部疆域、16 项架空终局产业与全部国家奇观 Lv.5 扩建权限均已解锁。",
+        }),
+      w("div", {
+        class: "actions end",
+        children: [
+          w("button", { class: "btn ghost", onClick: () => A.openModal(null), children: "继续执政" }),
+          d.tile !== void 0 &&
+            w("button", {
+              class: "btn gold",
+              onClick: () => {
+                A.openModal(null);
+                A.focusTile(d.tile);
+              },
+              children: isCap ? "检视首都 →" : "检视奇观 →",
+            }),
         ],
       }),
     ],
@@ -34180,9 +34959,12 @@ function pp({ tile: A, tab: e }) {
     [oRaw, r] = gt(e),
     o = (oRaw === "public" && !pubOpen) || (oRaw === "wonder" && !wonOpen) ? "industry" : oRaw,
     [i, v] = gt("ok"),
-    [pFil, setPFil] = gt("ok"),
+    [pFil, setPFil] = gt("auto"),
     beMods = be(n).mods,
     availInds = Dn(() => Ee.filter((x) => isIndVisibleV1(n, x)), [t.version, nStage]);
+  $t(() => {
+    if (e) r(e);
+  }, [e]);
   const triInfo = Dn(
     () =>
       o === "wonder" && typeof allWonderTriangles == "function"
@@ -34192,7 +34974,7 @@ function pp({ tile: A, tab: e }) {
   );
   $t(() => {
     const syncMap = () => {
-      const vs = window.__views;
+      const vs = _mapViews;
       if (!vs) return;
       const viewInst = !t.webglFailed && ie.state.settings.view === "3d" ? vs.d3 : vs.d2;
       viewInst == null || viewInst.update(ie.state, ie.metrics, ie.selected, null, ie.placement);
@@ -34294,11 +35076,13 @@ function pp({ tile: A, tab: e }) {
     B = (d) => isHarvestMatch(d) || isExoticMatch(d),
     a = o === "industry" ? c.filter(B) : [],
     Q = P ? Ee.filter((d) => d.needs.some((x) => x.includes(P.name))) : [],
+    pubOkCnt = o === "public" ? c.filter((d) => d.ok).length : 0,
+    effPFil = pFil === "auto" ? (pubOkCnt > 0 ? "ok" : "all") : pFil,
     l = (
       o === "wonder"
         ? c
         : o === "public"
-          ? c.filter((d) => (pFil === "ok" ? d.ok : pFil === "all" ? !0 : it[d.id] && it[d.id].cat === pFil))
+          ? c.filter((d) => (effPFil === "ok" ? d.ok : effPFil === "all" ? !0 : it[d.id] && it[d.id].cat === effPFil))
           : c.filter((d) => (i === "ok" ? d.ok : i === "all" ? !0 : HA[d.id].sector === i))
     ).filter((d) => !B(d)),
     u = s.buildsActive >= s.buildSlots,
@@ -34580,7 +35364,7 @@ function pp({ tile: A, tab: e }) {
         s.creditUsed,
         "/",
         s.creditLimit,
-        E > 0 && o === "industry" ? ` · 开国优惠：还有 ${E} 次半价` : "",
+        E > 0 && o === "industry" ? ` · 开国优惠：还有 ${E} 次半价且工期 −1 季` : "",
       ],
     }),
     children: [
@@ -34632,12 +35416,12 @@ function pp({ tile: A, tab: e }) {
               class: "filter-row",
               children: [
                 w("button", {
-                  class: `pill${pFil === "ok" ? " on" : ""}`,
+                  class: `pill${effPFil === "ok" ? " on" : ""}`,
                   onClick: () => setPFil("ok"),
-                  children: ["可建设 ", c.filter((d) => d.ok).length],
+                  children: ["可建设 ", pubOkCnt],
                 }),
                 w("button", {
-                  class: `pill${pFil === "all" ? " on" : ""}`,
+                  class: `pill${effPFil === "all" ? " on" : ""}`,
                   onClick: () => setPFil("all"),
                   children: ["全部 ", c.length],
                 }),
@@ -34652,7 +35436,7 @@ function pp({ tile: A, tab: e }) {
                   w(
                     "button",
                     {
-                      class: `pill${pFil === ct.id ? " on" : ""}`,
+                      class: `pill${effPFil === ct.id ? " on" : ""}`,
                       onClick: () => setPFil(ct.id),
                       children: ct.name,
                     },
@@ -36710,7 +37494,7 @@ function Xp() {
         ? `赤字运行中 · 剩余信用额度 ${fe(Math.max(0, t.debtCap - t.debt))} 亿（上限 −${fe(t.debtCap)} 亿）\n${restActive ? `✓ 重整免息保护中（剩 ${e.debtRestructureUntil - e.quarter} 季）` : "• 发展金融业与提升首都政治可提额降息"}`
         : `${(t.surplusDiv ?? 0) > 0.05 ? `✓ 国库满储分红：内需 +${SA((t.surplusDiv ?? 0) * sRate)} · 宜居 +${Math.round((t.surplusDiv ?? 0) * 5)}\n` : ""}• 储备上限：${fe(t.reserveCap)} 亿（1.5× 软缓冲上限 ${fe(softCap)} 亿）\n• 超额储备每季按 25% 缓释转全民消费分红（分红系数 ${SA(sRate)}）\n• 紧急建设可举债至 −${fe(t.debtCap)} 亿`,
     fbTipTitle = e.quarter <= 40 ? `开国扶持期（第 ${e.quarter}/40 季）` : `开国扶持退坡（剩 ${88 - e.quarter} 季）`,
-    fbTipBody = `第 1–40 季满额生效，第 41–88 季平滑退坡（当前系数 ${Math.round(ff * 100)}%）：\n• 税收扶持 +${Math.round(100 * ff)}%\n• 设施维护减免 −${Math.round(45 * ff)}%\n• 公共服务减免 −${Math.round(50 * ff)}%\n• 行政治理减免 −${Math.round(60 * ff)}%${jo(e) > 0 ? `\n• 新行业首次建造半价剩余 ${jo(e)} 次` : ""}`;
+    fbTipBody = `第 1–40 季满额生效，第 41–88 季平滑退坡（当前系数 ${Math.round(ff * 100)}%）：\n• 税收扶持 +${Math.round(100 * ff)}%\n• 设施维护减免 −${Math.round(45 * ff)}%\n• 公共服务减免 −${Math.round(50 * ff)}%\n• 行政治理减免 −${Math.round(60 * ff)}%${jo(e) > 0 ? `\n• 开国首建半价且工期 −1 季（剩余 ${jo(e)} 次）` : ""}`;
   const gdpDiag =
     typeof explainGdpDelta == "function"
       ? explainGdpDelta(e, t)
@@ -36751,7 +37535,7 @@ function Xp() {
                     w("b", {
                       children: e.quarter <= 40 ? `开国扶持 ${e.quarter}/40季` : `扶持退坡 ${Math.round(ff * 100)}%`,
                     }),
-                    jo(e) > 0 && w("em", { children: `首建半价 ×${jo(e)}` }),
+                    jo(e) > 0 && w("em", { children: `首建半价·工期−1季 ×${jo(e)}` }),
                   ],
                 }),
                 w("div", {
@@ -38201,11 +38985,11 @@ function Jp() {
             cost: t.respecUsed && t.respecUsed[n] ? 180 : 0,
             cdLeftQ: Math.max(0, ((t.respecCdQ && t.respecCdQ[n]) || 0) - e.quarter),
           },
-    lordActKeys = ["survey", "govern", "mentor", "supervise", "trade"].filter((k) =>
+    lordActKeys = ["survey", "supervise", "mentor", "trade", "govern"].filter((k) =>
       k === "govern" ? isFeatOpenSafe(e, "policy") : k === "trade" ? isFeatOpenSafe(e, "trade") : !0,
     ),
     locTipTitle = `主公驻跸：${tileName}`,
-    locTipBody = `• 亲临加成：主公停驻当地可提供亲临督导增益，并在每季结算对应五维历练（点击移镜定位）\n• 执政履历：调研 ${t.patrols} 次 · 施政 ${e.stats.decrees || 0} 次 · 指点 ${t.stats.mentors || 0} 次 · 督办 ${t.stats.supervises || 0} 次 · 贸易 ${t.stats.trades || 0} 次`;
+    locTipBody = `• 亲临加成：主公停驻当地可提供亲临督导增益，并在每季结算对应五维历练（点击移镜定位）\n• 执政履历：调研 ${t.patrols} 次 · 督办 ${t.stats.supervises || 0} 次 · 指点 ${t.stats.mentors || 0} 次 · 贸易 ${t.stats.trades || 0} 次 · 施政 ${e.stats.decrees || 0} 次`;
   $t(() => {
     const id = setInterval(() => setLiveTick((x) => x + 1), 2e3);
     return () => clearInterval(id);
@@ -38233,8 +39017,7 @@ function Jp() {
                     children: [
                       w("b", {
                         children: [
-                          "主公 ",
-                          t.name,
+                          fmtLordTitle(t.name),
                           w("em", { class: "lc-tlv", children: `Lv.${totalLv}/${maxTotalSkills}` }),
                         ],
                       }),
@@ -39802,7 +40585,11 @@ function Wp() {
       return { ok: !0, msg: `一键领取 ◇${g}` };
     });
   const jumpDaily = (q) => {
-    if (q.go === "tile") {
+    if (q.go === "frontier") {
+      CQ(q.tileId);
+      A.select(q.tileId);
+      A.toast("已定位首块可开拓邻格，开拓后即可出巡调研", "info");
+    } else if (q.go === "tile") {
       const qTarget = q.name
         .replace(/^(亲临视察|定点调研)\s*/, "")
         .replace(/^[「『]+|[」』]+$/g, "")
@@ -39964,15 +40751,17 @@ function Wp() {
                                 class: "btn tiny",
                                 onClick: () => jumpDaily(q),
                                 children:
-                                  q.go === "tile"
-                                    ? "定位"
-                                    : q.go === "survey"
-                                      ? "去调研"
-                                      : q.go === "mentor"
-                                        ? "去指点"
-                                        : q.go === "policy"
-                                          ? "去施政"
-                                          : "看财政",
+                                  q.go === "frontier"
+                                    ? "去开拓"
+                                    : q.go === "tile"
+                                      ? "定位"
+                                      : q.go === "survey"
+                                        ? "去调研"
+                                        : q.go === "mentor"
+                                          ? "去指点"
+                                          : q.go === "policy"
+                                            ? "去施政"
+                                            : "看财政",
                               }),
                             w("button", {
                               class: `btn small${rdy ? " gold" : ""}`,
@@ -41410,7 +42199,13 @@ function _p() {
             icon: "up",
             label: "等级",
             value: `Lv.${n.level}`,
-            sub: s.effLevel < n.level ? `按 Lv.${s.effLevel} 运转` : `上限 Lv.${P}`,
+            accent: s.effLevel < n.level ? "warn" : void 0,
+            sub:
+              s.effLevel < n.level
+                ? !n.card
+                  ? `按 Lv.${s.effLevel} 运转（无人驻守）`
+                  : `按 Lv.${s.effLevel} 运转（驻守上限）`
+                : `上限 Lv.${P}`,
           }),
         ],
       }),
@@ -41419,6 +42214,12 @@ function _p() {
         class: "status-row",
         children: [
           s.status === "running" && w(nf, { kind: "ok", children: "运转中" }),
+          s.status === "running" &&
+            s.effLevel < n.level &&
+            w(nf, {
+              kind: "warn",
+              children: !n.card ? `按 Lv.${s.effLevel} 运转（无人驻守）` : `按 Lv.${s.effLevel} 运转（驻守上限）`,
+            }),
           s.status === "stopped" &&
             w(nf, { kind: "warn", children: ["停产 · 缺少", s.missing.map((h) => h.join("/")).join("、")] }),
           s.status === "paused" && w(nf, { kind: "warn", children: ["调试/搬迁中，停产 ", n.paused, " 季"] }),
@@ -41666,7 +42467,7 @@ function $p() {
   return t.pendingEvent
     ? w("button", {
         class: "lord-here alert",
-        "data-tip-title": `主公${t.name}在此 · 有一件事等你定夺`,
+        "data-tip-title": `${fmtLordInline(t.name)}在此 · 有一件事等你定夺`,
         "data-tip": o,
         onClick: () => A.openModal({ type: "event" }),
         children: [w(NA, { node: Ae.crown, size: 14, stroke: 2.3 }), " 处理事件"],
@@ -41674,8 +42475,8 @@ function $p() {
     : w("span", {
         class: "lord-here",
         tabIndex: 0,
-        "aria-label": `主公${t.name}在此，${o}`,
-        "data-tip-title": `主公${t.name}在此`,
+        "aria-label": `${fmtLordInline(t.name)}在此，${o}`,
+        "data-tip-title": `${fmtLordInline(t.name)}在此`,
         "data-tip": o,
         children: w(NA, { node: Ae.crown, size: 15, stroke: 2.3 }),
       });
@@ -42598,7 +43399,7 @@ function LordCompass() {
           t(null);
           return;
         }
-        const v = window.__views,
+        const v = _mapViews,
           effView = A.webglFailed ? "2d" : A.state.settings.view,
           act =
             effView === "2d"
@@ -42765,6 +43566,8 @@ function ModalHostV1() {
   if (m.type === "autoDeploy") return w(AutoDeployModal, { m });
   if (m.type === "fypPreview") return w(FypPreviewModal, { planId: m.planId, m });
   if (m.type === "fypCelebrate") return w(FypCelebrateModal, { data: m.data, m });
+  if (m.type === "fypExpire") return w(FypExpireModal, { data: m.data, m });
+  if (m.type === "monumentComplete") return w(MonumentCompleteModal, { data: m.data, m });
   if (m.type === "debtConfirm") return w(DebtConfirmModal, { m });
   if (m.type === "breakthroughResult") return w(BreakthroughModal, { m });
   return w(hp, {});
@@ -42772,9 +43575,10 @@ function ModalHostV1() {
 function fL() {
   const A = Pe(),
     isTitle = Boolean(A.modal && (A.modal.type === "title" || A.modal.fromTitle)),
+    isMoving = Boolean(!isTitle && A.placement && A.placement.kind === "move"),
     effView = A.webglFailed ? "2d" : A.state.settings.view;
   return w("div", {
-    class: `app view-${effView}${isTitle ? " is-title" : ""}${!isTitle && A.selected !== null && !A.placement ? " has-sheet" : ""}${!isTitle && A.panel ? " has-panel" : ""}${A.modal ? " has-modal" : ""}${!isTitle && A.held && A.state.lord.ready !== !1 ? ` is-held held-${A.held}` : ""}`,
+    class: `app view-${effView}${isTitle ? " is-title" : ""}${isMoving ? " is-moving" : ""}${!isTitle && A.selected !== null && !A.placement ? " has-sheet" : ""}${!isTitle && A.panel ? " has-panel" : ""}${A.modal ? " has-modal" : ""}${!isTitle && A.held && A.state.lord.ready !== !1 ? ` is-held held-${A.held}` : ""}`,
     children: isTitle
       ? [w(oL, {}), w(ModalHostV1, {}), w(wL, {}), w(sL, {})]
       : [
@@ -42803,7 +43607,13 @@ function oL() {
     t = us(null),
     n = us({}),
     [s, f] = gt(!1),
-    o = s || A.webglFailed ? "2d" : A.state.settings.view;
+    o = s || A.webglFailed ? "2d" : A.state.settings.view,
+    isTitleBg = Boolean(A.modal && (A.modal.type === "title" || A.modal.fromTitle)),
+    titleBg =
+      isTitleBg && A.metrics.unlocked < 19 && typeof getTitleBackdrop === "function"
+        ? getTitleBackdrop()
+        : null,
+    wasTitleBgRef = us(isTitleBg);
   ($t(() => {
     const i = {
       onSelect: (v) => {
@@ -42834,10 +43644,10 @@ function oL() {
     }
     return (
       (n.current.d2 = new UC(t.current, i)),
-      (window.__views = n.current),
+      (_mapViews = n.current),
       () => {
         var v, c;
-        ((v = n.current.d3) == null || v.dispose(), (c = n.current.d2) == null || c.dispose());
+        ((_mapViews = null), (v = n.current.d3) == null || v.dispose(), (c = n.current.d2) == null || c.dispose());
       }
     );
   }, []),
@@ -42894,8 +43704,18 @@ function oL() {
       var c;
       const i = ((c = A.placement) == null ? void 0 : c.tiles) ?? null,
         v = o === "3d" ? n.current.d3 : n.current.d2;
-      v == null || v.update(A.state, A.metrics, A.selected, i, A.placement);
-    }, [A.version, o, A.placement]),
+      if (titleBg) {
+        v == null || v.update(titleBg.state, titleBg.metrics, null, null, null);
+      } else {
+        v == null || v.update(A.state, A.metrics, A.selected, i, A.placement);
+      }
+      if (wasTitleBgRef.current && !isTitleBg) {
+        var d3 = n.current.d3,
+          d2 = n.current.d2;
+        (d3 == null || d3.reset(), d2 == null || d2.reset());
+      }
+      wasTitleBgRef.current = isTitleBg;
+    }, [A.version, o, A.placement, isTitleBg]),
     $t(() => {
       const i = A.placement;
       if (!i || !i.tiles.size) return;
@@ -43548,7 +44368,8 @@ function BL() {
       }
     }
     const focusTile = (id) => window.dispatchEvent(new CustomEvent("map-focus", { detail: id }));
-    if (minView) {
+    const noRoutes = routes.length === 0;
+    if (minView || noRoutes) {
       return w(he, {
         children: [
           w("div", { class: "survey-vignette", "aria-hidden": "true" }),
@@ -43556,12 +44377,17 @@ function BL() {
             class: "survey-min-bar",
             children: [
               w("b", { class: "sd-dice-sm", children: [e.steps, " 步"] }),
-              w("span", { children: ["调研选点中 · 点击地图高亮地块前往（", e.tiles.size, " 处可达）"] }),
-              w("button", {
-                class: "btn tiny primary",
-                onClick: () => setMinView(!1),
-                children: "展开航线卡",
+              w("span", {
+                children: noRoutes
+                  ? ["实地调研 · 周边暂无建成热点，直接点击地图高亮地块前往（", e.tiles.size, " 处可达）"]
+                  : ["调研选点中 · 点击地图高亮地块前往（", e.tiles.size, " 处可达）"],
               }),
+              !noRoutes &&
+                w("button", {
+                  class: "btn tiny primary",
+                  onClick: () => setMinView(!1),
+                  children: "展开航线卡",
+                }),
               w("button", { class: "btn tiny", onClick: () => A.startPlacement(null), children: "暂缓" }),
             ],
           }),
@@ -43997,54 +44823,6 @@ if (typeof t9 === "object" && t9) {
 }
 SQ(w(fL, {}), document.getElementById("app"));
 ie.start();
-window.__store = ie;
-window.__lm = hl;
-window.__audio = { sfx: Cl, music: tl };
-window.__eun = {
-  noviceStage,
-  isFeatureOpen,
-  Uo,
-  ga,
-  Tt,
-  F4,
-  decreeCdQuarters,
-  Zc,
-  Wi,
-  SKILL_MAX_LV,
-  k4,
-  hc,
-  lordTotalLevel,
-  unlockedWardrobeSkins,
-  skillRespecInfo,
-  respecSkillLine,
-  countCopyBreakthroughs,
-  batchBreakthroughCopies,
-  toggleTileCardLock,
-  v7,
-  previewAutoDeploy,
-  applyAutoDeploy,
-  dt,
-  ko,
-  e7,
-  yi,
-  H4,
-  g7,
-  lQ,
-  retoolSpec,
-  cancelUpBuild,
-  fs,
-  ke,
-  HA,
-  Ee,
-  se,
-  ia,
-  C7,
-  cr,
-  G4,
-  qv,
-  startFiveYearPlan,
-  FYP_MAP,
-};
 </script>
     <style rel="stylesheet" crossorigin>
 :root {
@@ -58081,6 +58859,210 @@ button.dcard {
     grid-template-columns: 1fr;
   }
 }
+
+/* ===== v1.1 Pre-Launch Polish: Naming Dice, Ceremonies, Survey Dock & Mobile 390x844 ===== */
+.field-lb-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+.dice-inline-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 8px;
+  border-radius: 99px;
+  font-size: 11.5px;
+  font-weight: 600;
+  color: #ffe28a;
+  background: rgba(255, 207, 74, 0.12);
+  border: 1px solid rgba(255, 207, 74, 0.34);
+  cursor: pointer;
+  transition: background 0.14s, border-color 0.14s, transform 0.1s;
+}
+.dice-inline-btn:hover {
+  background: rgba(255, 207, 74, 0.24);
+  border-color: #ffcf4a;
+}
+.dice-inline-btn:active {
+  transform: scale(0.96);
+}
+
+/* FYP Unachieved Expiry & Monument Ceremony Modals */
+.fyp-ribbon.warn {
+  background: linear-gradient(90deg, rgba(255, 174, 66, 0.16), rgba(32, 22, 12, 0.55));
+  border-color: rgba(255, 174, 66, 0.42);
+}
+.fr-badge.warn {
+  color: #241400;
+  background: linear-gradient(180deg, #ffd175, #ef9b28);
+}
+.monument-ribbon {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 14px;
+}
+.monument-ico.cap {
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  display: grid;
+  place-items: center;
+  color: #261600;
+  background: linear-gradient(145deg, #ffe89e, #e8ac2b);
+  box-shadow: 0 4px 16px rgba(255, 207, 74, 0.35);
+  flex: none;
+}
+.monument-head-txt {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 4px;
+  min-width: 0;
+}
+
+/* Desktop Survey Dock & Min-Bar Clearance (1440x900 / 1366x680) */
+.app.is-moving .hud-bl .crews {
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+}
+.survey-dock {
+  bottom: 112px;
+}
+.survey-min-bar {
+  bottom: 108px;
+  max-width: calc(100vw - var(--nav) - 36px);
+}
+@media (min-width: 761px) and (max-height: 740px) {
+  .survey-dock {
+    bottom: 104px;
+    padding: 10px 14px;
+    gap: 8px;
+  }
+  .sd-card {
+    padding: 9px 10px 8px;
+    gap: 5px;
+  }
+}
+
+/* Governance Overview 4-Direction Insight Chips Spacing */
+.gh-insights-row {
+  gap: 6px;
+}
+.gh-ins-chip {
+  min-width: 0;
+  overflow: hidden;
+  gap: 4px;
+  padding: 2px 6px;
+}
+
+/* Mobile (390x844 & <=760px) Layout Polish */
+@media (max-width: 640px) {
+  .gh-insights-row {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 5px 7px;
+  }
+  .gh-ins-chip {
+    justify-content: space-between;
+    padding: 3px 8px;
+    font-size: 10.5px;
+  }
+}
+
+@media (max-width: 760px) {
+  /* 1) Keep .crews (2 支空闲 / 去开拓) completely untruncated beside .hud-clock */
+  .hud-bl {
+    gap: 5px 6px;
+  }
+  .crews {
+    padding: 3px 6px;
+    gap: 4px;
+  }
+  .crews-title b {
+    font-size: 12px;
+  }
+  .crew.idle {
+    padding: 4px 7px 6px 5px;
+    gap: 4px;
+  }
+  .crew.idle .crew-text b {
+    font-size: 11.5px;
+  }
+  .crews:not(:has(.crew.busy)) .crew.idle.go-expand .crew-text {
+    flex-direction: row;
+    align-items: baseline;
+    gap: 4px;
+  }
+  .crews:not(:has(.crew.busy)) .crew.idle.go-expand small {
+    display: inline;
+    font-size: 10px;
+    color: #ffe08a;
+  }
+  .hud-clock {
+    min-width: 0;
+    padding: 4px 8px;
+    gap: 4px;
+  }
+  .hc-rt-badge {
+    display: none;
+  }
+  .hc-toggle {
+    width: 34px;
+    height: 34px;
+  }
+  .hc-date {
+    font-size: 11.5px;
+  }
+
+  /* 2) Place .map-filter below .advisor so 国务简报 buttons are never covered */
+  .advisor .adv-item.main .adv-text {
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+  .map-filter {
+    right: 50px;
+    padding: 5px;
+    gap: 4px;
+    z-index: 16;
+  }
+  .map-filter .mf-btn {
+    width: 33px;
+    height: 33px;
+  }
+  .app:has(.advisor):not(.has-panel) .map-filter {
+    top: calc(var(--top) + 68px);
+  }
+
+  /* 3) Compact survey-min-bar & survey-dock on mobile */
+  .survey-min-bar {
+    left: calc(var(--nav) + 6px);
+    right: 6px;
+    bottom: 124px;
+    transform: none;
+    max-width: none;
+    border-radius: 14px;
+    flex-wrap: wrap;
+    gap: 6px 8px;
+    padding: 8px 11px;
+    font-size: 12px;
+  }
+  .survey-dock {
+    left: calc(var(--nav) + 6px);
+    right: 6px;
+    bottom: 120px;
+    width: auto;
+    transform: none;
+    padding: 10px 11px;
+    max-height: calc(100vh - var(--top) - 140px);
+    overflow-y: auto;
+  }
+}
+
 
 </style>
   </head>
