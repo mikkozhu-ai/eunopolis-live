@@ -13269,6 +13269,15 @@ function S4(A, e, t = Date.now()) {
         action: { type: "event" },
         prio: 100,
       }),
+    A.prospect &&
+      s({
+        id: "prospect-pending",
+        text: `地块 #${A.prospect.tile} 有待确认的地质勘探结果`,
+        cta: "继续选型",
+        kind: "gold",
+        action: { type: "prospect" },
+        prio: 99,
+      }),
     featOpen("lord") &&
       o.roll &&
       !o.pendingEvent &&
@@ -30074,6 +30083,7 @@ class fp {
       this.emit());
   }
   openModal(e) {
+    this._modalOnClose = null;
     if (!e || e.type !== "build") this.wonderPreviewIds = null;
     else if (e.tab === "wonder" && typeof allWonderTriangles === "function")
       this.wonderPreviewIds = allWonderTriangles(this.state).tileIds;
@@ -30137,6 +30147,10 @@ class fp {
   roll() {
     if (this.dice) return;
     const e = this.state;
+    if (e.lord.pendingEvent) {
+      this.openModal({ type: "event" });
+      return;
+    }
     if (e.lord.roll) {
       this.beginMove();
       return;
@@ -31562,6 +31576,7 @@ function rP({ items: A }) {
 const MQ = ["基础产业", "一级产业", "二级产业", "三级产业", "四级产业"];
 function Cn({ title: A, sub: e, onClose: t, children: n, wide: s, cls: f = "", help: o }) {
   const r = t ?? (() => ie.openModal(null));
+  ie._modalOnClose = r;
   return w("div", {
     class: "modal-back",
     onClick: (i) => i.target === i.currentTarget && r(),
@@ -34801,16 +34816,19 @@ function Fp() {
     wide: !0,
     cls: "prospect",
     help: If("prospect", e, A.metrics, { tile: o }),
-    title: `勘探结果 · 找到 ${n.length} 种资源`,
-    sub: `${Ge[o.terrain].name} #${o.id} · 费用已支付 · 挑一种采用，或者都不要`,
-    onClose: () => i(!1),
+    title: `勘探结果 · 探明 ${n.length} 种禀赋`,
+    sub: `${Ge[o.terrain].name} #${o.id} · 费用已支付 · 选择一种采用，或暂存先看地图`,
+    onClose: () => {
+      A.openModal(null);
+      A.toast("勘探结果已暂存，可点击勘探或顶部简报继续选型", "info");
+    },
     children: [
       w("div", {
         class: "prospect-now",
         children: [
-          w("span", { children: "这块地现在" }),
-          o.resource ? w(z0, { id: o.resource }) : w("b", { class: "muted", children: "没有资源" }),
-          r && w("small", { children: ["上面建着「", r.short, "」"] }),
+          w("span", { children: "当前地块禀赋" }),
+          o.resource ? w(z0, { id: o.resource }) : w("b", { class: "muted", children: "暂无资源" }),
+          r && w("small", { children: ["驻建产业「", r.short, "」"] }),
         ],
       }),
       w("ul", {
@@ -34837,12 +34855,22 @@ function Fp() {
         ),
       }),
       w("div", {
-        class: "actions end",
-        children: w("button", {
-          class: "btn",
-          onClick: () => i(!1),
-          children: ["都不要，", o.resource ? `保留${ke[o.resource].name}` : "保持原样"],
-        }),
+        class: "actions wrap end",
+        children: [
+          w("button", {
+            class: "btn ghost",
+            onClick: () => {
+              A.openModal(null);
+              A.toast("勘探结果已暂存，可查看地图后点击勘探继续选型", "info");
+            },
+            children: "暂存看地图",
+          }),
+          w("button", {
+            class: "btn",
+            onClick: () => i(!1),
+            children: ["放弃采用，", o.resource ? `保留${ke[o.resource].name}` : "保持原样"],
+          }),
+        ],
       }),
     ],
   });
@@ -41151,31 +41179,42 @@ function u9({ tile: A }) {
 `);
     },
     u = i
-      ? t.gems < r
-        ? w(pQ, { cost: r, small: !0 })
-        : w("button", {
-            class: "btn small rb-prospect",
-            "data-tip-title": `${n ? "重新勘探" : "勘探"} · ◇${r}`,
-            "data-tip": `给出最多 ${O.prospectOptions} 种资源，挑一种采用，也可以都不要${
-              n
-                ? `
-采用新的会顶掉现在的${n.name}`
-                : ""
-            }${
-              Q
-                ? `
-! ${v}找不到国内还缺的${Q.name}，它要去${Q.terrains.map((d) => Ge[d].name).join("、")}勘探`
-                : ""
-            }`,
+      ? t.prospect
+        ? w("button", {
+            class: "btn small gold rb-prospect",
+            "data-tip-title": `待确认勘探 · 地块 #${t.prospect.tile}`,
+            "data-tip": "上一次勘探结果已暂存，点击打开选型界面（不额外消耗星钻）",
             onClick: () => {
-              e.act((x) => c7(x, A.id)).ok && e.openModal({ type: "prospect" });
+              e.select(t.prospect.tile);
+              e.openModal({ type: "prospect" });
             },
-            children: [
-              w(NA, { node: Ae.search, size: 13 }),
-              " 勘探 ",
-              w("small", { class: "gem-cost", children: ["◇", r] }),
-            ],
+            children: [w(NA, { node: Ae.search, size: 13 }), " 继续选型"],
           })
+        : t.gems < r
+          ? w(pQ, { cost: r, small: !0 })
+          : w("button", {
+              class: "btn small rb-prospect",
+              "data-tip-title": `${n ? "重新勘探" : "勘探"} · ◇${r}`,
+              "data-tip": `给出最多 ${O.prospectOptions} 种资源，挑一种采用，也可以都不要${
+                n
+                  ? `
+采用新的会顶掉现在的${n.name}`
+                  : ""
+              }${
+                Q
+                  ? `
+• ${v}找不到国内还缺的${Q.name}，它要去${Q.terrains.map((d) => Ge[d].name).join("、")}勘探`
+                  : ""
+              }`,
+              onClick: () => {
+                e.act((x) => c7(x, A.id)).ok && e.openModal({ type: "prospect" });
+              },
+              children: [
+                w(NA, { node: Ae.search, size: 13 }),
+                " 勘探 ",
+                w("small", { class: "gem-cost", children: ["◇", r] }),
+              ],
+            })
       : null;
   if (!n)
     return w("div", {
@@ -41617,6 +41656,15 @@ function pQ({ cost: A, small: e }) {
 function LQ({ tile: A, label: e = "勘探" }) {
   const t = ie.state,
     n = h0(t, A);
+  if (t.prospect)
+    return w("button", {
+      class: "btn gold",
+      onClick: () => {
+        ie.select(t.prospect.tile);
+        ie.openModal({ type: "prospect" });
+      },
+      children: "继续勘探选型",
+    });
   return t.gems < n
     ? w(pQ, { cost: n })
     : w("button", {
@@ -42361,13 +42409,16 @@ function oL() {
               el.blur && el.blur();
             }
             if (ie.intro) return;
-            ie.placement
-              ? ie.startPlacement(null)
-              : ie.modal
-                ? ie.openModal(null)
-                : ie.selected !== null
-                  ? ie.select(null)
-                  : ie.panel && ie.openPanel(null);
+            if (ie.placement) {
+              ie.startPlacement(null);
+              return;
+            }
+            if (ie.modal) {
+              if (ie.modal.type === "title") return;
+              typeof ie._modalOnClose == "function" ? ie._modalOnClose() : ie.openModal(null);
+              return;
+            }
+            ie.selected !== null ? ie.select(null) : ie.panel && ie.openPanel(null);
             return;
           }
           if (isTyp(c)) return;
@@ -42684,7 +42735,13 @@ function C9(A) {
     if (e.govTab) ie._govTab = e.govTab;
     e.panel === "recruit" ? ie.openModal({ type: "recruit" }) : ((ie.panel = null), ie.openPanel(e.panel));
   } else if (e.type === "event") ie.openModal({ type: "event" });
-  else if (e.type === "roll") ie.roll();
+  else if (e.type === "prospect") {
+    if (ie.state.prospect) {
+      ie.panel = null;
+      ie.select(ie.state.prospect.tile);
+      ie.openModal({ type: "prospect" });
+    }
+  } else if (e.type === "roll") ie.roll();
   else if (e.type === "breakthrough") {
     const cObj = ie.state.cards[e.card],
       bt = cardBtMode(ie.state, cObj);
