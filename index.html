@@ -4,6 +4,9 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover" />
     <meta name="theme-color" content="#0f1620" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <link rel="manifest" href="data:application/manifest+json,%7B%22name%22%3A%22%E7%BB%8F%E4%B8%96%E6%B5%8E%E5%9B%BD%22%2C%22display%22%3A%22standalone%22%2C%22orientation%22%3A%22landscape%22%2C%22background_color%22%3A%22%230b1018%22%2C%22theme_color%22%3A%22%230f1620%22%7D" />
     <meta name="description" content="经世济国：从一块土地开始，经营属于你的经济体。" />
     <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 40 46'%3E%3Cpath d='M20 1 39 12v22L20 45 1 34V12Z' fill='%230f1620' stroke='%2358e1ff' stroke-width='2'/%3E%3Cpath d='M7 15 20 8l13 7-13 7Z' fill='%23dfe6ee'/%3E%3Cpath d='M7 15v14l13 7V22Z' fill='%239aa6b5'/%3E%3Cpath d='M20 22v14l13-7V15Z' fill='%236d7a8c'/%3E%3C/svg%3E" />
     <title>经世济国</title>
@@ -43548,6 +43551,90 @@ function ModalHostV1() {
   if (m.type === "breakthroughResult") return w(BreakthroughModal, { m });
   return w(hp, {});
 }
+function PortraitGuardV1() {
+  const canLock =
+    typeof document < "u" &&
+    Boolean(
+      document.documentElement &&
+        document.documentElement.requestFullscreen &&
+        typeof screen < "u" &&
+        screen.orientation &&
+        typeof screen.orientation.lock === "function",
+    );
+  const tryLockLandscape = () => {
+    try {
+      const p = document.documentElement.requestFullscreen();
+      if (p && typeof p.then === "function") {
+        p.then(() => {
+          screen.orientation.lock("landscape").catch(() => {});
+        }).catch(() => {});
+      }
+    } catch {}
+  };
+  return w("div", {
+    class: "portrait-lock-mask",
+    role: "dialog",
+    "aria-label": "请横屏游玩",
+    children: w("div", {
+      class: "portrait-lock-card",
+      children: [
+        w("div", {
+          class: "pl-icon",
+          "aria-hidden": "true",
+          children: w("svg", {
+            viewBox: "0 0 88 64",
+            width: 76,
+            height: 56,
+            fill: "none",
+            children: [
+              w("rect", {
+                x: 8,
+                y: 18,
+                width: 58,
+                height: 36,
+                rx: 7,
+                stroke: "#ffcf4a",
+                "stroke-width": 2.2,
+                fill: "rgba(255,207,74,0.08)",
+              }),
+              w("circle", { cx: 60, cy: 36, r: 2, fill: "#ffcf4a" }),
+              w("path", {
+                d: "M37 28 L44 32 L44 40 L37 44 L30 40 L30 32 Z",
+                stroke: "#58e1ff",
+                "stroke-width": 1.6,
+                fill: "rgba(88,225,255,0.16)",
+              }),
+              w("path", {
+                d: "M52 8 C64 8 74 16 76 28",
+                stroke: "#9db4cc",
+                "stroke-width": 1.8,
+                "stroke-linecap": "round",
+              }),
+              w("path", {
+                d: "M72 25 L76.5 29.5 L80 24.5",
+                stroke: "#9db4cc",
+                "stroke-width": 1.8,
+                "stroke-linecap": "round",
+                "stroke-linejoin": "round",
+              }),
+            ],
+          }),
+        }),
+        w("b", { class: "pl-title", children: "请旋转设备至横屏模式" }),
+        w("p", {
+          class: "pl-desc",
+          children: "《经世济国》采用全景山河沙盘与多维施政面板，仅支持横屏浏览与操作。",
+        }),
+        canLock &&
+          w("button", {
+            class: "btn primary pl-btn",
+            onClick: tryLockLandscape,
+            children: "进入全屏横屏",
+          }),
+      ],
+    }),
+  });
+}
 function fL() {
   const A = Pe(),
     isTitle = Boolean(A.modal && (A.modal.type === "title" || A.modal.fromTitle)),
@@ -43556,7 +43643,7 @@ function fL() {
   return w("div", {
     class: `app view-${effView}${isTitle ? " is-title" : ""}${isMoving ? " is-moving" : ""}${!isTitle && A.selected !== null && !A.placement ? " has-sheet" : ""}${!isTitle && A.panel ? " has-panel" : ""}${A.modal ? " has-modal" : ""}${!isTitle && A.held && A.state.lord.ready !== !1 ? ` is-held held-${A.held}` : ""}`,
     children: isTitle
-      ? [w(oL, {}), w(ModalHostV1, {}), w(wL, {}), w(sL, {})]
+      ? [w(oL, {}), w(ModalHostV1, {}), w(wL, {}), w(sL, {}), w(PortraitGuardV1, {})]
       : [
           w(oL, {}),
           w(iL, {}),
@@ -43574,6 +43661,7 @@ function fL() {
           w(wL, {}),
           w(ModalHostV1, {}),
           w(sL, {}),
+          w(PortraitGuardV1, {}),
         ],
   });
 }
@@ -58935,47 +59023,171 @@ button.dcard {
   padding: 2px 6px;
 }
 
-/* Mobile (390x844 & <=760px) Layout Polish */
-@media (max-width: 640px) {
-  .gh-insights-row {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 5px 7px;
+/* Mobile Portrait Guard & Mobile Landscape (e.g. 844x390 / 932x430 / 667x375) */
+.portrait-lock-mask {
+  display: none;
+}
+
+@media (orientation: portrait) and (max-width: 760px),
+  (hover: none) and (pointer: coarse) and (orientation: portrait) {
+  .portrait-lock-mask {
+    position: fixed;
+    inset: 0;
+    z-index: 99999;
+    display: grid;
+    place-items: center;
+    padding: 24px;
+    background:
+      radial-gradient(circle at 50% 38%, rgba(30, 52, 82, 0.52), rgba(7, 11, 18, 0.98) 72%),
+      #070b12;
+    -webkit-backdrop-filter: blur(14px);
+    backdrop-filter: blur(14px);
+    pointer-events: auto;
   }
-  .gh-ins-chip {
-    justify-content: space-between;
-    padding: 3px 8px;
-    font-size: 10.5px;
+  .portrait-lock-card {
+    width: min(332px, 100%);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    gap: 10px;
+    padding: 28px 24px 24px;
+    border-radius: 16px;
+    background: linear-gradient(165deg, rgba(18, 28, 44, 0.94), rgba(9, 14, 23, 0.97));
+    border: 1px solid rgba(255, 207, 74, 0.34);
+    box-shadow:
+      0 20px 50px rgba(0, 0, 0, 0.65),
+      inset 0 1px rgba(255, 255, 255, 0.08);
+  }
+  .pl-icon {
+    margin-bottom: 2px;
+    animation: pl-tilt 2.6s ease-in-out infinite;
+  }
+  .pl-title {
+    font-size: 17px;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    color: #ffe9a8;
+  }
+  .pl-desc {
+    margin: 0;
+    font-size: 13px;
+    line-height: 1.6;
+    color: #9db2c8;
+  }
+  .pl-btn {
+    margin-top: 6px;
+    min-width: 156px;
   }
 }
 
-@media (max-width: 760px) {
-  /* 1) Keep .crews (2 支空闲 / 去开拓) completely untruncated beside .hud-clock */
-  .hud-bl {
-    gap: 5px 6px;
+@keyframes pl-tilt {
+  0%, 100% {
+    transform: rotate(-8deg);
   }
-  .crews {
-    padding: 3px 6px;
-    gap: 4px;
+  50% {
+    transform: rotate(4deg);
   }
-  .crews-title b {
+}
+
+@media (orientation: landscape) and (max-height: 520px) {
+  :root {
+    --top: 38px;
+    --nav: 50px;
+  }
+  .topbar {
+    height: var(--top);
+    padding: 0 8px;
+    gap: 6px;
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+  .topbar::-webkit-scrollbar {
+    display: none;
+  }
+  .topbar .stat {
+    padding: 2px 8px;
+    min-height: 28px;
+  }
+  .nav {
+    overflow-y: auto;
+    scrollbar-width: none;
+    padding: 3px 3px;
+    gap: 1.5px;
+  }
+  .nav::-webkit-scrollbar {
+    display: none;
+  }
+  .nav button {
+    padding: 2px 0;
+    font-size: 9.5px;
+    gap: 1px;
+    flex: none;
+  }
+  .nav-ico {
+    width: 34px;
+    height: 22px;
+    border-radius: 8px;
+  }
+  .nav button > b {
+    font-size: 9.5px;
+    line-height: 1.1;
+  }
+  .nav button svg {
+    width: 14px;
+    height: 14px;
+  }
+  .advisor {
+    top: calc(var(--top) + 5px);
+    left: calc(var(--nav) + 8px);
+    right: 50px;
+    max-width: 480px;
+  }
+  .has-sheet .advisor {
+    right: 364px;
+  }
+  .adv-item {
+    padding: 4px 8px;
+  }
+  .adv-text {
     font-size: 12px;
   }
+  .map-ctrl {
+    top: calc(var(--top) + 5px);
+    right: 6px;
+    gap: 4px;
+  }
+  .map-ctrl .icon-btn {
+    width: 34px;
+    height: 34px;
+    font-size: 9px;
+  }
+  .map-filter {
+    top: calc(var(--top) + 5px);
+    right: 46px;
+    padding: 4px;
+    gap: 4px;
+  }
+  .hud-bl {
+    left: calc(var(--nav) + 8px);
+    bottom: 6px;
+    gap: 4px;
+    width: auto;
+  }
+  .crews {
+    padding: 2px 7px;
+    gap: 5px;
+  }
   .crew.idle {
-    padding: 4px 7px 6px 5px;
-    gap: 4px;
+    padding: 3px 7px;
   }
-  .crew.idle .crew-text b {
-    font-size: 11.5px;
+  .hud-lord {
+    padding: 4px 7px;
+    gap: 6px;
   }
-  .crews:not(:has(.crew.busy)) .crew.idle.go-expand .crew-text {
-    flex-direction: row;
-    align-items: baseline;
-    gap: 4px;
-  }
-  .crews:not(:has(.crew.busy)) .crew.idle.go-expand small {
-    display: inline;
-    font-size: 10px;
-    color: #ffe08a;
+  .act-btn {
+    min-width: 44px;
+    padding: 4px 5px 3px;
   }
   .hud-clock {
     min-width: 0;
@@ -58985,61 +59197,73 @@ button.dcard {
   .hc-rt-badge {
     display: none;
   }
-  .hc-toggle {
-    width: 34px;
-    height: 34px;
+  .panel {
+    top: var(--top);
+    left: var(--nav);
+    right: auto;
+    bottom: 0;
+    width: min(370px, calc(100vw - var(--nav) - 48px));
   }
-  .hc-date {
-    font-size: 11.5px;
-  }
-
-  /* 2) Place .map-filter below .advisor so 国务简报 buttons are never covered */
-  .advisor .adv-item.main .adv-text {
-    display: -webkit-box;
-    -webkit-line-clamp: 2;
-    -webkit-box-orient: vertical;
-    overflow: hidden;
-  }
-  .map-filter {
-    right: 50px;
-    padding: 5px;
-    gap: 4px;
-    z-index: 16;
-  }
-  .map-filter .mf-btn {
-    width: 33px;
-    height: 33px;
-  }
-  .app:has(.advisor):not(.has-panel) .map-filter {
-    top: calc(var(--top) + 68px);
-  }
-
-  /* 3) Compact survey-min-bar & survey-dock on mobile */
-  .survey-min-bar {
-    left: calc(var(--nav) + 6px);
-    right: 6px;
-    bottom: 124px;
-    transform: none;
-    max-width: none;
-    border-radius: 14px;
-    flex-wrap: wrap;
-    gap: 6px 8px;
-    padding: 8px 11px;
-    font-size: 12px;
-  }
-  .survey-dock {
-    left: calc(var(--nav) + 6px);
-    right: 6px;
-    bottom: 120px;
-    width: auto;
-    transform: none;
-    padding: 10px 11px;
-    max-height: calc(100vh - var(--top) - 140px);
+  .sheet,
+  .has-panel .sheet {
+    left: auto;
+    right: 46px;
+    top: auto;
+    bottom: 6px;
+    width: min(312px, 42vw);
+    max-width: 42vw;
+    max-height: calc(100dvh - var(--top) - 12px);
+    border-radius: var(--radius);
     overflow-y: auto;
   }
+  .modal-back {
+    place-items: center;
+    padding: 6px;
+  }
+  .modal,
+  .modal.wide {
+    width: min(680px, calc(100vw - 20px));
+    max-height: calc(100dvh - 12px);
+    border-radius: 12px;
+  }
+  .modal-head {
+    padding: 8px 14px;
+  }
+  .modal-body {
+    padding: 10px 14px 12px;
+  }
+  .title-card {
+    padding: 18px 26px 16px;
+    max-height: calc(100dvh - 16px);
+    overflow-y: auto;
+  }
+  .title-emblem svg {
+    width: 40px;
+    height: 46px;
+  }
+  .title-card h1 {
+    font-size: 25px;
+    margin: 6px 0 2px;
+  }
+  .survey-dock {
+    left: 50%;
+    right: auto;
+    bottom: 68px;
+    width: min(640px, calc(100vw - var(--nav) - 20px));
+    transform: translateX(-50%);
+    max-height: calc(100dvh - var(--top) - 76px);
+    overflow-y: auto;
+    padding: 8px 12px;
+  }
+  .survey-min-bar {
+    left: 50%;
+    right: auto;
+    bottom: 70px;
+    transform: translateX(-50%);
+    max-width: calc(100vw - var(--nav) - 24px);
+    padding: 6px 12px;
+  }
 }
-
-
 </style>
   </head>
   <body>
