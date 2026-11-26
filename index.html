@@ -10032,7 +10032,7 @@ function va(A, e) {
 function c7(A, e) {
   const t = A.tiles[e];
   if (!va(A, t)) return UA("这里不能勘探");
-  if (A.prospect) return UA("先处理上一次勘探结果");
+  if (A.prospect) A.prospect = null;
   const n = h0(A, t);
   if (A.gems < n) return UA(`星钻不足，需要 ${n}`);
   A.gems -= n;
@@ -13403,15 +13403,6 @@ function S4(A, e, t = Date.now()) {
         kind: "gold",
         action: { type: "event" },
         prio: 100,
-      }),
-    A.prospect &&
-      s({
-        id: "prospect-pending",
-        text: `地块 #${A.prospect.tile} 有待确认的地质勘探结果`,
-        cta: "继续选型",
-        kind: "gold",
-        action: { type: "prospect" },
-        prio: 99,
       }),
     featOpen("lord") &&
       o.roll &&
@@ -30791,7 +30782,9 @@ class fp {
         ? (this.modal = { type: "lordCreate" })
         : t && t.quarters >= 2
           ? (this.modal = { type: "offline", report: t })
-          : e.lord.pendingEvent && (this.modal = { type: "event" });
+          : e.lord.pendingEvent
+            ? (this.modal = { type: "event" })
+            : e.prospect && (this.modal = { type: "prospect" });
     } else {
       this.state = d7(((Math.random() * 2 ** 31) | 0), Date.now());
       this.metrics = dt(this.state);
@@ -31032,7 +31025,11 @@ class fp {
       this.emit());
   }
   openModal(e) {
+    const prev = this.modal;
     this._modalOnClose = null;
+    if (!e && prev && prev.type !== "prospect" && this.state && this.state.prospect) {
+      e = { type: "prospect" };
+    }
     if (!e || e.type !== "build") this.wonderPreviewIds = null;
     else if (e.tab === "wonder" && typeof allWonderTriangles === "function")
       this.wonderPreviewIds = allWonderTriangles(this.state).tileIds;
@@ -31085,12 +31082,24 @@ class fp {
       (this.placement = null),
       (this.wonderPreviewIds = null),
       (this.heldFrac = null),
-      (this.modal = e.lord && e.lord.ready === !1 ? { type: "lordCreate" } : null),
+      (this.modal =
+        e.lord && e.lord.ready === !1
+          ? { type: "lordCreate" }
+          : e.prospect
+            ? { type: "prospect" }
+            : null),
       this.resetCameraHome(),
       this.refresh());
   }
   afterEvent(e, t) {
-    ((this.modal = { type: "eventResult", name: e, lines: t.lines, then: t.prospect ? "prospect" : null }),
+    if (t && t.prospect && this.state.prospect) {
+      const extra = (t.lines || []).filter((l) => l && !l.includes("免费勘探"));
+      if (extra.length) this.toast(`${e}：${extra.join(" · ")}`, "gold");
+      this.modal = { type: "prospect", eventName: e, eventLines: t.lines };
+      this.refresh();
+      return;
+    }
+    ((this.modal = { type: "eventResult", name: e, lines: t.lines, then: null }),
       this.refresh());
   }
   roll() {
@@ -33478,7 +33487,7 @@ function hp() {
     case "recruit":
       return w(Tp, { results: e.results });
     case "prospect":
-      return w(Fp, {});
+      return w(Fp, { m: e });
     case "offline":
       return w(yp, { m: e });
     case "industry":
@@ -36157,7 +36166,7 @@ function Tp({ results: A }) {
     ],
   });
 }
-function Fp() {
+function Fp({ m }) {
   var v;
   const A = Pe(),
     e = A.state,
@@ -36176,11 +36185,8 @@ function Fp() {
     cls: "prospect",
     help: If("prospect", e, A.metrics, { tile: o }),
     title: `勘探结果 · 探明 ${n.length} 种禀赋`,
-    sub: `${Ge[o.terrain].name} #${o.id} · 费用已支付 · 选择一种采用，或暂存先看地图`,
-    onClose: () => {
-      A.openModal(null);
-      A.toast("勘探结果已暂存，可点击勘探或顶部简报继续选型", "info");
-    },
+    sub: `${Ge[o.terrain].name} #${o.id} · ${m && m.eventName ? `「${m.eventName}」免费勘探` : "费用已支付"} · 选择一种采用，或放弃保留原状`,
+    onClose: () => i(!1),
     children: [
       w("div", {
         class: "prospect-now",
@@ -36214,22 +36220,12 @@ function Fp() {
         ),
       }),
       w("div", {
-        class: "actions wrap end",
-        children: [
-          w("button", {
-            class: "btn ghost",
-            onClick: () => {
-              A.openModal(null);
-              A.toast("勘探结果已暂存，可查看地图后点击勘探继续选型", "info");
-            },
-            children: "暂存看地图",
-          }),
-          w("button", {
-            class: "btn",
-            onClick: () => i(!1),
-            children: ["放弃采用，", o.resource ? `保留${ke[o.resource].name}` : "保持原样"],
-          }),
-        ],
+        class: "actions end",
+        children: w("button", {
+          class: "btn",
+          onClick: () => i(!1),
+          children: ["放弃采用，", o.resource ? `保留${ke[o.resource].name}` : "保持原样"],
+        }),
       }),
     ],
   });
@@ -42555,42 +42551,31 @@ function u9({ tile: A }) {
 `);
     },
     u = i
-      ? t.prospect
-        ? w("button", {
-            class: "btn small gold rb-prospect",
-            "data-tip-title": `待确认勘探 · 地块 #${t.prospect.tile}`,
-            "data-tip": "上一次勘探结果已暂存，点击打开选型界面（不额外消耗星钻）",
-            onClick: () => {
-              e.select(t.prospect.tile);
-              e.openModal({ type: "prospect" });
-            },
-            children: [w(NA, { node: Ae.search, size: 13 }), " 继续选型"],
-          })
-        : t.gems < r
-          ? w(pQ, { cost: r, small: !0 })
-          : w("button", {
-              class: "btn small rb-prospect",
-              "data-tip-title": `${n ? "重新勘探" : "勘探"} · ◇${r}`,
-              "data-tip": `给出最多 ${O.prospectOptions} 种资源，挑一种采用，也可以都不要${
-                n
-                  ? `
+      ? t.gems < r
+        ? w(pQ, { cost: r, small: !0 })
+        : w("button", {
+            class: "btn small rb-prospect",
+            "data-tip-title": `${n ? "重新勘探" : "勘探"} · ◇${r}`,
+            "data-tip": `给出最多 ${O.prospectOptions} 种资源，挑一种采用，也可以都不要${
+              n
+                ? `
 采用新的会顶掉现在的${n.name}`
-                  : ""
-              }${
-                Q
-                  ? `
+                : ""
+            }${
+              Q
+                ? `
 • ${v}找不到国内还缺的${Q.name}，它要去${Q.terrains.map((d) => Ge[d].name).join("、")}勘探`
-                  : ""
-              }`,
-              onClick: () => {
-                e.act((x) => c7(x, A.id)).ok && e.openModal({ type: "prospect" });
-              },
-              children: [
-                w(NA, { node: Ae.search, size: 13 }),
-                " 勘探 ",
-                w("small", { class: "gem-cost", children: ["◇", r] }),
-              ],
-            })
+                : ""
+            }`,
+            onClick: () => {
+              e.act((x) => c7(x, A.id)).ok && e.openModal({ type: "prospect" });
+            },
+            children: [
+              w(NA, { node: Ae.search, size: 13 }),
+              " 勘探 ",
+              w("small", { class: "gem-cost", children: ["◇", r] }),
+            ],
+          })
       : null;
   if (!n)
     return w("div", {
@@ -43032,15 +43017,6 @@ function pQ({ cost: A, small: e }) {
 function LQ({ tile: A, label: e = "勘探" }) {
   const t = ie.state,
     n = h0(t, A);
-  if (t.prospect)
-    return w("button", {
-      class: "btn gold",
-      onClick: () => {
-        ie.select(t.prospect.tile);
-        ie.openModal({ type: "prospect" });
-      },
-      children: "继续勘探选型",
-    });
   return t.gems < n
     ? w(pQ, { cost: n })
     : w("button", {
