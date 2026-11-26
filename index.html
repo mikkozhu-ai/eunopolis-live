@@ -26071,12 +26071,12 @@ class OI {
       (this.sun.castShadow = !0),
       this.sun.shadow.mapSize.set(2048, 2048));
     const s = this.sun.shadow.camera;
-    ((s.left = -16),
-      (s.right = 16),
-      (s.top = 16),
-      (s.bottom = -16),
+    ((s.left = -22),
+      (s.right = 22),
+      (s.top = 22),
+      (s.bottom = -22),
       (s.near = 1),
-      (s.far = 50),
+      (s.far = 68),
       (this.sun.shadow.bias = -8e-4),
       (this.sun.shadow.normalBias = 0.02),
       this.scene.add(this.sun, this.sun.target));
@@ -27530,10 +27530,10 @@ class OI {
             p2 = ss(e.tiles[wi.tri[2]].q, e.tiles[wi.tri[2]].r);
           (E.position.set(
             (p1.x + p2.x - 2 * p0.x) / 3,
-            1.12,
+            n.build ? 1.48 : Math.min(2.55, (f.top || 1.8) + 0.16),
             (p1.z + p2.z - 2 * p0.z) / 3,
           ),
-            E.scale.setScalar(1.35));
+            E.scale.setScalar(n.build ? 1.85 : 2.45));
         } else {
           E.position.y = 0.92;
         }
@@ -27613,32 +27613,35 @@ class OI {
             B && (B.top = Math.max(B.top, 2.5 + F)));
         }));
     else if (wi && wi.isBuild) {
-      const stg = e9(wi.host);
+      const stg = e9(wi.host),
+        hasTri = Array.isArray(wi.tri) && wi.tri.length === 3;
       ((i.offset = [0, 0, 0]),
         P1(i, 16764746, g, 0.88),
-        (i.offset = [0, Ii, 0]),
-        i.cbox(0, 0, 0, 16.4, 0.42, 16.4, 14934226),
-        i.cbox(0, 0.42, 0, 14.8, 0.14, 14.8, 16764746),
-        i.cbox(0, 0.56, 0, 12.6, 0.24, 12.6, 15591386));
-      for (const [px, pz] of [
-        [-6.2, -6.2],
-        [6.2, -6.2],
-        [-6.2, 6.2],
-        [6.2, 6.2],
-      ]) {
-        (i.cbox(px, 0.56, pz, 0.75, 2.1, 0.75, 15779154),
-          i.cglow(
-            px,
-            2.72,
-            pz,
-            0.55,
-            0.45,
-            0.55,
-            16764746,
-            (Math.abs(px + pz) % 4) * 0.25,
-          ));
-      }
-      if (wi.isHost) {
+        P1(i, 16764746, null, 0.34),
+        (i.offset = [0, Ii, 0]));
+      if (hasTri) {
+        if (wi.isHost) {
+          const p0 = ss(n.q, n.r),
+            t1 = e.tiles[wi.tri[1]],
+            t2 = e.tiles[wi.tri[2]],
+            p1 = ss(t1.q, t1.r),
+            p2 = ss(t2.q, t2.r),
+            mcx = (p0.x + p1.x + p2.x) / 3,
+            mcz = (p0.z + p1.z + p2.z) / 3,
+            cx = mcx - p0.x,
+            cz = mcz - p0.z,
+            uPts = [
+              [(p0.x - mcx) / Ie, (p0.z - mcz) / Ie],
+              [(p1.x - mcx) / Ie, (p1.z - mcz) / Ie],
+              [(p2.x - mcx) / Ie, (p2.z - mcz) / Ie],
+            ];
+          (i.setRotation(0),
+            (i.scale = 1),
+            (i.offset = [cx / Ie, Ii, cz / Ie]),
+            (B = buildWonder3HexConstruction(i, stg, uPts, [cx, Ii * Ie, cz])),
+            (i.offset = [0, Ii, 0]));
+        }
+      } else if (wi.isHost) {
         (i.setRotation(D),
           (B = yv(i, "construction", {
             level: 1,
@@ -27649,40 +27652,6 @@ class OI {
             stage: stg,
           })),
           i.setRotation(0));
-        if (B) {
-          (B.spinners.push({
-            kind: "crane2",
-            pos: [0, (14 + stg * 1.4) * Ie + Ii * Ie, 0],
-            yaw: 0.65,
-            scale: 0.9,
-          }),
-            (B.top = Math.max(B.top, 16)));
-        }
-      } else {
-        const fh = 1.15 + stg * 0.85;
-        (i.cbox(0, 0.8, 0, 8.6, fh, 8.6, 13882312),
-          i.cbox(0, 0.8 + fh, 0, 7.2, 0.22, 7.2, 16764746),
-          i.cbox(-3.6, 0.8, 3.6, 2.2, 1.1, 1.6, 15779154),
-          i.cbox(3.5, 0.8, -3.4, 2.0, 0.95, 1.8, 14605526),
-          i.cbox(4.2, 0.8, 3.8, 0.9, 6.8 + stg, 0.9, 15906354),
-          (B = {
-            top: 9.5 + stg * 1.4,
-            clear: 12,
-            spinners: [
-              {
-                kind: "crane",
-                pos: [4.2 * Ie, (7.6 + stg) * Ie + Ii * Ie, 3.8 * Ie],
-                yaw: (n.id % 6) * 1.05,
-                scale: 0.82,
-              },
-            ],
-            smoke: [],
-            steam: [],
-            flames: [],
-            sparks: [],
-            paths: [],
-            specials: [],
-          }));
       }
     } else if (n.build)
       (i.setRotation(D),
@@ -27696,19 +27665,11 @@ class OI {
         })),
         i.setRotation(0));
     else if (wi && !wi.isHost) {
+      const wScheme = WONDER_TRI_SCHEMES[wi.pubId] || "A";
       ((i.offset = [0, 0, 0]),
         P1(i, 16764746, g, 0.92),
-        (i.offset = [0, Ii, 0]),
-        i.cbox(0, 0, 0, 16.2, 0.36, 16.2, 15657186),
-        i.cbox(0, 0.36, 0, 14.4, 0.14, 14.4, 16764746),
-        i.cbox(0, 0.5, 0, 12.6, 0.18, 12.6, 15262426));
-      for (const [px, pz] of [
-        [-5.6, -5.6],
-        [5.6, 5.6],
-      ]) {
-        (i.cbox(px, 0.68, pz, 0.85, 1.45, 0.85, 15657186),
-          i.cglow(px, 2.2, pz, 0.55, 0.38, 0.55, 16764746, 0.35));
-      }
+        wScheme === "B" && P1(i, 16764746, null, 0.42),
+        (i.offset = [0, Ii, 0]));
     } else if (n.public) {
       const isTriW = !!(
           wi &&
@@ -27729,42 +27690,52 @@ class OI {
       ((i.offset = [0, 0, 0]),
         P1(i, isTriW ? 16764746 : civAcc, isTriW ? g : null, isTriW ? 0.92 : 0.38));
       if (isTriW) {
-        const p0 = ss(n.q, n.r),
+        const wScheme = WONDER_TRI_SCHEMES[n.public] || "A",
+          p0 = ss(n.q, n.r),
           t1 = e.tiles[wi.tri[1]],
           t2 = e.tiles[wi.tri[2]],
           p1 = ss(t1.q, t1.r),
           p2 = ss(t2.q, t2.r),
-          cx = (p1.x + p2.x - 2 * p0.x) / 3,
-          cz = (p1.z + p2.z - 2 * p0.z) / 3;
-        ((i.offset = [0, Ii, 0]),
-          i.cbox(0, 0, 0, 16.2, 0.36, 16.2, 15657186),
-          i.cbox(0, 0.36, 0, 14.4, 0.14, 14.4, 16764746),
-          i.cbox(0, 0.5, 0, 12.6, 0.18, 12.6, 15262426),
+          mcx = (p0.x + p1.x + p2.x) / 3,
+          mcz = (p0.z + p1.z + p2.z) / 3,
+          cx = mcx - p0.x,
+          cz = mcz - p0.z,
+          uPts = [
+            [(p0.x - mcx) / Ie, (p0.z - mcz) / Ie],
+            [(p1.x - mcx) / Ie, (p1.z - mcz) / Ie],
+            [(p2.x - mcx) / Ie, (p2.z - mcz) / Ie],
+          ];
+        (wScheme === "B" && P1(i, 16764746, null, 0.42),
           i.setRotation(0),
-          (i.offset = [cx / Ie, Ii + 0.68, cz / Ie]),
-          (B = yv(i, `pub:${n.public}`, {
-            level: n.level,
-            terrain: n.terrain,
-            accent: 16764746,
-            seed: Q,
-            skins: l,
-            triScale: 1.4,
-          })),
+          (i.scale = 1),
+          (i.offset = [cx / Ie, Ii, cz / Ie]),
+          (B = buildWonder3Hex(i, n.public, n.level, uPts, [cx, Ii * Ie, cz])),
           (i.offset = [0, Ii, 0]));
         if (B) {
-          B.specials.push(
-            {
+          B.specials.push({
+            kind: "rings",
+            pos: [cx, Ii * Ie + B.top * Ie * 0.68, cz],
+            color: 16764746,
+          });
+          if (
+            n.public === "w_skytower" ||
+            n.public === "w_elevator" ||
+            n.public === "w_academy" ||
+            n.public === "w_solartower"
+          ) {
+            const beamCol =
+              n.public === "w_academy"
+                ? 6750110
+                : n.public === "w_solartower"
+                  ? 16764746
+                  : 5825023;
+            B.specials.push({
               kind: "beam",
-              pos: [cx, (Ii + 0.68) * Ie + B.top * 0.85, cz],
-              color: 16764746,
-              height: 7.5 + (n.level - 1) * 1.4,
-            },
-            {
-              kind: "rings",
-              pos: [cx, (Ii + 0.68) * Ie + B.top * 0.52, cz],
-              color: 16764746,
-            },
-          );
+              pos: [cx, Ii * Ie + B.top * Ie * 0.94, cz],
+              color: beamCol,
+              height: 6.5 + (n.level - 1) * 1.2,
+            });
+          }
           a = [...B.specials];
         }
       } else {
@@ -27927,6 +27898,7 @@ class OI {
         ),
         specials: (() => {
           const allowRing =
+            !!wi ||
             n.industry === "101110" ||
             n.industry === "101011" ||
             n.industry === "X005";
@@ -27954,6 +27926,7 @@ class OI {
         else if (n.industry === "X003" || n.public === "w_solartower")
           vKind = "energy_B";
         else if (
+          n.public === "w_academy" ||
           n.industry === "X009" ||
           n.industry === "X010" ||
           n.industry === "X005" ||
@@ -28128,6 +28101,608 @@ function Co(A, e, t, n, s, f, o, r, i, v, c = !1) {
       l,
       g,
     ));
+}
+
+const WONDER_TRI_SCHEMES = {
+  w_skytower: "B",
+  w_finhub: "B",
+  w_academy: "A",
+  w_expo: "C",
+  w_palace: "A",
+  w_megabridge: "A",
+  w_solartower: "A",
+  w_elevator: "B",
+};
+
+function buildWonder3HexConstruction(A, stg, uPts, W0) {
+  const P = window.GalleryPrim,
+    C = P.C,
+    fpLobe = 0.92,
+    s = Math.max(0, Math.min(3, stg || 0)),
+    coreH = 5.5 + s * 3.4;
+  // Central stepped megaproject foundation & steel scaffold frame
+  A.cbox(0, 0, 0, 18.2, 1.0, 18.2, C.concrete);
+  A.cglow(0, 1.02, 0, 16.6, 0.2, 16.6, C.gold, 0.15);
+  A.cbox(0, 1.0, 0, 12.6, coreH, 12.6, C.darkSlate);
+  for (const sx of [-6.4, 6.4]) {
+    for (const sz of [-6.4, 6.4]) {
+      A.cbox(sx, 1.0, sz, 1.2, coreH + 2.4, 1.2, C.amber);
+    }
+  }
+  for (let y = 3.2; y <= coreH + 1.5; y += 3.2) {
+    A.cbox(0, y, -6.4, 13.8, 0.55, 0.9, C.amber);
+    A.cbox(0, y, 6.4, 13.8, 0.55, 0.9, C.amber);
+    A.cbox(-6.4, y, 0, 0.9, 0.55, 13.8, C.amber);
+    A.cbox(6.4, y, 0, 0.9, 0.55, 13.8, C.amber);
+  }
+  // 3 radial construction causeways & lobe sub-bases
+  const spinners = [
+    {
+      kind: "crane2",
+      pos: [W0[0], W0[1] + (coreH + 6.5) * Ie, W0[2]],
+      yaw: 0.65,
+      scale: 0.95,
+    },
+  ];
+  uPts.forEach(([ux, uz], m) => {
+    const lx = ux * fpLobe,
+      lz = uz * fpLobe,
+      dl = Math.hypot(lx, lz) || 1,
+      fh = 1.6 + s * 1.1;
+    Co(
+      A,
+      W0[0] + lx * 0.5 * Ie,
+      W0[2] + lz * 0.5 * Ie,
+      lx / dl,
+      lz / dl,
+      dl * 0.94 * Ie,
+      4.4 * Ie,
+      W0[1],
+      W0[1] + 0.65 * Ie,
+      C.concrete,
+      !1,
+    );
+    A.cbox(lx, 0, lz, 9.6, 0.8, 9.6, C.concrete);
+    A.cbox(lx, 0.8, lz, 7.2, fh, 7.2, C.steel);
+    A.cglow(lx, 0.8 + fh, lz, 6.2, 0.22, 6.2, C.gold, m * 0.3);
+    if (m > 0) {
+      A.cbox(lx + 3.2, 0.8, lz + 2.8, 1.0, 7.6 + s * 1.2, 1.0, C.amber);
+      spinners.push({
+        kind: "crane",
+        pos: [
+          W0[0] + (lx + 3.2) * Ie,
+          W0[1] + (8.4 + s * 1.2) * Ie,
+          W0[2] + (lz + 2.8) * Ie,
+        ],
+        yaw: m * 2.1,
+        scale: 0.86,
+      });
+    }
+  });
+  return {
+    top: Math.max(18, coreH + 7),
+    clear: 12,
+    spinners,
+    smoke: [],
+    steam: [],
+    flames: [],
+    sparks: [],
+    paths: [],
+    specials: [],
+  };
+}
+
+function buildWonder3Hex(A, pubId, lv, uPts, W0) {
+  const P = window.GalleryPrim,
+    C = P.C,
+    sh = P.shade,
+    fp = 1.0,
+    fpLobe = 0.92,
+    ht = 1.0,
+    k = Math.min(5, Math.max(1, lv || 1)),
+    sorted = [...uPts].sort((a, b) => Math.abs(a[0]) - Math.abs(b[0])),
+    apex = sorted[0],
+    wings = [sorted[1], sorted[2]].sort((a, b) => a[0] - b[0]),
+    leftW = wings[0],
+    rightW = wings[1],
+    lobes = [apex, leftW, rightW],
+    azSign = apex[1] >= 0 ? 1 : -1;
+
+  let maxY = 22;
+  const trackY = (yTop) => {
+    if (yTop > maxY) maxY = yTop;
+  };
+
+  const M = {
+    cbox(x, y, z, w, h, d, col) {
+      trackY((y + h) * ht);
+      A.cbox(x * fp, y * ht, z * fp, w * fp, h * ht, d * fp, col);
+    },
+    cglow(x, y, z, w, h, d, col, ph = -1) {
+      trackY((y + h) * ht);
+      A.cglow(x * fp, y * ht, z * fp, w * fp, h * ht, d * fp, col, ph);
+    },
+    lbox(lx, lz, ox, y, oz, w, h, d, col, glow = !1, ph = -1) {
+      const cx = lx * fpLobe + ox * fp,
+        cz = lz * fpLobe + oz * fp;
+      trackY((y + h) * ht);
+      if (glow) A.cglow(cx, y * ht, cz, w * fp, h * ht, d * fp, col, ph);
+      else A.cbox(cx, y * ht, cz, w * fp, h * ht, d * fp, col);
+    },
+    obb(x, y, z, dx, dz, len, h, wid, col, glow = !1, rawPos = !1) {
+      const dl = Math.hypot(dx, dz) || 1,
+        nx = dx / dl,
+        nz = dz / dl,
+        px = rawPos ? x : x * fp,
+        pz = rawPos ? z : z * fp,
+        sl = rawPos ? len : len * fp,
+        sw = wid * fp,
+        sy0 = y * ht,
+        sy1 = (y + h) * ht;
+      trackY(sy1);
+      Co(
+        A,
+        W0[0] + px * Ie,
+        W0[2] + pz * Ie,
+        nx,
+        nz,
+        sl * Ie,
+        sw * Ie,
+        W0[1] + sy0 * Ie,
+        W0[1] + sy1 * Ie,
+        col,
+        glow,
+      );
+    },
+    strut(x0, y0, z0, x1, y1, z1, thick, col, glow = !1, rawEnds = !1) {
+      const sx0 = rawEnds ? x0 : x0 * fp,
+        sz0 = rawEnds ? z0 : z0 * fp,
+        sx1 = rawEnds ? x1 : x1 * fp,
+        sz1 = rawEnds ? z1 : z1 * fp,
+        sy0 = y0 * ht,
+        sy1 = y1 * ht;
+      trackY(Math.max(sy0, sy1));
+      const p0 = new Y(W0[0] + sx0 * Ie, W0[1] + sy0 * Ie, W0[2] + sz0 * Ie),
+        p1 = new Y(W0[0] + sx1 * Ie, W0[1] + sy1 * Ie, W0[2] + sz1 * Ie),
+        dir = p1.clone().sub(p0),
+        len = dir.length();
+      if (len < 1e-4) return;
+      dir.divideScalar(len);
+      const upRef = Math.abs(dir.y) > 0.92 ? new Y(1, 0, 0) : new Y(0, 1, 0),
+        r1 = new Y().crossVectors(dir, upRef).normalize(),
+        r2 = new Y().crossVectors(r1, dir).normalize(),
+        hw = thick * fp * Ie * 0.5,
+        c00 = p0.clone().addScaledVector(r1, -hw).addScaledVector(r2, -hw),
+        c10 = p0.clone().addScaledVector(r1, hw).addScaledVector(r2, -hw),
+        c11 = p0.clone().addScaledVector(r1, hw).addScaledVector(r2, hw),
+        c01 = p0.clone().addScaledVector(r1, -hw).addScaledVector(r2, hw),
+        d00 = p1.clone().addScaledVector(r1, -hw).addScaledVector(r2, -hw),
+        d10 = p1.clone().addScaledVector(r1, hw).addScaledVector(r2, -hw),
+        d11 = p1.clone().addScaledVector(r1, hw).addScaledVector(r2, hw),
+        d01 = p1.clone().addScaledVector(r1, -hw).addScaledVector(r2, hw),
+        buf = glow ? A.glow : A.solid,
+        cSide = glow ? col : sh(col, 0.9),
+        cDark = glow ? col : sh(col, 0.78);
+      (A.quad(c01, d01, d11, c11, r2, col, buf),
+        A.quad(c00, c10, d10, d00, r2.clone().negate(), cDark, buf),
+        A.quad(c10, c11, d11, d10, r1, cSide, buf),
+        A.quad(c00, d00, d01, c01, r1.clone().negate(), cSide, buf),
+        A.quad(d00, d10, d11, d01, dir, col, buf));
+    },
+    cyl(x, y, z, rad, h, col, glow = !1, ph = -1) {
+      const a = rad * 2,
+        b = rad * 1.42;
+      if (glow) {
+        (this.cglow(x, y, z, a, h, b * 0.62, col, ph),
+          this.cglow(x, y, z, b * 0.62, h, a, col, ph),
+          this.cglow(x, y, z, b, h, b, col, ph));
+      } else {
+        (this.cbox(x, y, z, a, h, b * 0.62, col),
+          this.cbox(x, y, z, b * 0.62, h, a, col),
+          this.cbox(x, y, z, b, h, b, sh(col, 1.04)));
+      }
+    },
+    dome(x, y, z, rad, h, col, glow = !1) {
+      const steps = 6;
+      for (let i = 0; i < steps; i++) {
+        const t = i / steps,
+          rr = rad * Math.cos(t * Math.PI * 0.48),
+          sy = y + t * h,
+          shh = h / steps + 0.1;
+        if (glow) this.cyl(x, sy, z, rr, shh, col, !0, (t * 0.6) % 1);
+        else this.cyl(x, sy, z, rr, shh, sh(col, 0.93 + t * 0.14), !1);
+      }
+    },
+    ring(x, y, z, rad, thick, h, col, glow = !0, phase = 0.15, segs = 16) {
+      for (let i = 0; i < segs; i++) {
+        const a0 = (i / segs) * Math.PI * 2,
+          a1 = ((i + 1) / segs) * Math.PI * 2,
+          mx = x + (Math.cos(a0) + Math.cos(a1)) * 0.5 * rad,
+          mz = z + (Math.sin(a0) + Math.sin(a1)) * 0.5 * rad,
+          dx = Math.cos(a1) - Math.cos(a0),
+          dz = Math.sin(a1) - Math.sin(a0),
+          chord = Math.hypot(dx, dz) * rad * 1.08;
+        this.obb(mx, y, mz, dx, dz, chord, h, thick, col, glow);
+      }
+    },
+    vRing(x, y, z, rad, thick, depth, col, axis = "z", glow = !0, segs = 20) {
+      for (let i = 0; i < segs; i++) {
+        const a = (i / segs) * Math.PI * 2,
+          u = Math.cos(a) * rad,
+          v = Math.sin(a) * rad,
+          px = axis === "z" ? x + u : x,
+          pz = axis === "z" ? z : z + u,
+          py = y + v,
+          w = axis === "z" ? thick * 1.35 : depth,
+          d = axis === "z" ? depth : thick * 1.35;
+        if (glow) this.cglow(px, py, pz, w, thick * 1.35, d, col, i / segs);
+        else this.cbox(px, py, pz, w, thick * 1.35, d, col);
+      }
+    },
+    tower(x, y, z, w, h, d, bodyCol, winCol = C.warmLit, trimCol = C.steel, floors = 0) {
+      this.cbox(x, y, z, w, h, d, bodyCol);
+      const rx = w / 2 - 0.35,
+        rz = d / 2 - 0.35;
+      for (const sx of [-1, 1]) {
+        for (const sz of [-1, 1]) {
+          this.cbox(x + sx * rx, y, z + sz * rz, 0.85, h + 0.35, 0.85, trimCol);
+        }
+      }
+      const fl = floors || Math.max(3, Math.floor(h / 2.6)),
+        step = (h - 1.8) / fl;
+      for (let i = 0; i < fl; i++) {
+        const fy = y + 1.2 + i * step,
+          bh = Math.min(1.05, step * 0.46);
+        (this.cglow(x, fy, z + d / 2 + 0.06, w - 1.6, bh, 0.18, winCol, (i * 0.13) % 1),
+          this.cglow(x, fy, z - d / 2 - 0.06, w - 1.6, bh, 0.18, winCol, (i * 0.13 + 0.3) % 1),
+          this.cglow(x + w / 2 + 0.06, fy, z, 0.18, bh, d - 1.6, winCol, (i * 0.13 + 0.15) % 1),
+          this.cglow(x - w / 2 - 0.06, fy, z, 0.18, bh, d - 1.6, winCol, (i * 0.13 + 0.45) % 1));
+      }
+      this.cbox(x, y + h, z, w + 0.5, 0.55, d + 0.5, trimCol);
+    },
+    spire(x, y, z, baseW, h, col = C.white, glowCol = C.cyan) {
+      (this.cbox(x, y, z, baseW, h * 0.34, baseW, col),
+        this.cbox(x, y + h * 0.34, z, baseW * 0.58, h * 0.34, baseW * 0.58, col),
+        this.cbox(x, y + h * 0.68, z, Math.max(0.45, baseW * 0.28), h * 0.32, Math.max(0.45, baseW * 0.28), glowCol),
+        this.cglow(x, y + h, z, Math.max(0.9, baseW * 0.44), 1.2, Math.max(0.9, baseW * 0.44), glowCol, 0.25));
+    },
+    cnRoof(x, y, z, w, d, h = 3.2, col = C.gold, ridge = C.amber) {
+      const steps = 5;
+      for (let i = 0; i < steps; i++) {
+        const t = i / steps,
+          rw = w + 2.0 - t * (w * 0.54 + 1.6),
+          rd = d + 2.0 - t * (d * 0.62 + 1.6);
+        this.cbox(x, y + i * (h / steps), z, rw, h / steps + 0.15, rd, sh(col, 0.92 + t * 0.14));
+      }
+      for (const sx of [-1, 1]) {
+        for (const sz of [-1, 1]) {
+          this.cbox(x + sx * (w / 2 + 0.95), y + 0.42, z + sz * (d / 2 + 0.95), 0.95, 0.85, 0.95, ridge);
+        }
+      }
+      this.cbox(x, y + h, z, Math.max(1.8, w * 0.5), 0.72, 0.85, ridge);
+    },
+    tree(x, y, z, s = 1.0, leafCol = C.emerald) {
+      (this.cbox(x, y, z, 0.7 * s, 2.0 * s, 0.7 * s, C.woodDark),
+        this.cbox(x, y + 1.8 * s, z, 2.8 * s, 1.8 * s, 2.8 * s, leafCol),
+        this.cbox(x, y + 3.4 * s, z, 1.8 * s, 1.2 * s, 1.8 * s, sh(leafCol, 1.12)));
+    },
+  };
+
+  function triSanctumPodium(baseCol, upperCol, trimCol, h = 2.4, lobeR = 7.8) {
+    (M.cyl(0, 0, 0, 11.4, h * 0.55, baseCol),
+      M.cyl(0, h * 0.55, 0, 9.8, h * 0.45, upperCol),
+      M.ring(0, h + 0.04, 0, 10.0, 0.42, 0.24, trimCol, !0, 0.1, 18));
+    for (let m = 0; m < 3; m++) {
+      const [ux, uz] = lobes[m],
+        lx = ux * fpLobe,
+        lz = uz * fpLobe,
+        bRad = lobeR,
+        a = bRad * 2,
+        b = bRad * 1.42,
+        uRad = lobeR * 0.84;
+      (M.obb(lx * 0.5, 0, lz * 0.5, lx, lz, Math.hypot(lx, lz) * 1.06, h * 0.55, 9.2, baseCol, !1, !0),
+        M.obb(lx * 0.5, h * 0.55, lz * 0.5, lx, lz, Math.hypot(lx, lz) * 0.98, h * 0.42, 7.2, upperCol, !1, !0),
+        M.obb(lx * 0.5, h * 0.98, lz * 0.5, lx, lz, Math.hypot(lx, lz) * 0.92, 0.2, 0.48, trimCol, !0, !0),
+        M.lbox(ux, uz, 0, 0, 0, a, h * 0.55, b * 0.62, baseCol),
+        M.lbox(ux, uz, 0, 0, 0, b * 0.62, h * 0.55, a, baseCol),
+        M.lbox(ux, uz, 0, 0, 0, b, h * 0.55, b, sh(baseCol, 1.04)),
+        M.lbox(ux, uz, 0, h * 0.55, 0, uRad * 2, h * 0.45, uRad * 0.88, upperCol),
+        M.lbox(ux, uz, 0, h * 0.55, 0, uRad * 0.88, h * 0.45, uRad * 2, upperCol),
+        M.lbox(ux, uz, 0, h * 0.55, 0, uRad * 1.42, h * 0.45, uRad * 1.42, sh(upperCol, 1.04)),
+        M.lbox(ux, uz, 0, h + 0.02, 0, uRad * 1.25, 0.22, uRad * 1.25, trimCol, !0, m * 0.3));
+    }
+    return h;
+  }
+
+  function triCampusPlazas(plazaCol, trimCol, walkwayCol = C.offwhite) {
+    (M.cyl(0, 0, 0, 9.6, 1.15, plazaCol),
+      M.ring(0, 1.16, 0, 9.4, 0.35, 0.2, trimCol, !0, 0.1, 16));
+    for (let m = 0; m < 3; m++) {
+      const [ux, uz] = lobes[m],
+        lx = ux * fpLobe,
+        lz = uz * fpLobe;
+      (M.obb(lx * 0.52, 0, lz * 0.52, lx, lz, Math.hypot(lx, lz) * 0.9, 0.55, 4.2, walkwayCol, !1, !0),
+        M.obb(lx * 0.52, 0.56, lz * 0.52, lx, lz, Math.hypot(lx, lz) * 0.88, 0.16, 0.42, trimCol, !0, !0),
+        M.lbox(ux, uz, 0, 0, 0, 13.6, 0.85, 8.6, plazaCol),
+        M.lbox(ux, uz, 0, 0, 0, 8.6, 0.85, 13.6, plazaCol),
+        M.lbox(ux, uz, 0, 0, 0, 11.2, 0.92, 11.2, sh(plazaCol, 1.06)),
+        M.lbox(ux, uz, 0, 0.93, 0, 9.8, 0.18, 9.8, trimCol, !0, m * 0.25));
+    }
+    return 1.15;
+  }
+
+  function triCyberArray(trimCol, secCol) {
+    (M.cyl(0, 0, 0, 10.2, 1.35, C.obsidian),
+      M.ring(0, 1.38, 0, 9.8, 0.45, 0.24, trimCol, !0, 0.15, 18));
+    for (let m = 0; m < 3; m++) {
+      const [ux, uz] = lobes[m],
+        lx = ux * fpLobe,
+        lz = uz * fpLobe;
+      (M.obb(lx * 0.55, 0, lz * 0.55, lx, lz, Math.hypot(lx, lz) * 1.0, 0.45, 3.4, C.obsidian, !1, !0),
+        M.obb(lx * 0.55, 0.46, lz * 0.55, lx, lz, Math.hypot(lx, lz) * 0.96, 0.22, 0.65, m % 2 ? secCol : trimCol, !0, !0),
+        M.lbox(ux, uz, 0, 0, 0, 11.6, 0.65, 11.6, C.obsidian),
+        M.lbox(ux, uz, 0, 0.66, 0, 9.2, 0.22, 9.2, trimCol, !0, m * 0.33),
+        M.lbox(ux, uz, 0, 0.88, 0, 5.4, 0.55, 5.4, C.darkSlate));
+    }
+    return 1.35;
+  }
+
+  // 1. 帝国天际观光塔 (w_skytower -> 方案 B：云端观光主塔 + 三格高空缆车迎宾副馆群)
+  if (pubId === "w_skytower") {
+    const y = triCampusPlazas(C.darkSlate, C.cyan, C.concrete),
+      h = 40 + k * 2.5;
+    (M.cyl(0, y, 0, 6.2, 6.0, C.obsidian),
+      M.cyl(0, y + 6.0, 0, 3.8, h * 0.74, C.white));
+    for (let i = 0; i < 6; i++) {
+      M.ring(0, y + 8 + i * 4.2, 0, 4.1, 0.38, 0.36, i % 2 ? C.cyan : C.gold, !0, i * 0.16, 14);
+    }
+    (M.dome(0, y + h * 0.44, 0, 6.4, 4.8, C.glassLit, !0),
+      M.ring(0, y + h * 0.46, 0, 7.0, 0.6, 0.55, C.gold, !0, 0.25),
+      M.dome(0, y + h * 0.72, 0, 4.8, 3.8, C.cyan, !0),
+      M.spire(0, y + 6.0 + h * 0.74, 0, 2.4, 12.0, C.white, C.cyan));
+    for (let m = 0; m < 3; m++) {
+      const [ux, uz] = lobes[m],
+        lx = ux * fpLobe,
+        lz = uz * fpLobe;
+      (M.lbox(ux, uz, 0, y, 0, 8.8, 5.4, 6.8, C.white),
+        M.lbox(ux, uz, 0, y + 5.4, 0, 6.6, 2.8, 5.2, C.glass),
+        M.lbox(ux, uz, 0, y + 8.2, 0, 7.2, 0.55, 5.8, C.gold),
+        M.lbox(ux, uz, 0, y + 8.8, 0, 3.2, 1.8, 3.2, C.cyan, !0, m * 0.3),
+        M.strut(lx, y + 9.6, lz, 0, y + h * 0.44, 0, 0.32, C.gold, !0, !0));
+    }
+  }
+
+  // 2. 国际金融与贸易中心 (w_finhub -> 方案 B：世贸双子主塔 + 证券交易所/清算行/黄金储备库三副楼)
+  else if (pubId === "w_finhub") {
+    const y = triCampusPlazas(C.navy, C.gold, C.warmStone),
+      h = 34 + k * 2.2;
+    (M.tower(-4.8, y, 0, 6.8, h, 6.8, C.darkSlate, C.gold, C.brass, 10 + k),
+      M.tower(4.8, y, 0, 6.8, h, 6.8, C.darkSlate, C.gold, C.brass, 10 + k));
+    for (const sy of [y + h * 0.46, y + h * 0.74]) {
+      (M.cbox(0, sy, 0, 5.6, 2.4, 3.8, C.glass),
+        M.cglow(0, sy + 0.7, 1.95, 5.0, 0.9, 0.2, C.gold, 0.2),
+        M.cglow(0, sy + 0.7, -1.95, 5.0, 0.9, 0.2, C.gold, 0.6));
+    }
+    (M.spire(-4.8, y + h + 0.5, 0, 2.8, 7.8, C.gold, C.warmLit),
+      M.spire(4.8, y + h + 0.5, 0, 2.8, 7.8, C.gold, C.warmLit),
+      M.lbox(apex[0], apex[1], 0, y, 0, 10.6, 7.2, 8.4, C.warmStone));
+    for (let px = -3.6; px <= 3.6; px += 2.4) {
+      M.lbox(apex[0], apex[1], px, y, 4.3 * azSign, 0.85, 7.0, 0.85, C.gold);
+    }
+    (M.lbox(apex[0], apex[1], 0, y + 7.2, 0, 11.4, 1.8, 9.0, C.gold),
+      M.lbox(apex[0], apex[1], 0, y + 9.0, 0, 7.2, 1.4, 6.2, C.brass),
+      M.tower((leftW[0] * fpLobe) / fp, y, (leftW[1] * fpLobe) / fp, 7.8, 15.5, 7.8, C.navy, C.cyan, C.silver, 5),
+      M.lbox(rightW[0], rightW[1], 0, y, 0, 9.6, 8.4, 9.6, C.obsidian),
+      M.lbox(rightW[0], rightW[1], 0, y + 8.4, 0, 7.2, 3.2, 7.2, C.gold),
+      M.lbox(rightW[0], rightW[1], 0, y + 11.6, 0, 4.4, 0.8, 4.4, C.warmLit, !0, 0.3));
+  }
+
+  // 3. 国家科学院圣殿 (w_academy -> 方案 A：跨三格强子对撞机 + 三探测站 + 中央量子圣殿塔)
+  else if (pubId === "w_academy") {
+    const y = triSanctumPodium(C.obsidian, C.darkSlate, C.emerald, 2.2, 7.6);
+    (M.ring(0, y + 0.4, 0, 15.2, 3.6, 2.8, C.offwhite, !1, 0, 24),
+      M.ring(0, y + 3.25, 0, 15.2, 1.1, 0.45, C.cyan, !0, 0.15, 24),
+      M.ring(0, y + 1.4, 0, 17.1, 0.45, 0.55, C.emerald, !0, 0.5, 24));
+    for (let m = 0; m < 3; m++) {
+      const [ux, uz] = lobes[m],
+        lx = ux * fpLobe,
+        lz = uz * fpLobe;
+      (M.lbox(ux, uz, 0, y, 0, 8.6, 5.8, 8.6, C.white),
+        M.dome(lx / fp, y + 5.8, lz / fp, 4.2, 3.6, m % 2 ? C.cyan : C.emerald, !0),
+        M.obb(lx * 0.5, y + 1.2, lz * 0.5, lx, lz, Math.hypot(lx, lz) * 0.86, 1.6, 2.2, C.silver, !1, !0),
+        M.obb(lx * 0.5, y + 2.85, lz * 0.5, lx, lz, Math.hypot(lx, lz) * 0.86, 0.35, 0.65, C.greenGlow, !0, !0));
+    }
+    const h = 23 + k * 2.0,
+      cy = y + h + 4.8;
+    (M.cyl(0, y, 0, 6.2, 6.5, C.darkSlate),
+      M.cyl(0, y + 6.5, 0, 4.4, h - 6.5, C.white));
+    for (let i = 0; i < 4; i++) {
+      M.ring(0, y + 8.5 + i * 3.8, 0, 4.8, 0.42, 0.4, C.emerald, !0, i * 0.22, 14);
+    }
+    (M.cglow(0, cy - 2.6, 0, 5.2, 5.2, 5.2, C.greenGlow, 0.2),
+      M.vRing(0, cy, 0, 7.6, 0.6, 0.65, C.cyan, "z", !0, 20),
+      M.vRing(0, cy, 0, 7.6, 0.6, 0.65, C.emerald, "x", !0, 20),
+      M.ring(0, cy, 0, 8.0, 0.5, 0.5, C.gold, !0, 0.4, 18));
+  }
+
+  // 4. 国家世博生态穹顶 (w_expo -> 方案 C：镜面莲花生态水苑 + 三重高空悬浮垂直森林云环塔)
+  else if (pubId === "w_expo") {
+    const y = triCyberArray(C.greenGlow, C.teal),
+      h = 29 + k * 1.6;
+    for (let m = 0; m < 3; m++) {
+      const [ux, uz] = lobes[m];
+      (M.lbox(ux, uz, 0, y - 0.3, 0, 10.2, 0.45, 10.2, C.teal, !0, m * 0.25),
+        M.tree((ux * fpLobe) / fp, y + 0.2, (uz * fpLobe) / fp, 1.25, C.emerald));
+    }
+    for (let b = 0; b < 3; b++) {
+      const a = (b / 3) * Math.PI * 2;
+      M.cyl(Math.cos(a) * 3.8, y, Math.sin(a) * 3.8, 1.35, h, C.white);
+    }
+    M.cglow(0, y + 1.0, 0, 2.0, h + 3.0, 2.0, C.greenGlow, 0.15);
+    const ringLevels = [
+      [y + h * 0.38, 11.2],
+      [y + h * 0.68, 8.8],
+      [y + h * 0.95, 6.4],
+    ];
+    for (let r = 0; r < ringLevels.length; r++) {
+      const [ry, rad] = ringLevels[r];
+      (M.ring(0, ry, 0, rad, 2.8, 2.0, C.white, !1, 0, 18),
+        M.ring(0, ry + 2.0, 0, rad, 2.2, 1.1, C.emerald, !1, 0, 18),
+        M.ring(0, ry - 0.35, 0, rad + 0.3, 0.55, 0.45, C.greenGlow, !0, r * 0.3, 18));
+    }
+    (M.dome(0, y + h + 2.2, 0, 4.4, 4.0, C.sky, !1),
+      M.ring(0, y + h + 2.4, 0, 4.8, 0.45, 0.4, C.gold, !0, 0.3, 14));
+  }
+
+  // 5. 紫禁博物宫殿群 (w_palace -> 方案 A：跨三格汉白玉三层丹陛紫禁皇城)
+  else if (pubId === "w_palace") {
+    const y = triSanctumPodium(C.warmStone, C.offwhite, C.gold, 2.6, 8.4),
+      by = y + 5.7,
+      hh = 8.4 + k * 0.9;
+    (M.cbox(0, y, -1.2 * azSign, 22.8, 2.0, 17.6, C.white),
+      M.cbox(0, y + 2.0, -1.2 * azSign, 20.2, 1.9, 15.2, C.offwhite),
+      M.cbox(0, y + 3.9, -1.2 * azSign, 17.8, 1.8, 13.0, C.white),
+      M.cglow(0, y + 5.72, -1.2 * azSign, 18.2, 0.24, 13.4, C.gold, 0.12));
+    for (let s = 0; s < 4; s++) {
+      M.cbox(0, y + s * 1.4, (4.8 + (3 - s) * 1.35) * azSign, 4.6, 1.45, 2.2, s % 2 ? C.gold : C.white);
+    }
+    M.cbox(0, by, -1.4 * azSign, 16.4, hh, 10.8, C.crimson);
+    for (let cx = -6.8; cx <= 6.8; cx += 2.26) {
+      (M.cbox(cx, by, 4.1 * azSign, 0.78, hh, 0.78, C.red),
+        M.cbox(cx, by, -6.9 * azSign, 0.78, hh, 0.78, C.red));
+    }
+    (M.cglow(0, by + hh * 0.56, 4.25 * azSign, 4.6, 1.8, 0.22, C.gold, 0.15),
+      M.cnRoof(0, by + hh, -1.4 * azSign, 17.8, 11.8, 4.2, C.gold, C.amber),
+      M.cbox(0, by + hh + 3.4, -1.4 * azSign, 12.6, 3.4, 7.8, C.crimson),
+      M.cnRoof(0, by + hh + 6.8, -1.4 * azSign, 13.8, 8.8, 4.8, C.gold, C.warmLit),
+      M.lbox(apex[0], apex[1], 0, y, -3.6 * azSign, 13.6, 0.45, 3.2, C.teal, !0, 0.25));
+    for (const bx of [-3.6, 0, 3.6]) {
+      M.lbox(apex[0], apex[1], bx, y + 0.45, -3.6 * azSign, 1.6, 0.65, 3.6, C.white);
+    }
+    (M.lbox(apex[0], apex[1], 0, y, 1.6 * azSign, 13.4, 5.8, 6.2, C.crimson),
+      M.lbox(apex[0], apex[1], 0, y, 2.2 * azSign, 2.4, 3.8, 6.6, C.obsidian),
+      M.cnRoof((apex[0] * fpLobe) / fp, y + 5.8, (apex[1] * fpLobe) / fp + 1.6 * azSign, 12.8, 5.8, 3.4, C.gold, C.amber));
+    for (const wg of [leftW, rightW]) {
+      const sx = wg[0] < 0 ? -1 : 1;
+      (M.obb(wg[0] * fpLobe * 0.56, y, wg[1] * fpLobe * 0.56, wg[0], wg[1], 9.0, 3.6, 2.8, C.crimson, !1, !0),
+        M.obb(wg[0] * fpLobe * 0.56, y + 3.6, wg[1] * fpLobe * 0.56, wg[0], wg[1], 9.2, 1.1, 3.4, C.gold, !1, !0),
+        M.lbox(wg[0], wg[1], 0, y, 0, 11.4, 1.8, 9.4, C.white),
+        M.lbox(wg[0], wg[1], 0, y + 1.8, 0, 9.6, 5.8, 7.6, C.crimson),
+        M.cnRoof((wg[0] * fpLobe) / fp, y + 7.6, (wg[1] * fpLobe) / fp, 10.2, 8.2, 3.5, C.gold, C.amber),
+        M.lbox(wg[0], wg[1], sx * 3.8, y + 1.8, -3.6 * azSign, 3.8, 5.2, 3.8, C.crimson),
+        M.cnRoof((wg[0] * fpLobe) / fp + sx * 3.8, y + 7.0, (wg[1] * fpLobe) / fp - 3.6 * azSign, 4.4, 4.4, 2.8, C.gold, C.warmLit));
+    }
+  }
+
+  // 6. 超级世纪大桥与运河枢 (w_megabridge -> 方案 A：跨三格双H巨塔斜拉跨海大桥 + 垂直深水船闸与航管塔)
+  else if (pubId === "w_megabridge") {
+    const bridgeZ = leftW[1] * 0.82,
+      dy = 10.2,
+      th = 33.5 + k * 1.5;
+    M.cyl(0, 0, 0, 12.2, 0.65, C.royalBlue);
+    for (let m = 0; m < 3; m++) {
+      const [ux, uz] = lobes[m],
+        lx = ux * fpLobe,
+        lz = uz * fpLobe;
+      (M.obb(lx * 0.5, 0, lz * 0.5, lx, lz, Math.hypot(lx, lz) * 1.1, 0.65, 11.2, C.royalBlue, !1, !0),
+        M.lbox(ux, uz, 0, 0, 0, 14.8, 0.65, 14.8, C.navy),
+        M.lbox(ux, uz, 0, 0.66, 0, 13.2, 0.22, 13.2, C.blue));
+    }
+    (M.cbox(-4.6, 0.65, apex[1] * 0.46, 1.8, 2.6, 20.5, C.concrete),
+      M.cbox(4.6, 0.65, apex[1] * 0.46, 1.8, 2.6, 20.5, C.concrete),
+      M.cbox(0, 0.9, apex[1] * 0.32, 3.8, 2.0, 9.6, C.crimson),
+      M.cbox(0, 2.9, apex[1] * 0.25, 3.2, 1.6, 5.4, C.amber),
+      M.cbox(0, 2.9, apex[1] * 0.52, 3.0, 2.6, 2.2, C.white),
+      M.tower((apex[0] * fpLobe) / fp - 5.6, 0.8, (apex[1] * fpLobe) / fp, 4.2, 19.5, 4.2, C.offwhite, C.cyan, C.steel, 6),
+      M.spire((apex[0] * fpLobe) / fp - 5.6, 20.3, (apex[1] * fpLobe) / fp, 1.4, 4.5, C.red, C.gold),
+      M.cbox(0, dy, bridgeZ, 39.2, 1.6, 6.6, C.silver),
+      M.cbox(0, dy - 1.2, bridgeZ, 38.0, 1.0, 4.8, C.steel),
+      M.cglow(0, dy + 1.65, bridgeZ + 2.8, 38.6, 0.28, 0.35, C.gold, 0.1),
+      M.cglow(0, dy + 1.65, bridgeZ - 2.8, 38.6, 0.28, 0.35, C.cyan, 0.55));
+    for (const px of [-9.6, 9.6]) {
+      (M.cbox(px, 0.65, bridgeZ, 4.0, 2.4, 9.2, C.concrete),
+        M.cbox(px, 2.4, bridgeZ - 3.4, 2.0, th, 2.0, C.white),
+        M.cbox(px, 2.4, bridgeZ + 3.4, 2.0, th, 2.0, C.white),
+        M.cbox(px, dy + 9.5, bridgeZ, 1.8, 1.8, 8.6, C.white),
+        M.cbox(px, 2.4 + th - 2.6, bridgeZ, 2.2, 2.4, 8.8, C.red),
+        M.cglow(px, 2.4 + th + 0.2, bridgeZ - 3.4, 1.0, 2.0, 1.0, C.gold, 0.2),
+        M.cglow(px, 2.4 + th + 0.2, bridgeZ + 3.4, 1.0, 2.0, 1.0, C.gold, 0.6));
+      for (const spanX of [-8.8, -5.2, 5.2, 8.8]) {
+        const anchorY = 2.4 + th - (Math.abs(spanX) > 7 ? 1.8 : 6.0);
+        for (const sz of [-3.0, 3.0]) {
+          M.strut(px, anchorY, bridgeZ + sz, px + spanX, dy + 1.5, bridgeZ + sz, 0.26, C.ice, !0);
+        }
+      }
+    }
+  }
+
+  // 7. 日冕超级能源塔 (w_solartower -> 方案 A：三格同心定日镜矩阵 + 中央超高层熔盐光热日冕巨塔)
+  else if (pubId === "w_solartower") {
+    const y = triSanctumPodium(C.obsidian, C.darkSlate, C.amber, 2.0, 8.4),
+      h = 34 + k * 2.2,
+      cy = y + h + 3.2;
+    (M.ring(0, y + 0.4, 0, 8.8, 2.0, 1.1, C.sky, !0, 0.1, 18),
+      M.ring(0, y + 0.6, 0, 13.2, 2.2, 1.3, C.glassLit, !0, 0.35, 24));
+    for (let m = 0; m < 3; m++) {
+      const [ux, uz] = lobes[m],
+        baseA = Math.atan2(uz, ux);
+      for (const rr of [17.2, 21.2]) {
+        for (let s = -2; s <= 2; s++) {
+          const a = baseA + s * 0.19,
+            mx = Math.cos(a) * rr * fpLobe,
+            mz = Math.sin(a) * rr * fpLobe;
+          M.obb(mx, y + 0.5, mz, -Math.cos(a), -Math.sin(a), 1.6, 1.6, 2.6, s % 2 ? C.sky : C.gold, !0, !0);
+        }
+      }
+      M.obb(ux * fpLobe * 0.52, y + 0.2, uz * fpLobe * 0.52, ux, uz, 14.0, 0.7, 1.1, C.orangeGlow, !0, !0);
+    }
+    M.cyl(0, y, 0, 5.4, 8.0, C.darkSlate);
+    for (let b = 0; b < 4; b++) {
+      const ba = (b / 4) * Math.PI * 2 + Math.PI / 4;
+      M.strut(Math.cos(ba) * 6.8, y, Math.sin(ba) * 6.8, Math.cos(ba) * 2.6, y + h * 0.58, Math.sin(ba) * 2.6, 1.4, C.offwhite);
+    }
+    (M.cyl(0, y + 8.0, 0, 3.4, h - 8.0, C.white),
+      M.dome(0, y + h - 1.0, 0, 5.4, 6.2, C.gold, !0),
+      M.cglow(0, cy - 2.4, 0, 6.8, 6.8, 6.8, C.orangeGlow, 0.1),
+      M.ring(0, cy + 0.5, 0, 8.8, 0.65, 0.6, C.warmLit, !0, 0.25, 18),
+      M.vRing(0, cy + 0.5, 0, 8.2, 0.55, 0.55, C.amber, "z", !0, 18));
+  }
+
+  // 8. 近地太空电梯基座 (w_elevator -> 方案 B：天梯发射主井 + 星际穿梭机停机坪 + 双激光供能高塔)
+  else if (pubId === "w_elevator") {
+    const y = triCampusPlazas(C.obsidian, C.purple, C.darkSlate),
+      h = 47 + k * 2.8,
+      podY = y + h * 0.55;
+    for (let i = 0; i < 3; i++) {
+      const s = 17.6 - i * 3.0;
+      M.cbox(0, y + i * 2.2, 0, s, 2.25, s, i % 2 ? C.steel : C.darkSlate);
+    }
+    (M.cbox(0, y + 6.6, 0, 2.8, h - 6.6, 2.8, C.silver),
+      M.cglow(0, y + 6.6, 0, 1.4, h - 4.0, 1.4, C.cyan, 0.15));
+    for (let r = 0; r < 5; r++) {
+      M.ring(0, y + 12.0 + r * 7.2, 0, 6.8 - r * 0.55, 0.65, 0.6, r % 2 ? C.magenta : C.cyan, !0, r * 0.2, 16);
+    }
+    (M.cyl((apex[0] * fpLobe) / fp, y, (apex[1] * fpLobe) / fp, 5.4, 2.2, C.gunmetal),
+      M.ring((apex[0] * fpLobe) / fp, y + 2.25, (apex[1] * fpLobe) / fp, 4.6, 0.5, 0.3, C.cyan, !0, 0.2, 14),
+      M.cglow(0, podY, 0, 5.6, 3.8, 5.6, C.magenta, 0.3));
+    for (const wg of [leftW, rightW]) {
+      (M.tower((wg[0] * fpLobe) / fp, y, (wg[1] * fpLobe) / fp, 6.4, 16.5, 6.4, C.darkSlate, C.purple, C.silver, 5),
+        M.dome((wg[0] * fpLobe) / fp, y + 16.5, (wg[1] * fpLobe) / fp, 2.8, 2.6, C.cyan, !0),
+        M.strut(wg[0] * fpLobe, y + 18.8, wg[1] * fpLobe, 0, podY + 1.8, 0, 0.42, C.cyan, !0, !0));
+    }
+  }
+
+  return {
+    smoke: [],
+    steam: [],
+    flames: [],
+    sparks: [],
+    paths: [],
+    spinners: [],
+    specials: [],
+    top: Math.max(18, maxY),
+    clear: 12,
+  };
 }
 const yI = {
     economy: [
