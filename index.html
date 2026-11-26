@@ -9835,17 +9835,39 @@ function ia(A, e, g = !1) {
   const t = A.cards[e],
     n = se[e];
   if (!t) return UA("尚未拥有这位人物");
-  const maxStars = Is[n.tier];
-  if (t.stars >= maxStars) return UA("已完成全部突破");
-  if (t.level < Qf(t)) return UA(`升到 Lv.${Qf(t)} 后才能突破`);
+  const maxStars = Is[n.tier],
+    prevStars = t.stars ?? 0,
+    prevLevel = t.level ?? 1,
+    prevCap = Math.min(Qf(t), Zn(n.tier));
+  if (prevStars >= maxStars) return UA("已完成全部突破");
+  if (prevLevel < Qf(t)) return UA(`升到 Lv.${Qf(t)} 后才能突破`);
   let starGain = 1,
     bonusGems = 0,
     bonusExp = 0,
+    gemSpent = 0,
     usedCopy = !1;
-  if (t.copies >= 1) {
+  if (t.copies >= 1 && !g) {
     t.copies -= 1;
     usedCopy = !0;
-    const starsLeft = maxStars - t.stars;
+    const starsLeft = maxStars - prevStars;
+    if (n.tier === 4) {
+      if (starsLeft >= 2) {
+        starGain = 2;
+        bonusGems = 800;
+      } else {
+        starGain = 1;
+        bonusGems = 2400;
+      }
+      bonusExp = 5000;
+    } else if (n.tier === 3) {
+      starGain = 1;
+      bonusGems = 400;
+      bonusExp = 2000;
+    }
+  } else if (t.copies >= 1 && g) {
+    t.copies -= 1;
+    usedCopy = !0;
+    const starsLeft = maxStars - prevStars;
     if (n.tier === 4) {
       if (starsLeft >= 2) {
         starGain = 2;
@@ -9864,8 +9886,9 @@ function ia(A, e, g = !1) {
     const o = BT_GEMS[n.tier] ?? 480;
     if (A.gems < o) return UA(`星钻不足，需要 ◇${o}`);
     A.gems -= o;
+    gemSpent = o;
   } else return UA("需要一张同名卡，或使用星钻猎头突破");
-  t.stars = Math.min(maxStars, t.stars + starGain);
+  t.stars = Math.min(maxStars, prevStars + starGain);
   const newCap = Math.min(Qf(t), Zn(n.tier));
   if (bonusGems > 0) A.gems += bonusGems;
   if (bonusExp > 0) {
@@ -9876,14 +9899,32 @@ function ia(A, e, g = !1) {
     }
     if (t.level >= newCap) t.exp = 0;
   }
+  const chaExp = 40 * starGain;
   A.stats.hadBreakthrough = (A.stats.hadBreakthrough ?? 0) + starGain;
-  yt(A, "cha", 40 * starGain);
+  yt(A, "cha", chaExp);
   const resMsg =
     usedCopy && n.tier >= 3
-      ? `${rn(n)} 同名突破 +${starGain} 星：上限升至 Lv.${newCap}，返还 ◇${bonusGems} 与 ${bonusExp} 经验（现 Lv.${t.level}）`
-      : `${rn(n)} 突破成功，等级上限提升到 Lv.${newCap}`;
+      ? `${rn(n)} 同名突破（★${prevStars}→★${t.stars}）：等级上限升至 Lv.${newCap}，返还 ◇${bonusGems} 与 ${bonusExp} 经验（现 Lv.${t.level}）`
+      : usedCopy
+        ? `${rn(n)} 完成同名突破（★${prevStars}→★${t.stars}），等级上限解锁至 Lv.${newCap}`
+        : `${rn(n)} 完成猎头突破（★${prevStars}→★${t.stars}），等级上限解锁至 Lv.${newCap}`;
   pe(A, `${resMsg}。`, usedCopy && n.tier >= 3 ? "gold" : "card");
-  return qe(resMsg, { starGain, bonusGems, bonusExp, level: t.level, cap: newCap });
+  return qe(resMsg, {
+    card: e,
+    mode: usedCopy ? "copy" : "gem",
+    prevStars,
+    stars: t.stars,
+    starGain,
+    maxStars,
+    prevLevel,
+    level: t.level,
+    prevCap,
+    cap: newCap,
+    gemSpent,
+    bonusGems,
+    bonusExp,
+    chaExp,
+  });
 }
 function ra(A, e, t) {
   var r;
@@ -12770,10 +12811,15 @@ function batchBreakthroughCopies(A) {
   for (const c of Object.values((A && A.cards) || {})) {
     const sim = _simCardCopyBreakthrough(c);
     if (!sim) continue;
+    const def = se[c.id],
+      prevStars = c.stars ?? 0,
+      prevLevel = c.level ?? 1,
+      prevCap = Math.min(Qf(c), Zn(def.tier));
     c.stars = sim.stars;
     c.copies = sim.copies;
     c.level = sim.level;
     c.exp = sim.exp;
+    const newCap = Math.min(Qf(c), Zn(def.tier));
     if (sim.bonusGems > 0) {
       A.gems += sim.bonusGems;
       totalBonusGems += sim.bonusGems;
@@ -12782,19 +12828,28 @@ function batchBreakthroughCopies(A) {
     totalStars += sim.gainedStars;
     items.push({
       id: c.id,
-      name: rn(se[c.id]),
+      name: rn(def),
+      tier: def.tier,
+      prevStars,
       starsGained: sim.gainedStars,
       stars: c.stars,
+      maxStars: Is[def.tier],
+      prevLevel,
       level: c.level,
+      prevCap,
+      cap: newCap,
       bonusGems: sim.bonusGems,
+      bonusExp: sim.bonusExp,
     });
   }
   if (!cardCount) return UA("当前没有可用同名卡直接突破的人物");
+  items.sort((a, b) => b.tier - a.tier || b.stars - a.stars);
+  const chaExp = 40 * totalStars;
   A.stats.hadBreakthrough = (A.stats.hadBreakthrough ?? 0) + totalStars;
-  yt(A, "cha", 40 * totalStars);
-  const msg = `一键同名突破完成：${cardCount} 位人物共晋升 +${totalStars} 星${totalBonusGems > 0 ? `，返还 ◇${totalBonusGems}` : ""}`;
+  yt(A, "cha", chaExp);
+  const msg = `批量同名突破完成：${cardCount} 位人才共晋升 +${totalStars} 星${totalBonusGems > 0 ? `，返还 ◇${totalBonusGems}` : ""}`;
   pe(A, `${msg}。`, totalBonusGems > 0 ? "gold" : "card");
-  return qe(msg, { cardCount, totalStars, bonusGems: totalBonusGems, items });
+  return qe(msg, { cardCount, totalStars, bonusGems: totalBonusGems, chaExp, items });
 }
 function _cloneStateForDeploySim(A) {
   const cardsClone = {};
@@ -28399,10 +28454,12 @@ function ei({ value: A, max: e, color: t = "var(--cyan)", label: n }) {
     ],
   });
 }
-function PQ({ stars: A, max: e }) {
+function PQ({ stars: A, max: e, igniteFrom: ig = null }) {
   return w("span", {
     class: "stars",
-    children: Array.from({ length: e }, (t, n) => w("i", { class: n < A ? "on" : "" }, n)),
+    children: Array.from({ length: e }, (t, n) =>
+      w("i", { class: n < A ? (ig !== null && n >= ig ? "on ignite" : "on") : "" }, n),
+    ),
   });
 }
 function jI({ def: A, size: e = 150 }) {
@@ -30111,6 +30168,49 @@ class fp {
           (this.modal = { type: "mentorResult", out: n }),
           this.emit());
       }, 1200));
+  }
+  breakthroughCard(cardId, useGems = !1, opts = {}) {
+    const prevGdp = (this.metrics && this.metrics.gdp) || 0,
+      res = this.act((st) => ia(st, cardId, useGems));
+    if (!res || !res.ok || !res.data) return res;
+    const out = res.data,
+      def = se[cardId],
+      newGdp = (this.metrics && this.metrics.gdp) || 0;
+    out.gdpDelta = newGdp - prevGdp;
+    Ht((def && def.tier >= 3) || out.starGain >= 2 ? "rare" : "levelup");
+    this.pulse++;
+    this.lastBt = {
+      cardId,
+      mode: out.mode,
+      prevStars: out.prevStars,
+      stars: out.stars,
+      ts: Date.now(),
+    };
+    this.modal = {
+      type: "breakthroughResult",
+      out,
+      backToCard: Boolean(opts && opts.backToCard),
+      fromMentor: Boolean(opts && opts.fromMentor),
+    };
+    this.emit();
+    return res;
+  }
+  batchBreakthrough() {
+    const prevGdp = (this.metrics && this.metrics.gdp) || 0,
+      res = this.act((st) => batchBreakthroughCopies(st));
+    if (!res || !res.ok || !res.data) return res;
+    const batch = res.data,
+      newGdp = (this.metrics && this.metrics.gdp) || 0;
+    batch.gdpDelta = newGdp - prevGdp;
+    Ht("rare");
+    this.pulse++;
+    this.lastBt = {
+      batchIds: new Set((batch.items || []).map((x) => x.id)),
+      ts: Date.now(),
+    };
+    this.modal = { type: "breakthroughResult", batch };
+    this.emit();
+    return res;
   }
   tradeAt(e, t) {
     this.act((s) => p4(s, e, t)).ok && (Ht("coin"), (this.modal = null), (this.selected = e), this.emit());
@@ -32290,6 +32390,8 @@ function hp() {
       return w(mp, {});
     case "mentorResult":
       return w(Op, { m: e });
+    case "breakthroughResult":
+      return typeof BreakthroughModal === "function" ? w(BreakthroughModal, { m: e }) : null;
     case "trade":
       return w(Rp, { tile: e.tile });
     case "fypPreview":
@@ -34204,6 +34306,7 @@ function zp({ id: A }) {
     g = Tt(t, "mentor"),
     gMax = g.maxCharges ?? g.perDay ?? 8,
     gCur = g.charges ?? g.left ?? 0,
+    justBt = Boolean(e.lastBt && e.lastBt.cardId === A && Date.now() - e.lastBt.ts < 12e3),
     P = () => {
       const B = new Set(
           t.tiles
@@ -34236,7 +34339,7 @@ function zp({ id: A }) {
     sub: `${n.title} · 原型：${n.origin}`,
     children: [
       w("div", {
-        class: "card-hero",
+        class: `card-hero${justBt ? " just-bt" : ""}`,
         style: { "--tier": Xe[n.tier] },
         children: [
           w("div", {
@@ -34254,8 +34357,14 @@ function zp({ id: A }) {
                 class: "cp-row",
                 children: [
                   w("span", { children: ["Lv.", s.level, " / ", Zn(n.tier)] }),
-                  w(PQ, { stars: s.stars, max: Is[n.tier] }),
-                  w("span", { class: "muted", children: ["同名卡 ×", s.copies] }),
+                  w(PQ, {
+                    stars: s.stars,
+                    max: Is[n.tier],
+                    igniteFrom: justBt ? e.lastBt.prevStars : null,
+                  }),
+                  justBt
+                    ? w("span", { class: "cp-bt-tag", children: `已突破 · 上限 Lv.${Math.min(o, Zn(n.tier))}` })
+                    : w("span", { class: "muted", children: ["同名卡 ×", s.copies] }),
                 ],
               }),
               w(ei, {
@@ -34277,13 +34386,13 @@ function zp({ id: A }) {
                     (btMode === "copy" || s.copies >= 1
                       ? w("button", {
                           class: "btn gold",
-                          onClick: () => e.act((B) => ia(B, A)),
+                          onClick: () => e.breakthroughCard(A, !1, { backToCard: !0 }),
                           children: ["突破 ", w("small", { children: "消耗 1 张同名卡" })],
                         })
                       : w("button", {
                           class: "btn gold",
                           disabled: btMode !== "gem" && t.gems < BT_GEMS[n.tier],
-                          onClick: () => e.act((B) => ia(B, A, !0)),
+                          onClick: () => e.breakthroughCard(A, !0, { backToCard: !0 }),
                           children: ["猎头突破 ", w("small", { children: ["◇", BT_GEMS[n.tier]] })],
                         })),
                   w("button", {
@@ -34927,8 +35036,11 @@ function mp() {
                 r && bt
                   ? w("button", {
                       class: "btn small gold",
-                      onClick: () => A.openModal({ type: "card", id: s.id }),
-                      children: bt === "gem" ? "猎头突破" : "去突破",
+                      onClick: () => A.breakthroughCard(s.id, bt === "gem", { fromMentor: !0 }),
+                      children:
+                        bt === "gem"
+                          ? ["猎头突破 ", w("small", { children: ["◇", BT_GEMS[f.tier]] })]
+                          : "同名突破",
                     })
                   : w("button", {
                       class: "btn small gold",
@@ -34979,19 +35091,19 @@ function Op({ m: A }) {
               }),
               w("small", {
                 children: n.jackpot
-                  ? `极小概率的开窍：直接升到关口 Lv.${n.cap}`
+                  ? `直达当前等级关口 Lv.${n.cap}`
                   : r < n.roll
-                    ? `掷出 ${n.roll} 点，升到关口 Lv.${n.cap} 就停住了`
-                    : `掷出 ${n.roll} 点，升了 ${r} 级`,
+                    ? `掷出 ${n.roll} 点，到达关口 Lv.${n.cap}`
+                    : `掷出 ${n.roll} 点，提升 ${r} 级`,
               }),
               v &&
                 w("small", {
                   class: "gold",
                   children: n.maxed
-                    ? "已经满级"
+                    ? "已达满级上限"
                     : f.copies > 0
-                      ? "到关口了，可以用同名卡突破"
-                      : `到关口了，可用 ◇${BT_GEMS[s.tier]} 猎头突破`,
+                      ? "已达等级关口，可用同名卡突破"
+                      : `已达等级关口，可用 ◇${BT_GEMS[s.tier]} 猎头突破`,
                 }),
             ],
           }),
@@ -35005,17 +35117,13 @@ function Op({ m: A }) {
             (f.copies > 0
               ? w("button", {
                   class: "btn gold",
-                  onClick: () => {
-                    (e.act((c) => ia(c, n.card)), e.openModal({ type: "card", id: n.card }));
-                  },
-                  children: "突破",
+                  onClick: () => e.breakthroughCard(n.card, !1),
+                  children: "同名突破",
                 })
               : w("button", {
                   class: "btn gold",
                   disabled: t.gems < BT_GEMS[s.tier],
-                  onClick: () => {
-                    e.act((c) => ia(c, n.card, !0)).ok && e.openModal({ type: "card", id: n.card });
-                  },
+                  onClick: () => e.breakthroughCard(n.card, !0),
                   children: `猎头突破 ◇${BT_GEMS[s.tier]}`,
                 })),
           w("button", {
@@ -35033,7 +35141,331 @@ function Op({ m: A }) {
           w("button", {
             class: `btn${i ? " ghost" : " primary"}`,
             onClick: () => e.openModal(null),
-            children: "好",
+            children: "确认",
+          }),
+        ],
+      }),
+    ],
+  });
+}
+function BreakthroughModal({ m: A }) {
+  const e = Pe(),
+    t = e.state;
+  if (A && A.batch) {
+    const b = A.batch,
+      items = b.items || [];
+    return w(Cn, {
+      cls: "act-modal bt-modal bt-batch-modal",
+      title: "批量同名突破 · 星级晋升结算",
+      sub: `共 ${b.cardCount} 位人才完成同名升星 · 累计晋升 +${b.totalStars} 星`,
+      children: [
+        w("div", {
+          class: "bt-kpis",
+          children: [
+            w("div", {
+              class: "bt-kpi",
+              children: [
+                w("span", { children: "晋升人数" }),
+                w("strong", { children: `${b.cardCount} 位` }),
+              ],
+            }),
+            w("div", {
+              class: "bt-kpi",
+              children: [
+                w("span", { children: "累计升星" }),
+                w("strong", { class: "gold", children: `+${b.totalStars} 星` }),
+              ],
+            }),
+            w("div", {
+              class: "bt-kpi",
+              children: [
+                w("span", { children: b.bonusGems > 0 ? "星钻返还" : "即时产出" }),
+                w("strong", {
+                  class: b.bonusGems > 0 ? "violet" : b.gdpDelta > 0.005 ? "up" : "",
+                  children:
+                    b.bonusGems > 0
+                      ? `◇${b.bonusGems}`
+                      : b.gdpDelta > 0.005
+                        ? `GDP +${fe(b.gdpDelta)}亿`
+                        : "全维倍率提升",
+                }),
+              ],
+            }),
+            w("div", {
+              class: "bt-kpi",
+              children: [
+                w("span", { children: "主公回馈" }),
+                w("strong", { class: "up", children: `魅力经验 +${b.chaExp || b.totalStars * 40}` }),
+              ],
+            }),
+          ],
+        }),
+        w("div", {
+          class: "bt-batch-list",
+          children: items.map((it) => {
+            const def = se[it.id],
+              tier = it.tier ?? (def ? def.tier : 1),
+              maxS = it.maxStars ?? (def ? Is[def.tier] : 3),
+              prevS = it.prevStars ?? Math.max(0, it.stars - (it.starsGained || 1));
+            return w(
+              "button",
+              {
+                class: "bt-batch-row",
+                style: { "--tier": Xe[tier] },
+                onClick: () => e.openModal({ type: "card", id: it.id }),
+                children: [
+                  w(Ls, { id: it.id, size: 42 }),
+                  w("div", {
+                    class: "bbl-main",
+                    children: [
+                      w("b", { children: [def ? w(Jo, { def }) : it.name, " ", w(L0, { tier })] }),
+                      w("small", {
+                        children: [
+                          `上限 Lv.${it.prevCap ?? 10} → Lv.${it.cap ?? Qf({ stars: it.stars })}`,
+                          it.level > (it.prevLevel || 0) ? ` · 直升 Lv.${it.level}` : "",
+                          it.bonusGems > 0 ? ` · 返 ◇${it.bonusGems}` : "",
+                        ],
+                      }),
+                    ],
+                  }),
+                  w("div", {
+                    class: "bbl-right",
+                    children: [
+                      w("div", {
+                        class: "bt-nodes compact",
+                        children: Array.from({ length: maxS }, (_, idx) => {
+                          const stCls = idx < prevS ? "lit" : idx < it.stars ? "ignite" : "dim";
+                          return w(
+                            "i",
+                            {
+                              class: `bt-node ${stCls}`,
+                              style:
+                                idx >= prevS && idx < it.stars
+                                  ? `--d:${(idx - prevS) * 90}ms`
+                                  : void 0,
+                            },
+                            idx,
+                          );
+                        }),
+                      }),
+                      w("em", { class: "bbl-delta", children: `★${prevS} → ★${it.stars}` }),
+                    ],
+                  }),
+                ],
+              },
+              it.id,
+            );
+          }),
+        }),
+        w("div", {
+          class: "actions end",
+          children: [
+            w("button", {
+              class: "btn primary",
+              onClick: () => e.openModal(null),
+              children: "确认",
+            }),
+          ],
+        }),
+      ],
+    });
+  }
+  const out = (A && A.out) || null,
+    def = out ? se[out.card] : null;
+  if (!out || !def) return null;
+  const cs = t.cards[out.card],
+    isGem = out.mode === "gem",
+    tl = cs && cs.tile !== null ? t.tiles[cs.tile] : null,
+    mods = be(t).mods || {},
+    vStar = tl ? mods.cardVirtualStar || 0 : 0,
+    sBoost = 1 + (mods.starMultBoost || 0),
+    prevPct = Math.round((out.prevStars + vStar) * 6 * sBoost),
+    newPct = Math.round((out.stars + vStar) * 6 * sBoost),
+    mentorAct = Tt(t, "mentor"),
+    canMentorNow = Boolean(cs && !wa(t, out.card) && !mentorAct.block),
+    maxLv = Zn(def.tier),
+    unlockedMax = out.cap >= maxLv,
+    whereText = tl
+      ? tl.capital
+        ? "首都"
+        : tl.industry && HA[tl.industry]
+          ? HA[tl.industry].short || HA[tl.industry].name
+          : Ws(tl)
+      : null,
+    startDeployNow = () => {
+      const valid = new Set(
+        t.tiles
+          .filter((Q) => Q.unlocked && (Q.capital || (Q.industry && !Q.build)) && Q.card !== out.card)
+          .map((Q) => Q.id),
+      );
+      if (!valid.size) {
+        e.toast("当前没有可派驻的已建成产业或首都岗位，请先建设产业", "warn");
+        return;
+      }
+      e.startPlacement({ kind: "deploy", card: out.card, tiles: valid });
+      e.toast("点击首都或已建成的产业地块进行派驻", "info");
+    };
+  return w(Cn, {
+    cls: `act-modal bt-modal ${isGem ? "mode-gem" : "mode-copy"} t${def.tier}`,
+    title: isGem ? "猎头突破 · 等级上限解锁" : "同名突破 · 等级上限解锁",
+    sub: `${def.title} · 原型：${def.origin}`,
+    children: [
+      w("div", {
+        class: "bt-stage",
+        style: { "--tier": Xe[def.tier] },
+        children: [
+          w("span", { class: "bt-fx-grid", "aria-hidden": "true" }),
+          w("span", { class: "bt-fx-sweep", "aria-hidden": "true" }),
+          w("div", {
+            class: "bt-portrait-pod",
+            children: [
+              w("span", { class: "bt-ring r1", "aria-hidden": "true" }),
+              w("span", { class: "bt-ring r2", "aria-hidden": "true" }),
+              w("div", { class: "bt-face", children: w(Ls, { id: out.card, size: 88 }) }),
+            ],
+          }),
+          w("div", {
+            class: "bt-hero-main",
+            children: [
+              w("div", {
+                class: "bt-name-row",
+                children: [
+                  w("b", { class: "bt-name", children: w(Jo, { def }) }),
+                  w(L0, { tier: def.tier }),
+                  w("span", {
+                    class: `bt-mode-tag ${isGem ? "gem" : "copy"}`,
+                    children: isGem ? "星钻猎头突破" : "同名晋升突破",
+                  }),
+                ],
+              }),
+              w("div", {
+                class: "bt-star-row",
+                children: [
+                  w("div", {
+                    class: "bt-nodes",
+                    children: Array.from({ length: out.maxStars }, (_, idx) => {
+                      const stCls = idx < out.prevStars ? "lit" : idx < out.stars ? "ignite" : "dim";
+                      return w(
+                        "i",
+                        {
+                          class: `bt-node ${stCls}`,
+                          style:
+                            idx >= out.prevStars && idx < out.stars
+                              ? `--d:${(idx - out.prevStars) * 110}ms`
+                              : void 0,
+                        },
+                        idx,
+                      );
+                    }),
+                  }),
+                  w("span", {
+                    class: "bt-star-delta",
+                    children: [
+                      w("span", { children: `★${out.prevStars}` }),
+                      w("i", { children: "→" }),
+                      w("b", { children: `★${out.stars}` }),
+                      w("em", { children: `+${out.starGain}` }),
+                    ],
+                  }),
+                ],
+              }),
+              w("div", {
+                class: "bt-gate-row",
+                children: [
+                  w("span", { class: "bgr-lbl", children: "等级上限" }),
+                  w("span", { class: "bgr-from", children: `Lv.${out.prevCap}` }),
+                  w("i", { class: "bgr-arr", children: "→" }),
+                  w("strong", { class: "bgr-to", children: `Lv.${out.cap}` }),
+                  out.level > out.prevLevel
+                    ? w("em", { class: "bgr-jump", children: `直升 Lv.${out.level}` })
+                    : w("em", { class: "bgr-span", children: `+${out.cap - out.prevCap} 级成长空间` }),
+                ],
+              }),
+            ],
+          }),
+        ],
+      }),
+      w("div", {
+        class: "bt-kpis",
+        children: [
+          w("div", {
+            class: "bt-kpi",
+            children: [
+              w("span", { children: "星级全维加成" }),
+              w("strong", { class: "up", children: `+${prevPct}% → +${newPct}%` }),
+            ],
+          }),
+          w("div", {
+            class: "bt-kpi",
+            children: [
+              w("span", { children: "驻地即时反馈" }),
+              w("strong", {
+                class: out.gdpDelta > 0.005 ? "up" : "",
+                children: whereText
+                  ? out.gdpDelta > 0.005
+                    ? `${whereText} · GDP +${fe(out.gdpDelta)}亿`
+                    : `${whereText} · 全维生效`
+                  : "待命中 · 派驻生效",
+              }),
+            ],
+          }),
+          w("div", {
+            class: "bt-kpi",
+            children: [
+              w("span", { children: unlockedMax && def.exclusive ? "满级专属词条" : "满级上限进度" }),
+              w("strong", {
+                class: unlockedMax ? "gold" : "",
+                children: unlockedMax
+                  ? def.exclusive
+                    ? `Lv.${maxLv} 解锁「${def.exclusive.name}」`
+                    : `已开放满级 Lv.${maxLv}`
+                  : `满级 Lv.${maxLv}（余 ${out.maxStars - out.stars} 星）`,
+              }),
+            ],
+          }),
+          w("div", {
+            class: "bt-kpi",
+            children: [
+              w("span", { children: "突破投入与回馈" }),
+              w("strong", {
+                children: isGem
+                  ? `消耗 ◇${out.gemSpent} · 魅力 +${out.chaExp}`
+                  : `同名 ×1${out.bonusGems > 0 ? ` · 返 ◇${out.bonusGems}` : ""} · 魅力 +${out.chaExp}`,
+              }),
+            ],
+          }),
+        ],
+      }),
+      w("div", {
+        class: "actions wrap end",
+        children: [
+          w("button", {
+            class: "btn ghost",
+            onClick: () => e.openModal({ type: "card", id: out.card }),
+            children: "人物档案",
+          }),
+          A.fromMentor &&
+            w("button", {
+              class: "btn ghost",
+              onClick: () => e.openModal({ type: "mentor" }),
+              children: "指点列表",
+            }),
+          !tl &&
+            w("button", {
+              class: "btn",
+              onClick: startDeployNow,
+              children: "派驻地块",
+            }),
+          canMentorNow &&
+            w("button", {
+              class: "btn primary",
+              onClick: () => e.mentorCard(out.card),
+              children: ["继续指点 ", w("small", { children: [`体力 ${mentorAct.cost}`] })],
+            }),
+          w("button", {
+            class: `btn ${canMentorNow ? "gold" : "primary"}`,
+            onClick: () => e.openModal(null),
+            children: "确认",
           }),
         ],
       }),
@@ -36787,13 +37219,7 @@ function Yp() {
                     A.toast("当前暂无满足等级的同名卡可批量突破，可点击人物查看突破条件", "info");
                     return;
                   }
-                  const res = A.act((st) => batchBreakthroughCopies(st));
-                  if (res && res.ok && !res.msg && res.data) {
-                    A.toast(
-                      `已完成 ${res.data.cardCount} 位人才突破，共提升 ${res.data.totalStars} 颗星级`,
-                      "gold",
-                    );
-                  }
+                  A.batchBreakthrough();
                 },
                 children: [
                   btInfo.cardCount > 0 &&
@@ -36919,6 +37345,11 @@ function Yp() {
             i = (r == null ? void 0 : r.tile) != null ? e.tiles[r.tile] : null,
             isLocked = Boolean(i && i.cardLocked),
             btMode = r ? cardBtMode(e, r) : null,
+            tileJustBt = Boolean(
+              A.lastBt &&
+                Date.now() - A.lastBt.ts < 12e3 &&
+                (A.lastBt.cardId === o.id || (A.lastBt.batchIds && A.lastBt.batchIds.has(o.id))),
+            ),
             whereShort = i
               ? i.capital
                 ? "首都"
@@ -36954,7 +37385,7 @@ function Yp() {
           return w(
             "button",
             {
-              class: `card-tile v11 t${o.tier}${r ? "" : " unowned"}`,
+              class: `card-tile v11 t${o.tier}${r ? "" : " unowned"}${tileJustBt ? " just-bt" : ""}`,
               style: { "--tier": Xe[o.tier] },
               "data-tip-title": cardTipTitle,
               "data-tip": cardTipLines.join("\n"),
@@ -37502,10 +37933,10 @@ function Jp() {
                 class: "trait-list compact",
                 children: Z9.map((Q) => {
                   const isAwake = t.hidden.includes(Q.id),
-                    trTipTitle = isAwake ? `隐藏性格 · ${Q.name}` : "未觉醒隐藏性格",
+                    trTipTitle = isAwake ? `隐藏特质 · ${Q.name}` : "未解锁隐藏特质",
                     trTipBody = isAwake
                       ? `✓ 效果：${Q.effect}\n• 达成条件：${Q.condition}`
-                      : `觉醒线索：${Q.hint}`;
+                      : `触发线索：${Q.hint}`;
                   return w(
                     "li",
                     {
@@ -37514,12 +37945,12 @@ function Jp() {
                       "data-tip-title": trTipTitle,
                       "data-tip": trTipBody,
                       children: [
-                        w("span", { class: "tr-ico", children: isAwake ? "●" : "🔒" }),
+                        w("span", { class: "tr-ico", children: isAwake ? "●" : "○" }),
                         w("b", { children: isAwake ? Q.name : "？？？" }),
                         _p6bQTip(trTipTitle, trTipBody),
                         w("em", {
                           class: `tr-pill ${isAwake ? "gold" : "muted"}`,
-                          children: isAwake ? "已觉醒" : "未觉醒",
+                          children: isAwake ? "已解锁" : "未解锁",
                         }),
                       ],
                     },
@@ -41070,7 +41501,7 @@ ${A.capital ? "首都" : "这块地"}产出 +${SA(i.prod)}${
         }${
           c
             ? `
-! 已到 Lv.${r} 关口，${bt === "copy" ? "可用同名卡突破（红/橙享共鸣礼）" : bt === "gem" ? `可用 ◇${BT_GEMS[f.tier]} 猎头突破` : `需同名卡或 ◇${BT_GEMS[f.tier]} 猎头突破`}`
+• 已到 Lv.${r} 关口，${bt === "copy" ? "可用同名卡突破（SSR/UR 返还星钻与经验）" : bt === "gem" ? `可用 ◇${BT_GEMS[f.tier]} 猎头突破` : `需同名卡或 ◇${BT_GEMS[f.tier]} 猎头突破`}`
             : ""
         }
 点一下看人物详情`,
@@ -41646,6 +42077,7 @@ function ModalHostV1() {
   if (m.type === "fypPreview") return w(FypPreviewModal, { planId: m.planId, m });
   if (m.type === "fypCelebrate") return w(FypCelebrateModal, { data: m.data, m });
   if (m.type === "debtConfirm") return w(DebtConfirmModal, { m });
+  if (m.type === "breakthroughResult") return w(BreakthroughModal, { m });
   return w(hp, {});
 }
 function fL() {
@@ -42190,7 +42622,7 @@ function C9(A) {
   else if (e.type === "breakthrough") {
     const cObj = ie.state.cards[e.card],
       bt = cardBtMode(ie.state, cObj);
-    bt === "copy" ? ie.act((t) => ia(t, e.card)) : ie.openModal({ type: "card", id: e.card });
+    bt === "copy" ? ie.breakthroughCard(e.card, !1) : ie.openModal({ type: "card", id: e.card });
   } else if (e.type === "restructure" || e.type === "restructureDebt") {
     ((ie.panel = null), ie.openPanel("economy"));
   } else if (e.type === "daily") ie.act((t) => w7(t));
@@ -42906,6 +43338,8 @@ window.__eun = {
   ke,
   HA,
   Ee,
+  se,
+  ia,
 };
 </script>
     <style rel="stylesheet" crossorigin>
@@ -56475,6 +56909,475 @@ button.dcard {
   background: rgba(12, 22, 35, 0.65);
   border: 1px dashed rgba(160, 200, 240, 0.2);
 }
+
+/* Breakthrough Ceremony Modal & Post-Breakthrough VFX */
+.modal.bt-modal {
+  max-width: 548px;
+}
+.bt-stage {
+  position: relative;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  padding: 18px;
+  border-radius: 12px;
+  background:
+    radial-gradient(circle at 18% 50%, color-mix(in srgb, var(--tier) 34%, transparent), transparent 62%),
+    radial-gradient(circle at 88% 16%, rgba(88, 225, 255, 0.16), transparent 54%),
+    linear-gradient(155deg, rgba(10, 20, 34, 0.96), rgba(5, 10, 18, 0.98));
+  border: 1px solid color-mix(in srgb, var(--tier) 60%, rgba(150, 205, 255, 0.28));
+  box-shadow:
+    0 14px 34px rgba(0, 0, 0, 0.52),
+    inset 0 1px 0 rgba(255, 255, 255, 0.1),
+    0 0 30px color-mix(in srgb, var(--tier) 26%, transparent);
+  animation: btStageIn 0.4s cubic-bezier(0.16, 0.88, 0.24, 1) both;
+}
+.bt-modal.mode-gem .bt-stage {
+  background:
+    radial-gradient(circle at 18% 50%, color-mix(in srgb, var(--tier) 32%, transparent), transparent 62%),
+    radial-gradient(circle at 86% 20%, rgba(168, 128, 255, 0.22), transparent 55%),
+    linear-gradient(155deg, rgba(11, 21, 37, 0.96), rgba(6, 10, 20, 0.98));
+}
+.bt-fx-grid {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  opacity: 0.22;
+  background-image:
+    linear-gradient(rgba(130, 190, 245, 0.14) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(130, 190, 245, 0.14) 1px, transparent 1px);
+  background-size: 20px 20px;
+  mask-image: radial-gradient(circle at 30% 50%, #000 20%, transparent 85%);
+}
+.bt-fx-sweep {
+  position: absolute;
+  top: -40%;
+  left: -35%;
+  width: 52%;
+  height: 180%;
+  pointer-events: none;
+  transform: rotate(22deg);
+  background: linear-gradient(
+    90deg,
+    transparent,
+    color-mix(in srgb, var(--tier) 26%, rgba(255, 255, 255, 0.22)),
+    transparent
+  );
+  animation: btSweep 2.8s cubic-bezier(0.22, 0.61, 0.36, 1) infinite;
+}
+.bt-portrait-pod {
+  position: relative;
+  z-index: 1;
+  flex: 0 0 94px;
+  width: 94px;
+  height: 94px;
+  display: grid;
+  place-items: center;
+}
+.bt-ring {
+  position: absolute;
+  border-radius: 14px;
+  pointer-events: none;
+}
+.bt-ring.r1 {
+  inset: -3px;
+  border: 1.5px solid color-mix(in srgb, var(--tier) 80%, #82ecff);
+  animation: btRingExpand 2s cubic-bezier(0.16, 0.78, 0.28, 1) infinite;
+}
+.bt-ring.r2 {
+  inset: -3px;
+  border: 1.5px solid color-mix(in srgb, var(--tier) 55%, #ffcf4a);
+  animation: btRingExpand 2s cubic-bezier(0.16, 0.78, 0.28, 1) 0.75s infinite;
+}
+.bt-face {
+  position: relative;
+  display: grid;
+  place-items: center;
+  border-radius: 10px;
+  box-shadow:
+    0 0 24px color-mix(in srgb, var(--tier) 58%, transparent),
+    0 6px 16px rgba(0, 0, 0, 0.55);
+  animation: btFacePop 0.46s cubic-bezier(0.2, 0.9, 0.3, 1.35) both;
+}
+.bt-hero-main {
+  position: relative;
+  z-index: 1;
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 9px;
+}
+.bt-name-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.bt-name {
+  font-size: 18px;
+  color: #f4f9ff;
+  letter-spacing: 0.02em;
+}
+.bt-mode-tag {
+  font: 600 11px/1.35 var(--mono);
+  padding: 2px 8px;
+  border-radius: 99px;
+  border: 1px solid rgba(255, 207, 74, 0.45);
+  background: rgba(255, 207, 74, 0.14);
+  color: #ffe39a;
+}
+.bt-mode-tag.gem {
+  border-color: rgba(132, 222, 255, 0.5);
+  background: linear-gradient(90deg, rgba(88, 225, 255, 0.16), rgba(176, 132, 255, 0.18));
+  color: #c8f3ff;
+}
+.bt-star-row {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  flex-wrap: wrap;
+}
+.bt-nodes {
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+  padding: 6px 11px;
+  border-radius: 8px;
+  background: rgba(4, 9, 16, 0.72);
+  border: 1px solid rgba(255, 207, 74, 0.28);
+}
+.bt-nodes.compact {
+  gap: 6px;
+  padding: 4px 8px;
+}
+.bt-node {
+  position: relative;
+  display: inline-block;
+  width: 11px;
+  height: 11px;
+  transform: rotate(45deg);
+  border: 1.5px solid rgba(255, 207, 74, 0.42);
+  background: rgba(255, 207, 74, 0.06);
+}
+.bt-nodes.compact .bt-node {
+  width: 8px;
+  height: 8px;
+}
+.bt-node.lit {
+  background: var(--gold);
+  border-color: #ffe28a;
+  box-shadow: 0 0 8px rgba(255, 207, 74, 0.55);
+}
+.bt-node.ignite {
+  background: #fff7d1;
+  border-color: #ffffff;
+  box-shadow:
+    0 0 14px #ffcf4a,
+    0 0 26px color-mix(in srgb, var(--tier) 85%, #58e1ff);
+  animation: btNodeIgnite 0.76s cubic-bezier(0.18, 0.92, 0.28, 1.45) var(--d, 80ms) both;
+}
+.bt-node.ignite::after {
+  content: "";
+  position: absolute;
+  inset: -3px;
+  border: 1.5px solid #ffe596;
+  pointer-events: none;
+  animation: btNodeWave 1.55s ease-out var(--d, 80ms) infinite;
+}
+.bt-star-delta {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 5px;
+  font: 700 14px/1 var(--mono);
+  color: #a3b7cc;
+}
+.bt-star-delta i {
+  font-style: normal;
+  color: #6d86a1;
+}
+.bt-star-delta b {
+  font-size: 16px;
+  color: #ffe18c;
+  text-shadow: 0 0 12px rgba(255, 207, 74, 0.5);
+}
+.bt-star-delta em {
+  font-style: normal;
+  font-size: 11.5px;
+  padding: 2px 6px;
+  border-radius: 5px;
+  background: rgba(109, 255, 168, 0.16);
+  border: 1px solid rgba(109, 255, 168, 0.36);
+  color: #9effc4;
+}
+.bt-gate-row {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  flex-wrap: wrap;
+  font-family: var(--mono);
+}
+.bt-gate-row .bgr-lbl {
+  font: 600 11.5px/1.3 var(--sans, system-ui);
+  color: #9cb2ca;
+  padding: 2px 7px;
+  border-radius: 5px;
+  background: rgba(140, 182, 224, 0.13);
+  border: 1px solid rgba(155, 195, 235, 0.2);
+}
+.bt-gate-row .bgr-from {
+  font-size: 16px;
+  color: #96acc3;
+}
+.bt-gate-row .bgr-arr {
+  font-style: normal;
+  color: #6e88a3;
+}
+.bt-gate-row .bgr-to {
+  font-size: 29px;
+  line-height: 1.05;
+  color: #ffffff;
+  text-shadow: 0 0 18px color-mix(in srgb, var(--tier) 80%, #58e1ff);
+  animation: mr-pop 0.52s cubic-bezier(0.2, 0.9, 0.3, 1.45) 0.08s both;
+}
+.bt-gate-row .bgr-span,
+.bt-gate-row .bgr-jump {
+  font-style: normal;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--cyan);
+}
+.bt-gate-row .bgr-jump {
+  color: var(--green);
+}
+.bt-kpis {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+  margin-top: 12px;
+}
+.bt-kpi {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  padding: 9px 11px;
+  border-radius: 9px;
+  background: rgba(9, 16, 27, 0.8);
+  border: 1px solid rgba(155, 195, 235, 0.18);
+}
+.bt-kpi > span {
+  font-size: 11px;
+  color: #8fa6bf;
+}
+.bt-kpi > strong {
+  font: 700 13px/1.35 var(--mono);
+  color: #ecf4fd;
+}
+.bt-kpi > strong.up {
+  color: var(--green);
+}
+.bt-kpi > strong.gold {
+  color: #ffe08a;
+}
+.bt-kpi > strong.violet {
+  color: #d6beff;
+}
+.bt-batch-list {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+  margin-top: 10px;
+  max-height: 300px;
+  overflow-y: auto;
+  padding-right: 2px;
+}
+.bt-batch-row {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  width: 100%;
+  text-align: left;
+  padding: 8px 11px;
+  border-radius: 10px;
+  cursor: pointer;
+  background:
+    radial-gradient(circle at 8% 50%, color-mix(in srgb, var(--tier) 20%, transparent), transparent 55%),
+    rgba(9, 16, 28, 0.85);
+  border: 1px solid color-mix(in srgb, var(--tier) 38%, rgba(150, 190, 230, 0.18));
+  transition: border-color 0.16s ease, transform 0.16s ease;
+}
+.bt-batch-row:hover {
+  border-color: color-mix(in srgb, var(--tier) 75%, #fff);
+  transform: translateY(-1px);
+}
+.bt-batch-row .bbl-main {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+.bt-batch-row .bbl-main > b {
+  font-size: 13.5px;
+  color: #f0f6fd;
+}
+.bt-batch-row .bbl-main > small {
+  font: 500 11.5px/1.3 var(--mono);
+  color: #9cb3cb;
+}
+.bt-batch-row .bbl-right {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 4px;
+}
+.bt-batch-row .bbl-delta {
+  font: 700 11.5px/1 var(--mono);
+  font-style: normal;
+  color: #ffe08a;
+}
+
+/* Post-Breakthrough Aura on CardModal & TalentPanel */
+.card-hero.just-bt {
+  position: relative;
+  overflow: hidden;
+  border-color: color-mix(in srgb, var(--tier) 78%, #ffcf4a) !important;
+  box-shadow:
+    0 0 26px color-mix(in srgb, var(--tier) 38%, rgba(255, 207, 74, 0.28)),
+    inset 0 0 18px color-mix(in srgb, var(--tier) 18%, transparent);
+}
+.card-hero.just-bt::after {
+  content: "";
+  position: absolute;
+  top: -40%;
+  left: -35%;
+  width: 45%;
+  height: 180%;
+  pointer-events: none;
+  transform: rotate(22deg);
+  background: linear-gradient(90deg, transparent, rgba(255, 232, 160, 0.22), transparent);
+  animation: btSweep 2.6s ease-in-out 2;
+}
+.stars i.on.ignite {
+  background: #fff6cf;
+  border-color: #ffffff;
+  box-shadow: 0 0 10px #ffcf4a, 0 0 18px #58e1ff;
+  animation: btMiniIgnite 1.1s ease-in-out infinite alternate;
+}
+.cp-bt-tag {
+  font: 700 11px/1.3 var(--mono);
+  padding: 2px 8px;
+  border-radius: 99px;
+  color: #ffe69c;
+  background: rgba(255, 207, 74, 0.16);
+  border: 1px solid rgba(255, 207, 74, 0.45);
+}
+.card-tile.v11.just-bt {
+  border-color: color-mix(in srgb, var(--tier) 85%, #ffcf4a) !important;
+  box-shadow: 0 0 16px color-mix(in srgb, var(--tier) 42%, rgba(255, 207, 74, 0.3));
+}
+
+@keyframes btStageIn {
+  0% {
+    opacity: 0;
+    transform: translateY(6px) scale(0.98);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+@keyframes btSweep {
+  0% {
+    left: -55%;
+    opacity: 0;
+  }
+  20% {
+    opacity: 1;
+  }
+  65% {
+    left: 125%;
+    opacity: 0.85;
+  }
+  100% {
+    left: 125%;
+    opacity: 0;
+  }
+}
+@keyframes btRingExpand {
+  0% {
+    transform: scale(0.92);
+    opacity: 0.9;
+  }
+  75% {
+    transform: scale(1.22);
+    opacity: 0;
+  }
+  100% {
+    transform: scale(1.22);
+    opacity: 0;
+  }
+}
+@keyframes btRingSpin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+@keyframes btFacePop {
+  0% {
+    opacity: 0;
+    transform: scale(0.72);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+@keyframes btNodeIgnite {
+  0% {
+    opacity: 0;
+    transform: rotate(45deg) scale(0.2);
+  }
+  55% {
+    opacity: 1;
+    transform: rotate(45deg) scale(1.55);
+  }
+  100% {
+    opacity: 1;
+    transform: rotate(45deg) scale(1);
+  }
+}
+@keyframes btNodeWave {
+  0% {
+    transform: scale(0.9);
+    opacity: 0.95;
+  }
+  100% {
+    transform: scale(2.15);
+    opacity: 0;
+  }
+}
+@keyframes btMiniIgnite {
+  from {
+    transform: rotate(45deg) scale(1);
+  }
+  to {
+    transform: rotate(45deg) scale(1.32);
+  }
+}
+@media (max-width: 640px) {
+  .bt-stage {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 14px;
+    padding: 14px;
+  }
+  .bt-kpis {
+    grid-template-columns: 1fr;
+  }
+}
+
 </style>
   </head>
   <body>
