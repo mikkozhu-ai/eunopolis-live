@@ -6975,23 +6975,26 @@ function activeFypMods(A, fypBoostArg) {
 function startFiveYearPlan(A, planId) {
   const plan = FYP_MAP[planId];
   if (!plan) return UA("未知五年规划");
-  const m = dt(A),
-    num = (A.stats.fypDone || 0) + 1;
+  const num = (A.stats.fypDone || 0) + 1;
   A.fyp = {
     id: planId,
     num,
     startQ: A.quarter,
     endQ: A.quarter + 20,
-    baseGdp: Math.max(1, m.gdp),
-    basePop: Math.max(1, m.population),
+    baseGdp: 1,
+    basePop: 1,
     baseUnlocks: A.tiles.filter((z) => z.unlocked).length,
     basePatrols: A.lord.patrols || 0,
     buildsDone: 0,
     pubDone: 0,
     goodFiscalQ: 0,
     goodLivQ: 0,
+    achieved: !1,
   };
-  pe(A, `已立项第 ${num} 轮五年规划「${plan.name}」（20 季）：${plan.pros}。`, "gold");
+  const m = dt(A);
+  A.fyp.baseGdp = Math.max(1, m.gdp);
+  A.fyp.basePop = Math.max(1, m.population);
+  pe(A, `已立项第 ${num} 轮五年规划「${plan.name}」（持续 20 季，期满结算）：${plan.pros}。`, "gold");
   return qe(`已启动「${plan.name}」`);
 }
 function checkFiveYearPlan(A, m) {
@@ -7002,7 +7005,11 @@ function checkFiveYearPlan(A, m) {
     f.goodFiscalQ = (f.goodFiscalQ || 0) + 1;
   if ((m.livability || 0) >= 55) f.goodLivQ = (f.goodLivQ || 0) + 1;
   const prog = plan.progress(A, m, f);
-  if (prog >= 1) {
+  if (prog >= 1) f.achieved = !0;
+  const nextQ = (A.quarter || 0) + 1,
+    endQ = f.endQ ?? (f.startQ || 0) + 20;
+  if (nextQ < endQ) return;
+  if (f.achieved || prog >= 1) {
     const rewMult = 1 + Math.max(0, be(A).mods.fypRewardMult || 0),
       cash = Math.round(Math.max(40, m.gdp * plan.gdpMult) * rewMult),
       gems = Math.round(plan.gems * rewMult);
@@ -7028,11 +7035,11 @@ function checkFiveYearPlan(A, m) {
     };
     pe(
       A,
-      `第 ${f.num} 轮五年规划「${plan.name}」达标结项：国库 +${fe(cash, 0)} 亿、星钻 ◇${gems}${ur ? `，解锁体制「${ur.name}」` : ""}。`,
+      `第 ${f.num} 轮五年规划「${plan.name}」期满达标结项：国库 +${fe(cash, 0)} 亿、星钻 ◇${gems}${ur ? `，解锁体制「${ur.name}」` : ""}。`,
       "gold",
     );
     A.fyp = null;
-  } else if (A.quarter >= f.endQ) {
+  } else {
     pe(
       A,
       `第 ${f.num} 轮五年规划「${plan.name}」届满结项（进度 ${Math.round(prog * 100)}%），可重新立项。`,
@@ -29037,7 +29044,7 @@ function isRankedEligible(A) {
   return Boolean(A && A.originMode === "fresh" && !A.usedFreeGems);
 }
 function QQ(A) {
-  return JSON.stringify(A, (e, t) => (t === 1 / 0 ? "Infinity" : t));
+  return JSON.stringify(A, (e, t) => (e === "_justCompletedFyp" ? void 0 : t === 1 / 0 ? "Infinity" : t));
 }
 function lQ(A) {
   var n, s;
@@ -29142,6 +29149,11 @@ function lQ(A) {
   delete e.vows;
   delete e.ngVows;
   delete e._justNoviceUnlock;
+  delete e._justCompletedFyp;
+  if (e.fyp && typeof e.fyp == "object") {
+    e.fyp.endQ = e.fyp.endQ ?? (e.fyp.startQ || e.quarter || 0) + 20;
+    e.fyp.achieved = Boolean(e.fyp.achieved);
+  }
   return (
     (t.traits = (t.traits ?? []).filter((f) => Vi[f])),
     (t.hidden = (t.hidden ?? []).filter((f) => s0[f])),
@@ -32848,22 +32860,25 @@ function FypPreviewModal({ planId }) {
     plan = FYP_MAP[planId];
   if (!plan) return null;
   const num = (st.stats.fypDone || 0) + 1,
-    estCash = Math.round(Math.max(40, met.gdp * (plan.gdpMult || 2))),
+    metAfter = Y8(st, (sim) => {
+      sim.fyp = { id: plan.id, startQ: sim.quarter, endQ: sim.quarter + 20 };
+    }),
+    estCash = Math.round(Math.max(40, metAfter.gdp * (plan.gdpMult || 2))),
     buffPills = (plan.pros || "").split(" · ").filter(Boolean),
     curUnlocks = met.unlocked ?? st.tiles.filter((z) => z.unlocked).length,
     maxT = st.tiles.length;
   const baseLineDesc =
     plan.id === "fyp_heavy"
-      ? `当前 GDP 基线 ${fe(met.gdp)} 亿 → 20 季内达 ${fe(met.gdp * 1.15)} 亿（+15%），或完成新建/升级 4 次`
+      ? `立项后 GDP 基线 ${fe(metAfter.gdp)} 亿 → 20 季内达 ${fe(metAfter.gdp * 1.15)} 亿（+15%），或完成新建/升级 4 次`
       : plan.id === "fyp_tech"
-        ? `当前 GDP 基线 ${fe(met.gdp)} 亿 → 20 季内达 ${fe(met.gdp * 1.18)} 亿（+18%），或主公巡察 5 次（当前累计 ${st.lord.patrols || 0} 次）`
+        ? `立项后 GDP 基线 ${fe(metAfter.gdp)} 亿 → 20 季内达 ${fe(metAfter.gdp * 1.18)} 亿（+18%），或主公调研 5 次（当前累计 ${st.lord.patrols || 0} 次）`
         : plan.id === "fyp_wonder"
-          ? `当前全国宜居 +${fe(met.livability, 0)}% → 20 季内建成/升级 1 座奇观或市政，或维持宜居 ≥55% 满 8 季`
+          ? `立项后全国宜居 +${fe(metAfter.livability, 0)}% → 20 季内建成/升级 1 座奇观或市政，或维持宜居 ≥55% 满 8 季`
           : plan.id === "fyp_fiscal"
-            ? `当前信用 ${met.creditRating}、季度净结余 ${met.net >= 0 ? "+" : ""}${fe(met.net)} 亿 → 20 季内保持 AA 以上且净结余 ≥0 满 10 季`
+            ? `立项后信用 ${metAfter.creditRating}、季度净结余 ${metAfter.net >= 0 ? "+" : ""}${fe(metAfter.net)} 亿 → 20 季内保持 AA 以上且净结余 ≥0 满 10 季`
             : plan.id === "fyp_frontier"
-              ? `当前已开拓 ${curUnlocks}/${maxT} 块 → 20 季内新拓 ${Math.min(6, Math.max(0, maxT - curUnlocks))} 块国土（余地不足时 GDP 达 ${fe(met.gdp * 1.12)} 亿亦可）`
-              : `当前人口 ${RC(met.population)}、GDP ${fe(met.gdp)} 亿 → 20 季内人口达 ${RC(met.population * 1.06)}（+6%）或 GDP 达 ${fe(met.gdp * 1.14)} 亿（+14%）`;
+              ? `当前已开拓 ${curUnlocks}/${maxT} 块 → 20 季内新拓 ${Math.min(6, Math.max(0, maxT - curUnlocks))} 块国土（余地不足时 GDP 达 ${fe(metAfter.gdp * 1.12)} 亿亦可）`
+              : `立项后人口基线 ${RC(metAfter.population)}、GDP 基线 ${fe(metAfter.gdp)} 亿 → 20 季内人口达 ${RC(metAfter.population * 1.06)}（+6%）或 GDP 达 ${fe(metAfter.gdp * 1.14)} 亿（+14%）`;
   const insText =
     plan.dir === "all"
       ? "四向体制洞察各 +1"
@@ -32873,7 +32888,7 @@ function FypPreviewModal({ planId }) {
   return w(Cn, {
     cls: "fyp-preview-modal",
     title: `第 ${num} 轮五年规划 · ${plan.name}`,
-    sub: `规划周期：20 个季度（${Ng(st.quarter)} → ${Ng(st.quarter + 20)}） · 立项后全局增益即刻生效`,
+    sub: `规划周期：满 20 个季度（${Ng(st.quarter)} → ${Ng(st.quarter + 20)}） · 增益持续满 20 季，期满达标自动结项`,
     children: [
       w("div", {
         class: "fyp-doc-sec",
@@ -38586,10 +38601,18 @@ function Vp() {
                               ],
                             }),
                             w(ei, {
-                              value: Math.round(fypProg * 100),
+                              value: e.fyp.achieved || fypProg >= 1 ? 100 : Math.round(fypProg * 100),
                               max: 100,
-                              color: fypProg >= 0.8 ? "var(--gold)" : "var(--cyan)",
-                              label: `${Math.round(fypProg * 100)}%`,
+                              color:
+                                e.fyp.achieved || fypProg >= 1
+                                  ? "var(--green)"
+                                  : fypProg >= 0.8
+                                    ? "var(--gold)"
+                                    : "var(--cyan)",
+                              label:
+                                e.fyp.achieved || fypProg >= 1
+                                  ? `100% 已达标 · 增益持续中（剩 ${fypLeft} 季期满结算）`
+                                  : `${Math.round(fypProg * 100)}%`,
                             }),
                             w("div", {
                               class: "filter-row",
@@ -38603,11 +38626,14 @@ function Vp() {
                                   children: curFyp.brief,
                                 }),
                                 w("span", {
-                                  class: "pill",
+                                  class: `pill${e.fyp.achieved || fypProg >= 1 ? " on" : ""}`,
                                   "data-tip-touch": !0,
                                   "data-tip-title": "达标考核目标",
                                   "data-tip": curFyp.kpiDesc,
-                                  children: `进度 ${Math.round(fypProg * 100)}%`,
+                                  children:
+                                    e.fyp.achieved || fypProg >= 1
+                                      ? "指标已达成 · 期满结项"
+                                      : `进度 ${Math.round(fypProg * 100)}%`,
                                 }),
                                 w("span", {
                                   class: "pill",
@@ -43384,6 +43410,8 @@ window.__eun = {
   cr,
   G4,
   qv,
+  startFiveYearPlan,
+  FYP_MAP,
 };
 </script>
     <style rel="stylesheet" crossorigin>
