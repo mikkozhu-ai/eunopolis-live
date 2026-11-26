@@ -27,9 +27,13 @@ ALTER TABLE public.cloud_saves
 
 CREATE INDEX IF NOT EXISTS idx_cloud_saves_gdp ON public.cloud_saves (gdp DESC);
 
--- 开启行级安全 (RLS)，并禁止前端直接读取 secret_hash 列或无凭证覆盖他人存档
+-- 开启行级安全 (RLS)，撤销整表默认权限并仅按列授予公开字段只读权（数据库层彻底锁死 secret_hash 与直写权限）
 ALTER TABLE public.cloud_saves ENABLE ROW LEVEL SECURITY;
-REVOKE SELECT (secret_hash) ON public.cloud_saves FROM anon, authenticated;
+REVOKE ALL ON public.cloud_saves FROM anon, authenticated;
+GRANT SELECT (
+  player_id, nation_name, gdp, quarter, unlocked, population,
+  credit_rating, ach_points, industry_gdp, save_json, updated_at
+) ON public.cloud_saves TO anon, authenticated;
 
 DROP POLICY IF EXISTS "public_read_cloud_saves" ON public.cloud_saves;
 DROP POLICY IF EXISTS "public_insert_cloud_saves" ON public.cloud_saves;
