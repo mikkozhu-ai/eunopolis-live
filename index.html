@@ -9123,6 +9123,7 @@ function evalPubReq(A, def, m) {
         label: `在产·${names}`,
         detail: `需国内已建成并运转「${fullNames}」`,
         ok: hit,
+        inds: list,
       });
     }
   }
@@ -32395,6 +32396,10 @@ function If(A, e, t, n = {}) {
           a: "代表建成后全国每季总 GDP 的真实净增量（已包含对邻格供需边、集群与下游解锁的联动带动；国家奇观同步预演三格全部外圈邻居的带动收益），下方数值为建成后每季财政净结余变化。",
         },
         {
+          q: "「差一步解锁」与缺失前置胶囊怎么看？",
+          a: "默认视图在「当前可建」下方会自动列出本格地形适配、仅缺 1 组前置原料的近期产业；彩色图标胶囊直接标注「供给行业 · 产物」或「自然禀赋 · 开采行业」（附「本格可建 / 可建 / 有空矿」提示）。点击胶囊即可在本格高亮定位上游、跳转现成空矿直接建设，或打开上游详情逐级溯源并一键返回建造。",
+        },
+        {
           q: "产业、市政设施与国家奇观有什么区别？",
           a: `75 种「产业」分五级（造价 ${Li(O.buildCost)} 亿，工期 ${Li(O.buildTime)} 季，开国前 ${O.foundingBuilds} 次建设半价且工期 −1 季${jo(e) > 0 ? `，还剩 ${jo(e)} 次` : ""}）；24 种「市政设施」占 1 格、每种全国限建 3 座，除带动对口产业外还对紧邻的住宅/地产/物业/REIT 提供 60% 配套溢价，依托城区居住与物业建材底座可历时 1–2 季扩建至 Lv.3；8 座「国家奇观」为唯一巨构，需相连 3 格空地三角（地图金色三角框高亮），随首都等级与重工、地产/REIT、芯片航天及未来产业底座历时 3–6 季扩建至 Lv.5。`,
         },
@@ -33690,7 +33695,7 @@ function hp() {
     case "lordCreate":
       return w(xp, {});
     case "build":
-      return w(pp, { tile: e.tile, tab: e.tab ?? "industry" });
+      return w(pp, { tile: e.tile, tab: e.tab ?? "industry", focusInd: e.focusInd ?? null });
     case "deploy":
       return w(Lp, { tile: e.tile });
     case "card":
@@ -33702,7 +33707,7 @@ function hp() {
     case "offline":
       return w(yp, { m: e });
     case "industry":
-      return w(Up, { id: e.id });
+      return w(Up, { id: e.id, fromBuild: e.fromBuild ?? null });
     case "tree":
     case "techTree":
       return w(TechTreeModal, { focus: e.focus ?? null, branch: e.branch ?? "all" });
@@ -35212,7 +35217,66 @@ function Y8(A, e) {
   };
   return (e(t), dt(t));
 }
-function pp({ tile: A, tab: e }) {
+const PROVIDER_SHORT_BLDG = {
+  201010: "电力公用",
+  201011: "水气公用",
+  181013: "林业木纸",
+  171011: "航空航天",
+  171014: "交通装备",
+  161010: "生物制药",
+  161011: "医疗设施",
+  161012: "医疗设备",
+  151010: "房地产开发",
+  141112: "机构金融",
+  121110: "必选批发",
+  121111: "商超零售",
+  111010: "服装纺织",
+  111013: "家居办公",
+  101014: "互联网服务",
+  X003: "可控核聚变",
+};
+function conciseIndBldgName(ind) {
+  return ind ? PROVIDER_SHORT_BLDG[ind.id] || ind.name : "";
+}
+function resolveReqTagInfo(tg) {
+  const res = fs.find((r) => r.name === tg);
+  if (res) {
+    const reqHarv = Ee.find((k) => k.harvest && !k.harvestOptional && k.harvest.includes(res.id)),
+      optHarv = Ee.find((k) => k.harvest && k.harvestOptional && k.harvest.includes(res.id)),
+      harv = reqHarv || optHarv || null;
+    return {
+      kind: "res",
+      tag: tg,
+      res,
+      harv,
+      isReqHarv: Boolean(reqHarv),
+      subLabel: res.fictional
+        ? "奇异勘探"
+        : reqHarv
+          ? `${reqHarv.short}开采`
+          : optHarv
+            ? `${optHarv.short}宝地`
+            : "自然禀赋",
+    };
+  }
+  const prods = mg(tg),
+    ind =
+      prods.find((k) => k.source !== "架空" && k.makes === tg) ||
+      prods.find((k) => k.makes === tg) ||
+      prods[0] ||
+      null;
+  if (!ind) return { kind: "raw", tag: tg };
+  const bName = conciseIndBldgName(ind),
+    sameText = bName.replace(/\s+/g, "") === tg.replace(/\s+/g, "");
+  return {
+    kind: "ind",
+    tag: tg,
+    ind,
+    bldgName: bName,
+    subLabel: sameText ? "" : tg,
+  };
+}
+function pp({ tile: A, tab: e, focusInd = null }) {
   const t = Pe(),
     n = t.state,
     s = t.metrics,
@@ -35224,11 +35288,38 @@ function pp({ tile: A, tab: e }) {
     o = (oRaw === "public" && !pubOpen) || (oRaw === "wonder" && !wonOpen) ? "industry" : oRaw,
     [i, v] = gt("ok"),
     [pFil, setPFil] = gt("auto"),
+    [flashId, setFlashId] = gt(focusInd),
+    [expGrps, setExpGrps] = gt({}),
     beMods = be(n).mods,
-    availInds = Dn(() => Ee.filter((x) => isIndVisibleV1(n, x)), [t.version, nStage]);
+    availInds = Dn(() => Ee.filter((x) => isIndVisibleV1(n, x)), [t.version, nStage]),
+    emptyTiles = Dn(
+      () => n.tiles.filter((tl) => tl.unlocked && !tl.capital && !tl.industry && !tl.public && !tl.build && tl.wonderHost == null),
+      [t.version],
+    ),
+    indReadyStat = Dn(() => {
+      const mp = {};
+      for (const ind of availInds) {
+        const here = js(n, f, ind.id, s).ok,
+          anyCnt = here ? 1 : emptyTiles.some((tl) => js(n, tl, ind.id, s).ok) ? 1 : 0;
+        mp[ind.id] = { here, any: anyCnt > 0 };
+      }
+      return mp;
+    }, [t.version, A, availInds, emptyTiles]);
   $t(() => {
     if (e) r(e);
   }, [e]);
+  $t(() => {
+    if (focusInd) {
+      setFlashId(focusInd);
+      const tm = setTimeout(() => {
+        const el = document.querySelector(`.modal [data-bcard-id="${focusInd}"]`);
+        el && el.scrollIntoView({ block: "center" });
+      }, 25);
+      return () => clearTimeout(tm);
+    }
+    const sc = document.querySelector(".modal-body, .modal .mbody, .modal");
+    if (sc) sc.scrollTop = 0;
+  }, [focusInd, A, o]);
   const triInfo = Dn(
     () =>
       o === "wonder" && typeof allWonderTriangles == "function"
@@ -35257,6 +35348,11 @@ function pp({ tile: A, tab: e }) {
           ? availInds.map((x) => {
               var I;
               const M = js(n, f, x.id, s),
+                terrainOk = fa(f, x),
+                localResOk = wc(f, x),
+                eraErr = x.source === "架空" ? Dc(n, s) : null,
+                missing = M.missing || [],
+                missSteps = (!terrainOk ? 50 : 0) + (!localResOk ? 2 : 0) + (eraErr ? 3 : 0) + missing.length,
                 z = M.ok ? Y8(n, (F) => (F.tiles[A].industry = x.id)) : null,
                 p = z ? (((I = z.tiles[A]) == null ? void 0 : I.gdp) ?? 0) : 0,
                 H = z
@@ -35276,6 +35372,11 @@ function pp({ tile: A, tab: e }) {
                 id: x.id,
                 ok: M.ok,
                 reason: M.reason,
+                missing,
+                terrainOk,
+                localResOk,
+                eraErr,
+                missSteps,
                 gdp: z ? z.gdp - s.gdp : 0,
                 own: p,
                 unlocks: H,
@@ -35294,6 +35395,9 @@ function pp({ tile: A, tab: e }) {
                 ancTile = anyC ? anyC.anchor : M.anchor != null && n.tiles[M.anchor] ? n.tiles[M.anchor] : f,
                 wTri = anyC ? anyC.tri : M.tri || null,
                 okW = isW ? M.ok && Boolean(wTri) : M.ok,
+                reqItems = M.reqItems || [],
+                missSteps =
+                  (!x.terrains.includes(ancTile.terrain) ? 50 : 0) + reqItems.filter((rq) => !rq.ok).length,
                 z = okW
                   ? Y8(n, (sim) => {
                       const simAnc = sim.tiles[ancTile.id];
@@ -35311,7 +35415,8 @@ function pp({ tile: A, tab: e }) {
                 id: x.id,
                 ok: okW,
                 reason: M.reason,
-                reqItems: M.reqItems || [],
+                reqItems,
+                missSteps,
                 anchor: ancTile.id,
                 tri: wTri,
                 gdp: z ? z.gdp - s.gdp : 0,
@@ -35321,7 +35426,14 @@ function pp({ tile: A, tab: e }) {
                 cost: Rg(n, ancTile, "public", x.id),
               };
             })
-        ).sort((x, M) => Number(M.ok) - Number(x.ok) || M.gdp - x.gdp),
+        ).sort((x, M) =>
+          x.ok !== M.ok
+            ? Number(M.ok) - Number(x.ok)
+            : x.ok
+              ? M.gdp - x.gdp
+              : (x.missSteps ?? 9) - (M.missSteps ?? 9) ||
+                ((HA[x.id] ? HA[x.id].level : 0) - (HA[M.id] ? HA[M.id].level : 0)),
+        ),
       [t.version, A, o, nStage],
     ),
     g = f.resource,
@@ -35349,6 +35461,22 @@ function pp({ tile: A, tab: e }) {
           ? c.filter((d) => (effPFil === "ok" ? d.ok : effPFil === "all" ? !0 : it[d.id] && it[d.id].cat === effPFil))
           : c.filter((d) => (i === "ok" ? d.ok : i === "all" ? !0 : HA[d.id].sector === i))
     ).filter((d) => !B(d)),
+    nearList =
+      o === "industry" && i === "ok"
+        ? c.filter((d) => !d.ok && !B(d) && d.terrainOk && d.localResOk && !d.eraErr && d.missing.length === 1)
+        : o === "public" && effPFil === "ok"
+          ? c.filter((d) => {
+              if (d.ok) return !1;
+              const def = it[d.id];
+              if (!def || !def.terrains.includes(f.terrain)) return !1;
+              const builtCnt = n.tiles.filter(
+                (tl) =>
+                  (tl.public && tl.public === d.id) ||
+                  (tl.build && tl.build.kind === "public" && tl.build.id === d.id),
+              ).length;
+              return builtCnt < 3 && d.reqItems && d.reqItems.filter((rq) => !rq.ok).length === 1;
+            })
+          : [],
     u = s.buildsActive >= s.buildSlots,
     finLocked =
       (typeof isDebtRestructureActive == "function" && isDebtRestructureActive(n)) ||
@@ -35357,6 +35485,129 @@ function pp({ tile: A, tab: e }) {
     E = jo(n),
     exBonusVal =
       P && P.fictional ? (P.bonus + (beMods.exoticAdd ?? 0)) * (1 + (beMods.exoticBoost ?? 0)) : 0,
+    jumpToInd = (indId) => {
+      const ind = HA[indId];
+      if (!ind) return;
+      const stInfo = indReadyStat[indId];
+      if (stInfo && stInfo.here && isIndVisibleV1(n, ind)) {
+        o !== "industry" && r("industry");
+        i !== "ok" && i !== "all" && i !== ind.sector && v("ok");
+        setFlashId(indId);
+        setTimeout(() => {
+          const el = document.querySelector(`.modal [data-bcard-id="${indId}"]`);
+          el && el.scrollIntoView({ block: "center" });
+        }, 25);
+        t.toast(`「${ind.name}」可直接在当前地块建设`, "info");
+        return;
+      }
+      t.openModal({ type: "industry", id: indId, fromBuild: { tile: A, tab: o } });
+    },
+    jumpToRes = (res, harv) => {
+      if (!res) return;
+      const freeTile = emptyTiles.find((tl) => tl.resource === res.id);
+      if (freeTile) {
+        CQ(freeTile.id);
+        t.openModal({
+          type: "build",
+          tile: freeTile.id,
+          tab: "industry",
+          focusInd: harv ? harv.id : null,
+        });
+        t.toast(`已定位国内现成的「${res.name}」空地，可直接建设开采`, "info");
+        return;
+      }
+      const occTile = n.tiles.find((tl) => tl.unlocked && tl.resource === res.id);
+      if (occTile) {
+        t.openModal(null);
+        CQ(occTile.id);
+        t.toast(
+          `已定位国内「${res.name}」地块${harv ? `，如需供货可改建「${harv.name}」` : ""}`,
+          "info",
+        );
+        return;
+      }
+      const terrStr = res.terrains.map((tr) => Ge[tr].name).join("、");
+      t.toast(`国内尚未探明「${res.name}」，可在${terrStr}开拓或勘探`, "info");
+      if (harv) t.openModal({ type: "industry", id: harv.id, fromBuild: { tile: A, tab: o } });
+    },
+    scoreReqTag = (tg) => {
+      const info = resolveReqTagInfo(tg);
+      if (info.kind === "ind") {
+        const stInfo = indReadyStat[info.ind.id];
+        if (stInfo && stInfo.here) return 5;
+        if (stInfo && stInfo.any) return 4;
+        return info.ind.source === "架空" ? 1 : 3;
+      }
+      if (info.kind === "res") {
+        if (emptyTiles.some((tl) => tl.resource === info.res.id)) return 5;
+        if (n.tiles.some((tl) => tl.unlocked && tl.resource === info.res.id)) return 3;
+        return info.res.fictional ? 0 : 2;
+      }
+      return 1;
+    },
+    renderProviderPill = (tg) => {
+      const info = resolveReqTagInfo(tg);
+      if (info.kind === "ind") {
+        const ind = info.ind,
+          col = xs(ind),
+          stInfo = indReadyStat[ind.id] || { here: !1, any: !1 },
+          tip = stInfo.here
+            ? `由「${ind.name}」产出「${tg}」\n✓ 当前地块即可建设，点击直接定位`
+            : stInfo.any
+              ? `由「${ind.name}」产出「${tg}」\n✓ 国内已有空地可建，点击查看并选址`
+              : `由「${ind.name}」产出「${tg}」\n点击查看「${ind.name}」前置与选址`;
+        return w(
+          "button",
+          {
+            type: "button",
+            class: `bc-prov-pill${stInfo.here ? " ready-here" : stInfo.any ? " ready-any" : ""}`,
+            style: `--pc:${col}`,
+            "data-tip": tip,
+            onClick: () => jumpToInd(ind.id),
+            children: [
+              w(NA, { node: $r[ind.id] ?? Ae.hex, size: 13.5, color: col }),
+              w("b", { children: info.bldgName }),
+              info.subLabel && w("small", { children: ["· ", info.subLabel] }),
+              stInfo.here
+                ? w("em", { class: "prov-flag here", children: "本格可建" })
+                : stInfo.any
+                  ? w("em", { class: "prov-flag any", children: "可建" })
+                  : null,
+            ],
+          },
+          tg,
+        );
+      }
+      if (info.kind === "res") {
+        const res = info.res,
+          hasFree = emptyTiles.some((tl) => tl.resource === res.id),
+          hasAny = hasFree || n.tiles.some((tl) => tl.unlocked && tl.resource === res.id),
+          terrStr = res.terrains.map((tr) => Ge[tr].name).join("、"),
+          tip = hasFree
+            ? `自然禀赋「${res.name}」（${info.subLabel}）\n✓ 国内已有现成空地，点击直接前往建设`
+            : hasAny
+              ? `自然禀赋「${res.name}」（${info.subLabel}）\n国内已有该资源地块，点击定位查看`
+              : `自然禀赋「${res.name}」（${info.subLabel}）\n分布于：${terrStr}（开拓或勘探获取）`;
+        return w(
+          "button",
+          {
+            type: "button",
+            class: `bc-prov-pill is-res${hasFree ? " ready-here" : ""}`,
+            style: `--pc:${res.color || Xe[res.tier] || "#8cb4d8"}`,
+            "data-tip": tip,
+            onClick: () => jumpToRes(res, info.harv),
+            children: [
+              w($i, { id: res.id, size: 15 }),
+              w("b", { children: res.name }),
+              w("small", { children: ["· ", info.subLabel] }),
+              hasFree && w("em", { class: "prov-flag here", children: "有空矿" }),
+            ],
+          },
+          tg,
+        );
+      }
+      return w("span", { class: "bchip bad", children: tg }, tg);
+    },
     h = (d) => {
       var k;
       const x = d.kind === "industry" ? HA[d.id] : null,
@@ -35383,11 +35634,13 @@ function pp({ tile: A, tab: e }) {
         dcBuild = evalDebtCross(n, d.cost, s),
         finDownCost = d.cost * O.financeDown,
         dcFin = x ? evalDebtCross(n, finDownCost, s) : null,
-        targetName = x ? x.name : M.name;
+        targetName = x ? x.name : M.name,
+        capLvNow = ((n.tiles.find((tl) => tl.capital) || {}).level) ?? 1;
       return w(
         "li",
         {
-          class: `bcard${d.ok ? "" : " locked"}${F ? " local" : ""}${exot ? " exotic-card" : ""}`,
+          "data-bcard-id": d.id,
+          class: `bcard${d.ok ? "" : " locked compact-locked"}${F ? " local" : ""}${exot ? " exotic-card" : ""}${flashId === d.id ? " flash-target" : ""}`,
           style: `--c:${x ? xs(x) : (M && CIVIC_COLOR[M.cat]) || nD}`,
           children: [
             F &&
@@ -35405,8 +35658,8 @@ function pp({ tile: A, tab: e }) {
                 w(vn, {
                   industry: x == null ? void 0 : x.id,
                   pub: M == null ? void 0 : M.id,
-                  size: 50,
-                  dim: !d.ok,
+                  size: d.ok ? 50 : 44,
+                  dim: !1,
                 }),
                 w("div", {
                   class: "bc-name",
@@ -35440,24 +35693,192 @@ function pp({ tile: A, tab: e }) {
                       w("small", { children: "GDP/季" }),
                     ],
                   }),
+                x &&
+                  w("button", {
+                    type: "button",
+                    class: "bc-info-btn",
+                    "data-tip": `查看「${x.name}」完整简介与上下游链路`,
+                    onClick: () => t.openModal({ type: "industry", id: x.id, fromBuild: { tile: A, tab: o } }),
+                    children: w(_e, { name: "chain", size: 13 }),
+                  }),
               ],
             }),
-            w("p", { class: "bc-desc", children: d.ok ? (x ? x.desc : M.desc) : d.reason }),
+            d.ok && w("p", { class: "bc-desc", children: x ? x.desc : M.desc }),
+            !d.ok &&
+              x &&
+              (() => {
+                if (!d.terrainOk) {
+                  const okTerrs = ["plain", "hill", "forest", "valley", "desert"]
+                    .concat(x.water ? ["water"] : [], x.mountain ? ["mountain"] : [], x.ice ? ["ice"] : [])
+                    .map((tr) => Ge[tr].name)
+                    .join("、");
+                  return w("div", {
+                    class: "bc-miss-box",
+                    children: w("div", {
+                      class: "bc-miss-row",
+                      children: [
+                        w("span", { class: "bc-miss-lbl", children: "地形不符" }),
+                        w("span", {
+                          class: "bchip bad",
+                          children: `需建在 ${okTerrs}（本格为${Ge[f.terrain].name}）`,
+                        }),
+                      ],
+                    }),
+                  });
+                }
+                const rows = [];
+                if (!d.localResOk && Array.isArray(x.harvest) && x.harvest.length) {
+                  const gKey = `${d.id}:harv`,
+                    isExp = Boolean(expGrps[gKey]),
+                    sortedHarv = [...x.harvest]
+                      .filter((rid) => ke[rid])
+                      .sort(
+                        (ra, rb) =>
+                          Number(ke[rb].terrains.includes(f.terrain)) - Number(ke[ra].terrains.includes(f.terrain)) ||
+                          scoreReqTag(ke[rb].name) - scoreReqTag(ke[ra].name),
+                      ),
+                    visHarv = isExp || sortedHarv.length <= 3 ? sortedHarv : sortedHarv.slice(0, 3),
+                    remCnt = sortedHarv.length - visHarv.length;
+                  rows.push(
+                    w(
+                      "div",
+                      {
+                        class: "bc-miss-row",
+                        children: [
+                          w("span", { class: "bc-miss-lbl", children: "本格需矿" }),
+                          visHarv.map((rid, idx) =>
+                            w(
+                              he,
+                              {
+                                children: [
+                                  idx > 0 && w("u", { class: "bc-or", children: "或" }),
+                                  renderProviderPill(ke[rid].name),
+                                ],
+                              },
+                              rid,
+                            ),
+                          ),
+                          remCnt > 0 &&
+                            w("button", {
+                              type: "button",
+                              class: "bc-more-btn",
+                              onClick: () => setExpGrps({ ...expGrps, [gKey]: !0 }),
+                              children: `+${remCnt}种`,
+                            }),
+                        ],
+                      },
+                      "harv",
+                    ),
+                  );
+                }
+                if (d.eraErr) {
+                  rows.push(
+                    w(
+                      "div",
+                      {
+                        class: "bc-miss-row",
+                        children: [
+                          w("span", { class: "bc-miss-lbl", children: "架空门槛" }),
+                          capLvNow < O.fictionCapital &&
+                            w("span", {
+                              class: "bchip bad",
+                              children: `首都 Lv.${O.fictionCapital}（现 Lv.${capLvNow}）`,
+                            }),
+                          s.diversity < O.fictionDiversity &&
+                            w("span", {
+                              class: "bchip bad",
+                              children: `国内 ${O.fictionDiversity} 种行业（现 ${s.diversity} 种）`,
+                            }),
+                        ],
+                      },
+                      "era",
+                    ),
+                  );
+                }
+                d.missing.forEach((grp, gIdx) => {
+                  const gKey = `${d.id}:g${gIdx}`,
+                    isExp = Boolean(expGrps[gKey]),
+                    sortedGrp = [...grp].sort((ta, tb) => scoreReqTag(tb) - scoreReqTag(ta)),
+                    visGrp = isExp || sortedGrp.length <= 3 ? sortedGrp : sortedGrp.slice(0, 3),
+                    remCnt = sortedGrp.length - visGrp.length;
+                  rows.push(
+                    w(
+                      "div",
+                      {
+                        class: "bc-miss-row",
+                        children: [
+                          w("span", { class: "bc-miss-lbl", children: "缺前置" }),
+                          visGrp.map((tg, idx) =>
+                            w(
+                              he,
+                              {
+                                children: [
+                                  idx > 0 && w("u", { class: "bc-or", children: "或" }),
+                                  renderProviderPill(tg),
+                                ],
+                              },
+                              tg,
+                            ),
+                          ),
+                          remCnt > 0 &&
+                            w("button", {
+                              type: "button",
+                              class: "bc-more-btn",
+                              "data-tip": `其余可替代项：${sortedGrp.slice(3).join("、")}`,
+                              onClick: () => setExpGrps({ ...expGrps, [gKey]: !0 }),
+                              children: `+${remCnt}种`,
+                            }),
+                        ],
+                      },
+                      `g${gIdx}`,
+                    ),
+                  );
+                });
+                return rows.length
+                  ? w("div", { class: "bc-miss-box", children: rows })
+                  : d.reason
+                    ? w("p", { class: "bc-desc", children: d.reason })
+                    : null;
+              })(),
+            !d.ok &&
+              M &&
+              (!d.reqItems || d.reqItems.filter((rq) => !rq.ok).length === 0 || (d.reason && !d.reqItems.some((rq) => !rq.ok && rq.detail === d.reason))) &&
+              d.reason &&
+              w("p", { class: "bc-desc", children: d.reason }),
             d.reqItems &&
               d.reqItems.length > 0 &&
               w("div", {
                 class: "bc-chips bc-reqs",
-                children: d.reqItems.map((rq, rIdx) =>
-                  w(
+                children: (d.ok ? d.reqItems : d.reqItems.filter((rq) => !rq.ok)).map((rq, rIdx) => {
+                  const firstInd = rq.inds && rq.inds[0] ? HA[rq.inds[0]] : null;
+                  if (!rq.ok && firstInd) {
+                    const col = xs(firstInd);
+                    return w(
+                      "button",
+                      {
+                        type: "button",
+                        class: "bc-prov-pill",
+                        style: `--pc:${col}`,
+                        "data-tip": `${rq.detail}\n点击查看或前往建设`,
+                        onClick: () => jumpToInd(firstInd.id),
+                        children: [
+                          w(NA, { node: $r[firstInd.id] ?? Ae.hex, size: 13.5, color: col }),
+                          w("b", { children: rq.inds.map((iid) => conciseIndBldgName(HA[iid]) || iid).join(" / ") }),
+                        ],
+                      },
+                      rIdx,
+                    );
+                  }
+                  return w(
                     "span",
                     {
                       class: `bchip ${rq.ok ? "good" : "bad"}`,
-                      "data-tip": rq.ok ? `准入条件已满足：${rq.label}` : `尚未满足该建设门槛：${rq.label}`,
+                      "data-tip": rq.ok ? `准入条件已满足：${rq.label}` : `尚未满足该建设门槛：${rq.detail || rq.label}`,
                       children: [rq.ok ? "✓ " : "× ", rq.label],
                     },
                     rIdx,
-                  ),
-                ),
+                  );
+                }),
               }),
             w("div", {
               class: "bc-chips",
@@ -35470,6 +35891,7 @@ function pp({ tile: A, tab: e }) {
                   }),
                 M &&
                   M.wonder &&
+                  d.ok &&
                   w("span", { class: "bchip good", children: "全国唯一 · 占3格 · 最高 Lv.5" }),
                 M &&
                   w("span", {
@@ -35481,8 +35903,9 @@ function pp({ tile: A, tab: e }) {
                       M.livability,
                     ],
                   }),
-                cleanStat && w("span", { class: "bchip good", children: cleanStat }),
-                M &&
+                d.ok && cleanStat && w("span", { class: "bchip good", children: cleanStat }),
+                d.ok &&
+                  M &&
                   M.boosts.slice(0, 3).map((U) => {
                     var m, N;
                     return w(
@@ -35499,7 +35922,8 @@ function pp({ tile: A, tab: e }) {
                       U,
                     );
                   }),
-                M &&
+                d.ok &&
+                  M &&
                   (() => {
                     const rePct = M.boost * 0.6,
                       reStr = Number.isInteger(Math.round(rePct * 1e3) / 10) ? SA(rePct, 0) : SA(rePct, 1);
@@ -35517,6 +35941,12 @@ function pp({ tile: A, tab: e }) {
                       : `工程工期。主公督办可削减剩余工期 ${Math.round(Math.min(0.95, O.superviseCut + (beMods.superviseBoost || 0)) * 100)}%`,
                   children: [w(NA, { node: Ae.clock, size: 13 }), " ", p, " 季"],
                 }),
+                !d.ok &&
+                  w("span", {
+                    class: "bchip",
+                    "data-tip": "建设造价",
+                    children: [w(_e, { name: "coin", size: 12 }), " ", fe(d.cost), " 亿"],
+                  }),
                 d.ok &&
                   Math.abs(d.net) > 0.05 &&
                   w("span", {
@@ -35535,7 +35965,8 @@ function pp({ tile: A, tab: e }) {
                 H && w("span", { class: "bchip good", children: "适宜地形" }),
               ],
             }),
-            d.links &&
+            d.ok &&
+              d.links &&
               d.links.list.length > 0 &&
               w("div", {
                 class: "bc-links",
@@ -35794,7 +36225,7 @@ function pp({ tile: A, tab: e }) {
                                 a.length,
                                 " 个行业可契合开发",
                                 Ms[P.tier] > 0 ? `，${Ke[P.tier]}矿藏开采 +${SA(Ms[P.tier])}` : "",
-                                a.some((it) => HA[it.id] && HA[it.id].harvestOptional)
+                                a.some((it0) => HA[it0.id] && HA[it0.id].harvestOptional)
                                   ? `（可选宝地额外 +${SA(O.optHarvestBonus ?? 0.2)}）`
                                   : "",
                                 "；建其它行业则不触发本格禀赋",
@@ -35846,8 +36277,28 @@ function pp({ tile: A, tab: e }) {
         }),
       !l.length &&
         !a.length &&
-        w("p", { class: "empty", children: "没有符合条件的项目。切到“全部”可以看到缺少什么。" }),
-      w("ul", { class: "build-grid", children: l.map(h) }),
+        !nearList.length &&
+        w("p", { class: "empty", children: "没有符合条件的项目。切到“全部”可查看完整产业列表。" }),
+      l.length > 0 && w("ul", { class: "build-grid", children: l.map(h) }),
+      nearList.length > 0 &&
+        w("section", {
+          class: "bnear-sec",
+          children: [
+            w("header", {
+              class: "bnear-hd",
+              children: [
+                w("span", {
+                  class: "bnear-title",
+                  children: ["差一步解锁 · ", nearList.length, " 项"],
+                }),
+                w("small", {
+                  children: "本格地形适配，仅缺 1 项前置 · 点击彩色胶囊可直达补建或查看来源",
+                }),
+              ],
+            }),
+            w("ul", { class: "build-grid", children: nearList.map(h) }),
+          ],
+        }),
     ],
   });
 }
@@ -37386,7 +37837,7 @@ function yp({ m: A }) {
     ],
   });
 }
-function Up({ id: A }) {
+function Up({ id: A, fromBuild = null }) {
   var M, z;
   const e = Pe(),
     t = e.state,
@@ -37412,7 +37863,7 @@ function Up({ id: A }) {
       (e.startPlacement({ kind: "build", industry: A, tiles: p }),
         p.size && e.toast(`${p.size} 块地可以建设「${s.short}」，点击绿色地块`, "info"));
     },
-    g = (p) => ie.openModal({ type: "industry", id: p }),
+    g = (p) => ie.openModal({ type: "industry", id: p, fromBuild }),
     P = xs(s),
     B = s.source === "架空" ? Dc(t, n) : null,
     a = ((M = t.tiles.find((p) => p.capital)) == null ? void 0 : M.level) ?? 1,
@@ -37422,10 +37873,19 @@ function Up({ id: A }) {
     D = Q.filter((p) => js(t, p, A, n).ok).length,
     l = js(t, t.tiles[0], A, n).missing,
     u = (p) => {
-      const H = mg(p).length ? null : fs.find((I) => I.name === p);
+      const H = fs.find((I) => I.name === p);
       return H ? `${H.terrains.map((I) => Ge[I].name).join("、")}能勘探到` : "";
     },
-    C = (p) => (u(p) ? `${p}（${u(p)}）` : p),
+    C = (p) => {
+      const info = resolveReqTagInfo(p);
+      return info.kind === "ind"
+        ? info.subLabel
+          ? `${info.bldgName}（${info.subLabel}）`
+          : info.bldgName
+        : u(p)
+          ? `${p}（${u(p)}）`
+          : p;
+    },
     E = D
       ? null
       : (B ??
@@ -37440,30 +37900,50 @@ function Up({ id: A }) {
         ? `供水 +${O.util.water[A]}/级`
         : null,
     d = (p) => {
-      const H = mg(p),
-        I = n.tags.has(p),
-        F = H.length
-          ? []
-          : Ee.filter((k) => {
-              var U;
-              return (U = k.harvest) == null ? void 0 : U.some((m) => ke[m].name === p);
-            }),
-        L = H[0] ?? F[0];
+      const info = resolveReqTagInfo(p),
+        I = n.tags.has(p);
+      if (info.kind === "ind") {
+        const L = info.ind;
+        return w(
+          "button",
+          {
+            class: `ptag${I ? " have" : ""}`,
+            title: `由「${L.name}」产出「${p}」，点击查看`,
+            onClick: () => g(L.id),
+            children: [
+              w(NA, { node: $r[L.id] ?? Ae.hex, size: 14, color: xs(L) }),
+              info.bldgName,
+              info.subLabel && w("small", { children: ["· ", info.subLabel] }),
+              I && w("i", { children: "✓" }),
+            ],
+          },
+          p,
+        );
+      }
+      if (info.kind === "res") {
+        const L = info.harv;
+        return w(
+          "button",
+          {
+            class: `ptag${I ? " have" : ""}`,
+            disabled: !L,
+            title: `${u(p)}${L ? `；建「${L.name}」开采，点击查看` : ""}`,
+            onClick: () => L && g(L.id),
+            children: [
+              w($i, { id: info.res.id, size: 14 }),
+              info.res.name,
+              w("small", { children: ["· ", info.subLabel] }),
+              I && w("i", { children: "✓" }),
+            ],
+          },
+          p,
+        );
+      }
       return w(
-        "button",
+        "span",
         {
-          class: `ptag${I ? " have" : ""}`,
-          disabled: !L,
-          title: L
-            ? `${H.length ? "由" : `${u(p)}；要在有这种资源的地上建`}「${L.name}」${H.length ? "生产" : "来开采"}，点一下去看`
-            : p,
-          onClick: () => L && g(L.id),
-          children: [
-            w(Ec, { tag: p, size: 14 }),
-            p,
-            L && w("small", { children: L.short }),
-            I && w("i", { children: "✓" }),
-          ],
+          class: `ptag static${I ? " have" : ""}`,
+          children: [w(Ec, { tag: p, size: 14 }), p, I && w("i", { children: "✓" })],
         },
         p,
       );
@@ -37479,6 +37959,20 @@ function Up({ id: A }) {
       class: "im-title",
       style: `--c:${P}`,
       children: [
+        fromBuild &&
+          t.tiles[fromBuild.tile] &&
+          w("button", {
+            type: "button",
+            class: "btn small im-back-btn",
+            onClick: () =>
+              e.openModal({
+                type: "build",
+                tile: fromBuild.tile,
+                tab: fromBuild.tab || "industry",
+                focusInd: js(t, t.tiles[fromBuild.tile], A, n).ok ? A : null,
+              }),
+            children: "← 返回建造",
+          }),
         w(vn, { industry: A, size: 46 }),
         w("span", {
           children: [
@@ -37739,6 +38233,19 @@ function Up({ id: A }) {
       w("div", {
         class: "actions end",
         children: [
+          fromBuild &&
+            t.tiles[fromBuild.tile] &&
+            w("button", {
+              class: "btn",
+              onClick: () =>
+                e.openModal({
+                  type: "build",
+                  tile: fromBuild.tile,
+                  tab: fromBuild.tab || "industry",
+                  focusInd: js(t, t.tiles[fromBuild.tile], A, n).ok ? A : null,
+                }),
+              children: js(t, t.tiles[fromBuild.tile], A, n).ok ? "← 返回本格建设" : "← 返回建造面板",
+            }),
           E && w("span", { class: "im-why", children: ["现在还建不了 · ", E] }),
           w("button", {
             class: "btn",
@@ -59852,6 +60359,193 @@ button.dcard {
     padding: 6px 12px;
   }
 }
+
+/* BuildModal near-unlock section & provider-first visual capsules */
+.bcard.locked.compact-locked {
+  opacity: 1;
+  padding: 10px 11px;
+  gap: 7px;
+  background:
+    linear-gradient(180deg, color-mix(in srgb, var(--c) 5.5%, transparent), transparent 52%), #070c149e;
+  border-color: rgba(150, 188, 226, 0.12);
+}
+.bcard.locked.compact-locked > .bc-top .bc-name b {
+  color: #dce6f2;
+  font-size: 14.5px;
+}
+.bcard.locked.compact-locked > .bc-chips {
+  opacity: 0.78;
+}
+.bcard.flash-target {
+  border-color: #ffcf4a !important;
+  box-shadow:
+    0 0 0 1px rgba(255, 207, 74, 0.55),
+    0 0 22px rgba(255, 207, 74, 0.28);
+  animation: bcardFlashPulse 1.6s ease-out;
+}
+@keyframes bcardFlashPulse {
+  0% {
+    box-shadow:
+      0 0 0 2px rgba(255, 207, 74, 0.9),
+      0 0 28px rgba(255, 207, 74, 0.52);
+  }
+  100% {
+    box-shadow:
+      0 0 0 1px rgba(255, 207, 74, 0.55),
+      0 0 22px rgba(255, 207, 74, 0.28);
+  }
+}
+.bc-info-btn {
+  flex: none;
+  width: 26px;
+  height: 26px;
+  border-radius: 7px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  color: #9bb2ca;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(160, 200, 240, 0.14);
+  cursor: pointer;
+  transition:
+    color 0.15s,
+    border-color 0.15s,
+    background 0.15s;
+}
+.bc-info-btn:hover {
+  color: #eaf4ff;
+  border-color: rgba(88, 225, 255, 0.48);
+  background: rgba(88, 225, 255, 0.12);
+}
+.bc-miss-box {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  padding: 6px 8px;
+  border-radius: 8px;
+  background: rgba(12, 20, 32, 0.72);
+  border: 1px solid rgba(160, 198, 236, 0.13);
+}
+.bc-miss-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 5px;
+}
+.bc-miss-lbl {
+  font-size: 11px;
+  font-weight: 600;
+  color: #ff9fa8;
+  padding: 1px 5px;
+  border-radius: 4px;
+  background: rgba(255, 93, 108, 0.13);
+  border: 1px solid rgba(255, 93, 108, 0.25);
+  white-space: nowrap;
+}
+.bc-or {
+  text-decoration: none;
+  font-size: 11px;
+  color: #7d93ab;
+  margin: 0 1px;
+}
+.bc-prov-pill {
+  --pc: #58e1ff;
+  display: inline-flex;
+  align-items: center;
+  gap: 4.5px;
+  padding: 3px 8px 3px 6px;
+  border-radius: 99px;
+  font-size: 12px;
+  line-height: 1.25;
+  color: #eef5fc;
+  background: color-mix(in srgb, var(--pc) 13%, rgba(16, 26, 40, 0.92));
+  border: 1px solid color-mix(in srgb, var(--pc) 42%, rgba(160, 200, 240, 0.18));
+  cursor: pointer;
+  white-space: nowrap;
+  transition:
+    transform 0.12s,
+    border-color 0.15s,
+    background 0.15s;
+}
+.bc-prov-pill:hover {
+  transform: translateY(-1px);
+  border-color: color-mix(in srgb, var(--pc) 82%, #ffffff);
+  background: color-mix(in srgb, var(--pc) 22%, rgba(20, 32, 48, 0.96));
+}
+.bc-prov-pill b {
+  font-weight: 600;
+  color: #f4f9ff;
+}
+.bc-prov-pill small {
+  font-size: 11px;
+  color: #a9bfd6;
+}
+.bc-prov-pill.ready-here {
+  border-color: rgba(109, 255, 168, 0.52);
+}
+.prov-flag {
+  font-style: normal;
+  font-size: 10px;
+  font-weight: 600;
+  padding: 1px 5px;
+  border-radius: 99px;
+  margin-left: 1px;
+}
+.prov-flag.here {
+  color: #9dffbf;
+  background: rgba(109, 255, 168, 0.16);
+  border: 1px solid rgba(109, 255, 168, 0.36);
+}
+.prov-flag.any {
+  color: #8ce8ff;
+  background: rgba(88, 225, 255, 0.14);
+  border: 1px solid rgba(88, 225, 255, 0.32);
+}
+.bc-more-btn {
+  padding: 2px 7px;
+  border-radius: 99px;
+  font-size: 11px;
+  color: #9db5ce;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px dashed rgba(160, 200, 240, 0.28);
+  cursor: pointer;
+}
+.bc-more-btn:hover {
+  color: #eef6ff;
+  border-color: rgba(88, 225, 255, 0.5);
+}
+.bnear-sec {
+  margin-top: 14px;
+  padding-top: 12px;
+  border-top: 1px dashed rgba(160, 200, 240, 0.18);
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.bnear-hd {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 6px 12px;
+}
+.bnear-title {
+  font-size: 13.5px;
+  font-weight: 700;
+  color: #ffd978;
+  letter-spacing: 0.02em;
+}
+.bnear-hd small {
+  font-size: 11.5px;
+  color: #8fa6bf;
+}
+.im-back-btn {
+  margin-right: 4px;
+  white-space: nowrap;
+}
+
+
 </style>
   </head>
   <body>
