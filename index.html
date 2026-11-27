@@ -6912,7 +6912,7 @@ const FIVE_YEAR_PLANS = [
     id: "fyp_wonder",
     ico: "crown",
     name: "奇观市政",
-    brief: "奇观/市政造价 −25% · 工期 −20%",
+    brief: "奇观市政 −25% · 工期 −20%",
     pros: "奇观与市政造价/扩建费 −25% · 市政与奇观工期 −20% · 全国宜居与上限 +10 · 施工队 +1",
     kpiDesc: "20 季内建成/升级奇观或市政，或维持宜居 ≥55% 满 8 季",
     rewardDesc: "国库 +2.0 季 GDP · ◇280 · 民生洞察 +3",
@@ -10765,7 +10765,7 @@ function getDailyQuests(A, now = Date.now()) {
         id: "dq_visit",
         key: "visit",
         ico: "pin",
-        name: "拓荒调研「首块邻地」",
+        name: "拓荒「首块邻地」",
         desc: "先开拓首块相邻地块，再调研抵达该地块",
         target: 1,
         reward: 70,
@@ -30337,10 +30337,14 @@ const SUPABASE_LADDER_SQL = `CREATE TABLE IF NOT EXISTS public.cloud_saves (
   industry_gdp JSONB NOT NULL DEFAULT '{}'::jsonb,
   save_json JSONB NOT NULL,
   secret_hash TEXT,
-  updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-  CONSTRAINT cloud_saves_gdp_plausible CHECK (gdp <= GREATEST(260.0, unlocked::double precision * 3800.0))
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 ALTER TABLE public.cloud_saves ADD COLUMN IF NOT EXISTS secret_hash TEXT;
+ALTER TABLE public.cloud_saves DROP CONSTRAINT IF EXISTS cloud_saves_gdp_plausible;
+ALTER TABLE public.cloud_saves
+  ADD CONSTRAINT cloud_saves_gdp_plausible
+  CHECK (unlocked BETWEEN 1 AND 217 AND gdp >= 0 AND gdp <= GREATEST(260.0, unlocked::double precision * 3800.0))
+  NOT VALID;
 CREATE INDEX IF NOT EXISTS idx_cloud_saves_gdp ON public.cloud_saves (gdp DESC);
 ALTER TABLE public.cloud_saves ENABLE ROW LEVEL SECURITY;
 REVOKE ALL ON public.cloud_saves FROM anon, authenticated;
@@ -30364,14 +30368,14 @@ DECLARE
   v_unlocked INTEGER := coalesce((p_row->>'unlocked')::integer, 1);
   v_quarter INTEGER := coalesce((p_row->>'quarter')::integer, 0);
 BEGIN
-  IF char_length(p_write_key) < 12 OR char_length(p_write_key) > 80 THEN
+  IF p_write_key IS NULL OR char_length(trim(p_write_key)) < 12 OR char_length(trim(p_write_key)) > 80 THEN
     RAISE EXCEPTION 'invalid write key';
   END IF;
   IF char_length(v_pid) < 6 OR char_length(v_pid) > 64 THEN
     RAISE EXCEPTION 'invalid player_id';
   END IF;
-  IF octet_length((p_row->'save_json')::text) > 409600 THEN
-    RAISE EXCEPTION 'save_json too large';
+  IF p_row->'save_json' IS NULL OR octet_length((p_row->'save_json')::text) > 409600 THEN
+    RAISE EXCEPTION 'invalid or oversized save_json';
   END IF;
   IF v_unlocked < 1 OR v_unlocked > 217 OR v_gdp < 0 OR v_gdp > GREATEST(260.0, v_unlocked::double precision * 3800.0) THEN
     RAISE EXCEPTION 'implausible gdp for unlocked tiles';
@@ -30386,7 +30390,7 @@ BEGIN
     credit_rating, ach_points, industry_gdp, save_json, secret_hash, updated_at
   ) VALUES (
     v_pid,
-    left(coalesce(p_row->>'nation_name', '未命名国家'), 32),
+    left(coalesce(nullif(trim(p_row->>'nation_name'), ''), '未命名国家'), 32),
     v_gdp, v_quarter, v_unlocked,
     coalesce((p_row->>'population')::double precision, 0),
     coalesce(p_row->>'credit_rating', 'AAA'),
@@ -39140,7 +39144,7 @@ function Np() {
                       w(NA, { node: r0[B], size: 13, color: lt[B].color }),
                       w("span", {
                         class: "isg-nm",
-                        children: lt[B].name,
+                        children: B === "11" ? "可选消费" : lt[B].name,
                       }),
                       w("em", { class: "isg-cnt", children: `${secBuilt}/${secAll.length}` }),
                     ],
@@ -41603,9 +41607,12 @@ function Wp() {
                           class: "dq-main",
                           style: "display:flex;flex-direction:row;align-items:center;gap:6px;min-width:0",
                           children: [
-                            w(NA, { node: Ae[q.ico] ?? Ae.flag, size: 14, stroke: 2.1 }),
+                            w("span", {
+                              style: "display:inline-flex;flex-shrink:0",
+                              children: w(NA, { node: Ae[q.ico] ?? Ae.flag, size: 14, stroke: 2.1 }),
+                            }),
                             w("b", {
-                              style: "overflow:hidden;text-overflow:ellipsis;white-space:nowrap",
+                              style: "min-width:0;flex:0 1 auto;overflow:hidden;text-overflow:ellipsis;white-space:nowrap",
                               children: String(q.name || "").replace(/^亲临视察/, "视察"),
                             }),
                             w("span", {
@@ -59437,8 +59444,8 @@ button.dcard {
 .isg-cell {
   display: flex;
   align-items: center;
-  gap: 5px;
-  padding: 5px 7px;
+  gap: 4px;
+  padding: 5px 6px;
   border-radius: 8px;
   background: rgba(9, 15, 24, 0.74);
   border: 1px solid rgba(160, 200, 240, 0.16);
@@ -59471,7 +59478,7 @@ button.dcard {
 .isg-nm {
   flex: 1;
   min-width: 0;
-  font-size: 11.5px;
+  font-size: 11px;
   font-weight: 600;
   white-space: nowrap;
   overflow: hidden;

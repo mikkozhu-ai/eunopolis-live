@@ -61,14 +61,14 @@ DECLARE
   v_unlocked INTEGER := coalesce((p_row->>'unlocked')::integer, 1);
   v_quarter INTEGER := coalesce((p_row->>'quarter')::integer, 0);
 BEGIN
-  IF char_length(p_write_key) < 12 OR char_length(p_write_key) > 80 THEN
+  IF p_write_key IS NULL OR char_length(trim(p_write_key)) < 12 OR char_length(trim(p_write_key)) > 80 THEN
     RAISE EXCEPTION 'invalid write key';
   END IF;
   IF char_length(v_pid) < 6 OR char_length(v_pid) > 64 THEN
     RAISE EXCEPTION 'invalid player_id';
   END IF;
-  IF octet_length((p_row->'save_json')::text) > 409600 THEN
-    RAISE EXCEPTION 'save_json too large';
+  IF p_row->'save_json' IS NULL OR octet_length((p_row->'save_json')::text) > 409600 THEN
+    RAISE EXCEPTION 'invalid or oversized save_json';
   END IF;
   IF v_unlocked < 1 OR v_unlocked > 217 OR v_gdp < 0 OR v_gdp > GREATEST(260.0, v_unlocked::double precision * 3800.0) THEN
     RAISE EXCEPTION 'implausible gdp for unlocked tiles';
@@ -85,7 +85,7 @@ BEGIN
     credit_rating, ach_points, industry_gdp, save_json, secret_hash, updated_at
   ) VALUES (
     v_pid,
-    left(coalesce(p_row->>'nation_name', '未命名国家'), 32),
+    left(coalesce(nullif(trim(p_row->>'nation_name'), ''), '未命名国家'), 32),
     v_gdp,
     v_quarter,
     v_unlocked,
