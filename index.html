@@ -202,7 +202,7 @@ const hf = ["12", "18", "13", "20", "17", "11", "19", "10", "16", "14", "15"],
       en: "Food",
       sector: "12",
       level: 0,
-      harvest: ["wheat", "cotton", "fish", "salt", "sugarcane", "tobacco_leaf", "coffee"],
+      harvest: ["wheat", "cotton", "fish", "salt", "sugarcane", "tobacco_leaf", "coffee", "herbs", "marine_bio"],
       harvestOptional: !0,
       needs: [],
       makes: "农产品",
@@ -211,7 +211,7 @@ const hf = ["12", "18", "13", "20", "17", "11", "19", "10", "16", "14", "15"],
       ice: !0,
       suits: ["plain", "valley"],
       model: "farm",
-      desc: "种植、养殖、渔业与食品加工。运转时提供基础人口与人口乘区加成，建于农渔盐茶等资源格额外增产。",
+      desc: "种植、养殖、渔业与食品加工。运转时提供基础人口与人口乘区加成，建于农渔盐茶草本等禀赋格额外增产并向下游输出对应物产。",
     },
     {
       id: "121011",
@@ -222,7 +222,7 @@ const hf = ["12", "18", "13", "20", "17", "11", "19", "10", "16", "14", "15"],
       level: 1,
       harvest: ["spring", "sugarcane", "coffee"],
       harvestOptional: !0,
-      needs: [["农产品", "甘蔗", "咖啡"], ["供水"]],
+      needs: [["农产品", "谷物沃土", "甘蔗", "咖啡"], ["供水", "清泉水脉"]],
       makes: "饮料",
       mountain: !0,
       ice: !0,
@@ -240,7 +240,7 @@ const hf = ["12", "18", "13", "20", "17", "11", "19", "10", "16", "14", "15"],
       level: 1,
       harvest: ["tobacco_leaf"],
       harvestOptional: !0,
-      needs: [["农产品"]],
+      needs: [["农产品", "烟叶种植带"]],
       makes: "烟草制品",
       suits: ["hill", "plain"],
       model: "light",
@@ -253,15 +253,15 @@ const hf = ["12", "18", "13", "20", "17", "11", "19", "10", "16", "14", "15"],
       en: "Household Products",
       sector: "12",
       level: 2,
-      harvest: ["herbs", "marine_bio"],
+      harvest: ["herbs", "marine_bio", "salt"],
       harvestOptional: !0,
-      needs: [["化工品"], ["供水"]],
+      needs: [["化工品", "天然盐湖", "道地药材", "海洋生物群"], ["供水", "清泉水脉"]],
       makes: "日化用品",
       water: !0,
       ice: !0,
       mountain: !0,
       model: "light",
-      desc: "清洁、个护与家庭日常用品制造。建于药材或海洋生物地块享天然活性原料增产。",
+      desc: "清洁、个护与家庭日常用品制造。建于药材、盐湖或海洋生物地块享天然活性原料增产。",
     },
     {
       id: "121110",
@@ -272,7 +272,7 @@ const hf = ["12", "18", "13", "20", "17", "11", "19", "10", "16", "14", "15"],
       level: 2,
       harvest: ["harbor"],
       harvestOptional: !0,
-      needs: [["物流"], ["农产品"], ["饮料", "烟草制品", "日化用品"]],
+      needs: [["物流", "深水航道"], ["农产品", "谷物沃土", "近海渔场"], ["饮料", "烟草制品", "日化用品"]],
       makes: "必需品批发",
       water: !0,
       model: "warehouse",
@@ -285,7 +285,7 @@ const hf = ["12", "18", "13", "20", "17", "11", "19", "10", "16", "14", "15"],
       en: "Retail - Consumer Staples",
       sector: "12",
       level: 1,
-      needs: [["农产品"], ["饮料", "烟草制品", "日化用品", "生活服务"]],
+      needs: [["农产品", "谷物沃土", "近海渔场"], ["饮料", "烟草制品", "日化用品", "生活服务"]],
       makes: "商超零售",
       model: "retail",
       desc: "超市、便利店与民生卖场，衔接基础消费品并为银行业与现代零售提供商业流水。",
@@ -299,12 +299,12 @@ const hf = ["12", "18", "13", "20", "17", "11", "19", "10", "16", "14", "15"],
       level: 2,
       harvest: ["salt", "abyssal_vent"],
       harvestOptional: !0,
-      needs: [["油气燃料", "煤炭", "石油", "天然气", "可燃冰"], ["供水"]],
+      needs: [["油气燃料", "煤炭", "石油", "天然气", "可燃冰", "天然盐湖", "深海热液口"], ["供水"]],
       makes: "化工品",
       water: !0,
       ice: !0,
       model: "chem",
-      desc: "有机与无机基础化学品，制造业核心上游。需碳氢能源底座与供水，建于盐湖或热液口大幅增产。",
+      desc: "有机与无机基础化学品，制造业核心上游。可用油气煤或盐湖、热液口开发，建于盐湖或热液口大幅增产。",
     },
     {
       id: "181011",
@@ -330,10 +330,10 @@ const hf = ["12", "18", "13", "20", "17", "11", "19", "10", "16", "14", "15"],
       level: 2,
       harvest: ["bamboo_pulp"],
       harvestOptional: !0,
-      needs: [["木材制品"], ["化工品", "建材"]],
+      needs: [["木材制品", "木材", "速生竹浆林"], ["化工品", "建材", "石英砂"]],
       makes: "包装",
       model: "light",
-      desc: "纸品、复合膜与工业容器，需林业木浆与化工或玻璃建材协同供应。",
+      desc: "纸品、复合膜与工业容器，需林业木竹浆与化工或硅砂玻璃协同供应。",
     },
     {
       id: "181013",
@@ -357,7 +357,7 @@ const hf = ["12", "18", "13", "20", "17", "11", "19", "10", "16", "14", "15"],
       en: "Steel",
       sector: "18",
       level: 2,
-      needs: [["铁矿"], ["电力", "煤炭"], ["供水"]],
+      needs: [["铁矿"], ["电力", "煤炭", "石灰石"], ["供水"]],
       makes: "钢材",
       model: "steel",
       desc: "高炉炼铁、炼钢与特种轧钢，装备制造与产业扩建的核心材料。",
@@ -412,7 +412,7 @@ const hf = ["12", "18", "13", "20", "17", "11", "19", "10", "16", "14", "15"],
       en: "Oil & Gas Services & Equip",
       sector: "13",
       level: 3,
-      needs: [["油气燃料"], ["机械设备"]],
+      needs: [["油气燃料", "石油", "天然气", "可燃冰"], ["机械设备"]],
       makes: "油服",
       model: "factory",
       desc: "深井钻探、油气田工程与专用装备。",
@@ -444,14 +444,14 @@ const hf = ["12", "18", "13", "20", "17", "11", "19", "10", "16", "14", "15"],
       level: 1,
       harvest: ["wind_corridor", "geothermal"],
       harvestOptional: !0,
-      needs: [["油气燃料", "煤炭", "铀矿", "绿电", "可燃冰"]],
+      needs: [["油气燃料", "煤炭", "天然气", "铀矿", "绿电", "强风走廊", "地热裂谷", "可燃冰"]],
       makes: "电力",
       mountain: !0,
       ice: !0,
       water: !0,
       suits: ["valley"],
       model: "power",
-      desc: "主力发电与骨干电网，可用油气、煤、铀、绿电或可燃冰。",
+      desc: "主力发电与骨干电网，可用油气、煤、铀、绿电、风廊、地热或可燃冰。",
     },
     {
       id: "201011",
@@ -469,7 +469,7 @@ const hf = ["12", "18", "13", "20", "17", "11", "19", "10", "16", "14", "15"],
       ice: !0,
       suits: ["valley", "water"],
       model: "utility",
-      desc: "供水、燃气管网与水处理。河谷或海湾供水量 ×1.5，建于清泉水脉额外增产并提升供货配额。",
+      desc: "供水、燃气管网与水处理。河谷或海湾供水量 ×1.5，建于清泉水脉额外增产并向下游输送清泉水源。",
     },
     {
       id: "201012",
@@ -478,7 +478,7 @@ const hf = ["12", "18", "13", "20", "17", "11", "19", "10", "16", "14", "15"],
       en: "Elec & Gas Marketing & Trading",
       sector: "20",
       level: 2,
-      needs: [["电力"], ["供水", "油气燃料", "绿电", "可燃冰"]],
+      needs: [["电力"], ["供水", "油气燃料", "天然气", "绿电", "强风走廊", "地热裂谷", "可燃冰"]],
       makes: "能源交易",
       model: "office",
       desc: "电力与燃气跨区调度、结算与合约交易。",
@@ -502,12 +502,15 @@ const hf = ["12", "18", "13", "20", "17", "11", "19", "10", "16", "14", "15"],
       en: "Aerospace & Defense",
       sector: "17",
       level: 4,
-      needs: [["运输装备"], ["电子硬件"], ["化工品", "稀土"]],
+      harvest: ["rareearth"],
+      harvestOptional: !0,
+      needs: [["运输装备"], ["电子硬件"], ["铝土矿", "铜矿", "稀土", "星辰振金矿"]],
       makes: "航天装备",
       mountain: !0,
+      ice: !0,
       suits: ["desert"],
       model: "aero",
-      desc: "干线飞机、运载火箭与航天器系统。",
+      desc: "干线飞机、运载火箭与航天器系统，需铝土矿、铜矿或稀土等特种航材配额。",
     },
     {
       id: "171012",
@@ -598,7 +601,7 @@ const hf = ["12", "18", "13", "20", "17", "11", "19", "10", "16", "14", "15"],
       water: !0,
       suits: ["water", "valley", "plain"],
       model: "logistics",
-      desc: "干线铁路、公路与港口航运。建于深水航道享枢纽港口加成。",
+      desc: "干线铁路、公路与港口航运。建于深水航道享枢纽港口加成并向贸易渠道输出航运运力。",
     },
     {
       id: "171113",
@@ -607,7 +610,7 @@ const hf = ["12", "18", "13", "20", "17", "11", "19", "10", "16", "14", "15"],
       en: "Engineering & Construction",
       sector: "17",
       level: 2,
-      needs: [["建材"], ["钢材", "机械设备"]],
+      needs: [["建材", "石灰石", "砂石"], ["钢材", "机械设备"]],
       makes: "基建工程",
       model: "construct",
       desc: "大型土木工程与工业园区建设。",
@@ -633,10 +636,10 @@ const hf = ["12", "18", "13", "20", "17", "11", "19", "10", "16", "14", "15"],
       en: "Automotive",
       sector: "11",
       level: 3,
-      needs: [["钢材"], ["工业零部件", "电气设备"]],
+      needs: [["钢材"], ["工业零部件", "电气设备", "橡胶", "锂矿"]],
       makes: "汽车",
       model: "auto",
-      desc: "整车与汽车零部件制造。",
+      desc: "整车、动力电池总成与轮胎汽车配套制造。",
     },
     {
       id: "111012",
@@ -645,11 +648,11 @@ const hf = ["12", "18", "13", "20", "17", "11", "19", "10", "16", "14", "15"],
       en: "Home Construction",
       sector: "11",
       level: 1,
-      needs: [["建材", "木材制品"], ["供水"]],
+      needs: [["建材", "木材制品", "木材", "石灰石", "砂石"], ["供水"]],
       makes: "住宅",
       suits: ["plain"],
       model: "housing",
-      desc: "住宅建造。开工需全国具备供水。",
+      desc: "住宅建造。开工需建筑骨料或木材与供水。",
     },
     {
       id: "111013",
@@ -658,10 +661,10 @@ const hf = ["12", "18", "13", "20", "17", "11", "19", "10", "16", "14", "15"],
       en: "Home & Office Products",
       sector: "11",
       level: 2,
-      needs: [["木材制品", "工业零部件"]],
+      needs: [["木材制品", "木材", "速生竹浆林", "棉花", "工业零部件"]],
       makes: "家居用品",
       model: "light",
-      desc: "家具、家电与办公用品。",
+      desc: "实木竹材家具、家纺软装、家电与办公用品。",
     },
     {
       id: "111014",
@@ -696,7 +699,7 @@ const hf = ["12", "18", "13", "20", "17", "11", "19", "10", "16", "14", "15"],
       level: 1,
       harvest: ["scenic", "geothermal"],
       harvestOptional: !0,
-      needs: [["生活服务", "农产品"]],
+      needs: [["生活服务", "农产品", "近海渔场", "咖啡", "地质奇观带", "地热裂谷"]],
       makes: "文旅服务",
       water: !0,
       mountain: !0,
@@ -714,7 +717,7 @@ const hf = ["12", "18", "13", "20", "17", "11", "19", "10", "16", "14", "15"],
       level: 2,
       harvest: ["harbor"],
       harvestOptional: !0,
-      needs: [["物流"], ["服装", "家居用品", "休闲产品", "汽车"]],
+      needs: [["物流", "深水航道"], ["服装", "家居用品", "休闲产品", "汽车"]],
       makes: "批发贸易",
       water: !0,
       model: "warehouse",
@@ -727,10 +730,10 @@ const hf = ["12", "18", "13", "20", "17", "11", "19", "10", "16", "14", "15"],
       en: "Retail - Discretionary",
       sector: "11",
       level: 2,
-      needs: [["商超零售", "物流"], ["服装", "家居用品", "休闲产品", "电子硬件", "黄金"]],
+      needs: [["商超零售", "物流"], ["服装", "家居用品", "休闲产品", "电子硬件", "黄金", "地质奇观带"]],
       makes: "零售",
       model: "retail",
-      desc: "百货中心、品牌专卖与珠宝零售，需商业流通底座与消费制造货源协同。",
+      desc: "百货中心、品牌专卖、免税文旅商业与珠宝零售。",
     },
     {
       id: "111212",
@@ -739,10 +742,10 @@ const hf = ["12", "18", "13", "20", "17", "11", "19", "10", "16", "14", "15"],
       en: "E-Commerce Discretionary",
       sector: "11",
       level: 3,
-      needs: [["物流"], ["网络服务"], ["服装", "家居用品", "休闲产品", "电子硬件"]],
+      needs: [["物流", "深水航道"], ["网络服务"], ["服装", "家居用品", "休闲产品", "电子硬件"]],
       makes: "电商",
       model: "warehouse",
-      desc: "全国在线零售与数字履约平台。",
+      desc: "全国在线零售、跨境港口仓配与数字履约平台。",
     },
     {
       id: "191010",
@@ -765,12 +768,12 @@ const hf = ["12", "18", "13", "20", "17", "11", "19", "10", "16", "14", "15"],
       level: 3,
       harvest: ["permafrost"],
       harvestOptional: !0,
-      needs: [["石英砂", "稀土"], ["化工品"], ["电力"], ["供水"]],
+      needs: [["石英砂", "稀土"], ["化工品"], ["电力"], ["供水", "清泉水脉"]],
       makes: "芯片",
       ice: !0,
       mountain: !0,
       model: "fab",
-      desc: "晶圆制造、封测与光刻工艺，需石英砂或稀土配额，支撑全国产业 Lv.5 技改。",
+      desc: "晶圆制造、封测与光刻工艺，需石英砂或稀土配额及超纯水源，支撑全国产业 Lv.5 技改。",
     },
     {
       id: "191110",
@@ -803,7 +806,7 @@ const hf = ["12", "18", "13", "20", "17", "11", "19", "10", "16", "14", "15"],
       mountain: !0,
       suits: ["ice"],
       model: "campus",
-      desc: "算力托管、系统集成与数据中心服务，建于冰原或极寒散热带享天然散热增产。",
+      desc: "算力托管、系统集成与数据中心服务，建于冰原或极寒散热带享天然散热增产并输出低温算力底座。",
     },
     {
       id: "101010",
@@ -812,10 +815,10 @@ const hf = ["12", "18", "13", "20", "17", "11", "19", "10", "16", "14", "15"],
       en: "Advertising & Marketing",
       sector: "10",
       level: 2,
-      needs: [["内容", "出版传媒"], ["通信网络", "生活服务"]],
+      needs: [["内容", "出版传媒", "地质奇观带"], ["通信网络", "生活服务"]],
       makes: "营销服务",
       model: "media",
-      desc: "品牌传播、媒介投放与商业推广，需娱乐内容或出版传媒提供内容供给。",
+      desc: "品牌传播、实景宣发、媒介投放与商业推广。",
     },
     {
       id: "101011",
@@ -844,7 +847,7 @@ const hf = ["12", "18", "13", "20", "17", "11", "19", "10", "16", "14", "15"],
       mountain: !0,
       water: !0,
       model: "media",
-      desc: "影视、音乐与数字互动娱乐制作，提供民生承载并向广告与数字生态供货。",
+      desc: "影视、音乐与数字互动娱乐制作，建于地质奇观带享实景外景增产。",
     },
     {
       id: "101013",
@@ -855,7 +858,7 @@ const hf = ["12", "18", "13", "20", "17", "11", "19", "10", "16", "14", "15"],
       level: 1,
       harvest: ["bamboo_pulp"],
       harvestOptional: !0,
-      needs: [["木材制品", "通信网络"]],
+      needs: [["木材制品", "速生竹浆林", "通信网络"]],
       makes: "出版传媒",
       model: "media",
       desc: "书刊出版、知识发行与广播传媒，提供民生承载并支撑广告营销产业。",
@@ -867,10 +870,10 @@ const hf = ["12", "18", "13", "20", "17", "11", "19", "10", "16", "14", "15"],
       en: "Internet Media & Services",
       sector: "10",
       level: 3,
-      needs: [["通信网络"], ["软件", "IT服务"]],
+      needs: [["通信网络"], ["软件", "IT服务", "极寒散热带"]],
       makes: "网络服务",
       model: "campus",
-      desc: "大型平台、搜索引擎与在线数字服务。",
+      desc: "大型平台、超算云与在线数字服务。",
     },
     {
       id: "101110",
@@ -895,13 +898,18 @@ const hf = ["12", "18", "13", "20", "17", "11", "19", "10", "16", "14", "15"],
       level: 3,
       harvest: ["herbs", "marine_bio", "ancient_bio"],
       harvestOptional: !0,
-      needs: [["化工品"], ["医疗服务", "IT服务"], ["供水"]],
+      needs: [
+        ["化工品"],
+        ["医疗服务", "IT服务"],
+        ["道地药材", "海洋生物群", "古生态菌群", "异星生命源质"],
+        ["供水", "清泉水脉"],
+      ],
       makes: "药品",
       water: !0,
       mountain: !0,
       ice: !0,
       model: "fab",
-      desc: "原研药与生物制剂生产，建于药材、海洋生物或古生态菌群地块大幅增产。",
+      desc: "原研药与生物制剂生产，需激活药材、海洋生物或古生态菌群之一，建于对应宝地大幅增产。",
     },
     {
       id: "161011",
@@ -917,7 +925,7 @@ const hf = ["12", "18", "13", "20", "17", "11", "19", "10", "16", "14", "15"],
       mountain: !0,
       water: !0,
       model: "hospital",
-      desc: "综合医院、专科诊疗与公共卫生体系，核心民生承载底座。",
+      desc: "综合医院、专科诊疗与公共卫生体系，建于药材或古生态菌群地块可向制药链输出活性药源。",
     },
     {
       id: "161012",
@@ -950,10 +958,10 @@ const hf = ["12", "18", "13", "20", "17", "11", "19", "10", "16", "14", "15"],
       en: "Asset Management",
       sector: "14",
       level: 3,
-      needs: [["信贷"]],
+      needs: [["信贷", "黄金"]],
       makes: "资管",
       model: "finance",
-      desc: "主权基金、产业资本配置与机构资产管理，支撑全国产业 Lv.6 技改。",
+      desc: "主权基金、黄金储备配置与机构资产管理，支撑全国产业 Lv.6 技改。",
     },
     {
       id: "141111",
@@ -974,10 +982,10 @@ const hf = ["12", "18", "13", "20", "17", "11", "19", "10", "16", "14", "15"],
       en: "Institutional Financial Svcs",
       sector: "14",
       level: 3,
-      needs: [["信贷"], ["IT服务"]],
+      needs: [["信贷", "黄金"], ["IT服务"]],
       makes: "投行交易",
       model: "finance",
-      desc: "证券承销、做市清算与大宗机构交易。",
+      desc: "证券承销、贵金属做市清算与大宗机构交易。",
     },
     {
       id: "141210",
@@ -1000,13 +1008,13 @@ const hf = ["12", "18", "13", "20", "17", "11", "19", "10", "16", "14", "15"],
       level: 2,
       harvest: ["scenic"],
       harvestOptional: !0,
-      needs: [["建材"], ["信贷"], ["供水"]],
+      needs: [["建材", "石灰石", "砂石"], ["信贷"], ["供水"]],
       makes: "地产",
       mountain: !0,
       water: !0,
       suits: ["plain"],
       model: "housing",
-      desc: "综合商业体与住宅社区开发，建于自然奇观带享景观溢价。",
+      desc: "综合商业体与住宅社区开发，建于地质奇观带享景观溢价。",
     },
     {
       id: "151011",
@@ -1015,10 +1023,10 @@ const hf = ["12", "18", "13", "20", "17", "11", "19", "10", "16", "14", "15"],
       en: "REIT",
       sector: "15",
       level: 3,
-      needs: [["地产"], ["资管", "信贷"]],
+      needs: [["地产", "地质奇观带"], ["资管", "信贷"]],
       makes: "REIT",
       model: "finance",
-      desc: "不动产证券化与商业地产投资信托。",
+      desc: "商业与文旅不动产证券化投资信托。",
     },
     {
       id: "151012",
@@ -1054,10 +1062,14 @@ const hf = ["12", "18", "13", "20", "17", "11", "19", "10", "16", "14", "15"],
       en: "Super Mecha",
       sector: "17",
       level: 4,
-      needs: [["钢材", "太空矿产", "稀土"], ["机械设备"], ["芯片"]],
+      harvest: ["rareearth"],
+      harvestOptional: !0,
+      needs: [["钢材"], ["稀土", "太空矿产", "星辰振金矿"], ["机械设备"], ["芯片"]],
       makes: "巨型机甲",
+      mountain: !0,
+      ice: !0,
       model: "mecha",
-      desc: "重型双足机动工程与星际防务装甲总成。",
+      desc: "重型双足机动工程与星际防务装甲总成，需稀土、太空矿产或振金特种装甲核心。",
     },
     {
       id: "X003",
@@ -1069,7 +1081,7 @@ const hf = ["12", "18", "13", "20", "17", "11", "19", "10", "16", "14", "15"],
       level: 4,
       harvest: ["abyssal_vent"],
       harvestOptional: !0,
-      needs: [["锂矿", "铀矿"], ["机械设备"], ["芯片"]],
+      needs: [["锂矿", "铀矿", "深海热液口", "氦-3陨石"], ["机械设备"], ["芯片"]],
       makes: "聚变电力",
       alsoMakes: ["电力"],
       mountain: !0,
@@ -1077,7 +1089,7 @@ const hf = ["12", "18", "13", "20", "17", "11", "19", "10", "16", "14", "15"],
       suits: ["valley", "water"],
       water: !0,
       model: "fusion",
-      desc: "模块化磁约束聚变反应堆，运转后向全国电网输出高密度电力。",
+      desc: "模块化磁约束聚变反应堆，需锂、铀、深海热液口或氦-3燃料底座，向全国电网输出高密度电力。",
     },
     {
       id: "X004",
@@ -1087,14 +1099,20 @@ const hf = ["12", "18", "13", "20", "17", "11", "19", "10", "16", "14", "15"],
       en: "Synthetic Biology",
       sector: "16",
       level: 3,
-      harvest: ["marine_bio", "ancient_bio"],
+      harvest: ["marine_bio", "ancient_bio", "abyssal_vent"],
       harvestOptional: !0,
-      needs: [["药品"], ["化工品"], ["芯片", "IT服务"]],
+      needs: [
+        ["药品"],
+        ["化工品"],
+        ["海洋生物群", "古生态菌群", "深海热液口", "异星生命源质"],
+        ["芯片", "IT服务"],
+      ],
       makes: "生物制造",
       water: !0,
       ice: !0,
+      mountain: !0,
       model: "biotech",
-      desc: "定向编辑工程菌株定向合成材料、蛋白与活性药物原料。",
+      desc: "定向编辑工程菌株合成材料与活性蛋白，需激活高阶海洋生物、古生态菌群、热液口或异星源质之一。",
     },
     {
       id: "X005",
@@ -1117,7 +1135,7 @@ const hf = ["12", "18", "13", "20", "17", "11", "19", "10", "16", "14", "15"],
       en: "Super Androids",
       sector: "19",
       level: 4,
-      needs: [["芯片"], ["脑机设备"], ["生物制造"]],
+      needs: [["芯片"], ["脑机设备"], ["生物制造", "古生态菌群", "异星生命源质"]],
       makes: "仿生人",
       model: "android",
       desc: "融合合成肌肉组织与通用智能核心的全尺寸具身智能体。",
@@ -1147,7 +1165,7 @@ const hf = ["12", "18", "13", "20", "17", "11", "19", "10", "16", "14", "15"],
       en: "Super Exchange",
       sector: "14",
       level: 3,
-      needs: [["投行交易"], ["资管"], ["网络服务", "量子算力"]],
+      needs: [["投行交易"], ["资管", "黄金"], ["网络服务", "量子算力", "深水航道"]],
       makes: "全球交易",
       model: "exchange",
       desc: "全天候跨时区自动化清算与高频大宗交易枢纽。",
@@ -1162,13 +1180,13 @@ const hf = ["12", "18", "13", "20", "17", "11", "19", "10", "16", "14", "15"],
       level: 4,
       harvest: ["permafrost"],
       harvestOptional: !0,
-      needs: [["芯片"], ["电力"], ["软件", "IT服务"]],
+      needs: [["芯片"], ["极寒散热带", "稀土", "室温超导晶"], ["电力"], ["软件", "IT服务"]],
       makes: "量子算力",
       ice: !0,
       mountain: !0,
       suits: ["ice"],
       model: "quantum",
-      desc: "极低温超导量子计算阵列，冰原与极寒散热带享显著加成。",
+      desc: "极低温超导量子计算阵列，需激活极寒散热带、稀土或室温超导晶底座。",
     },
     {
       id: "X010",
@@ -1178,12 +1196,12 @@ const hf = ["12", "18", "13", "20", "17", "11", "19", "10", "16", "14", "15"],
       en: "Consciousness Data Center",
       sector: "19",
       level: 4,
-      needs: [["量子算力"], ["脑机设备"], ["电力"]],
+      needs: [["量子算力", "极寒散热带", "室温超导晶"], ["脑机设备"], ["电力"]],
       makes: "意识存档",
       ice: !0,
       suits: ["ice"],
       model: "mindcenter",
-      desc: "将人类大脑记忆与灵魂数字化，脱离肉体实现赛博永生。冰原散热最好。",
+      desc: "将人类大脑记忆与意识数字化存储，冰原与超导低温环境享显著加成。",
     },
     {
       id: "X011",
@@ -1193,13 +1211,13 @@ const hf = ["12", "18", "13", "20", "17", "11", "19", "10", "16", "14", "15"],
       en: "Weather Engineering",
       sector: "20",
       level: 4,
-      needs: [["卫星传输"], ["量子算力", "芯片"], ["聚变电力", "电力"]],
+      needs: [["卫星传输"], ["量子算力", "芯片"], ["聚变电力", "电力", "暗物质残片"]],
       makes: "气象调控",
       alsoMakes: ["供水"],
       mountain: !0,
       suits: ["mountain", "hill"],
       model: "weather",
-      desc: "人工操控台风、降雨、洋流，并向全国提供 50/级 巨量淡水供给（终局供水枢纽）。",
+      desc: "调控大气环流与降水，并向全国提供 50/级 淡水供给（终局供水枢纽）。",
     },
     {
       id: "X012",
@@ -1209,11 +1227,11 @@ const hf = ["12", "18", "13", "20", "17", "11", "19", "10", "16", "14", "15"],
       en: "Interstellar Transit",
       sector: "17",
       level: 4,
-      needs: [["航天装备"], ["聚变电力"], ["量子算力"]],
+      needs: [["航天装备"], ["聚变电力", "氦-3陨石", "暗物质残片"], ["量子算力", "室温超导晶"]],
       makes: "星际航运",
       suits: ["desert"],
       model: "starport",
-      desc: "折叠时空维度，经营星际跃迁航道与超光速物流垄断。",
+      desc: "折叠时空维度，经营星际跃迁航道与深空物流网络。",
     },
     {
       id: "X013",
@@ -1223,10 +1241,10 @@ const hf = ["12", "18", "13", "20", "17", "11", "19", "10", "16", "14", "15"],
       en: "Dream Weaving",
       sector: "10",
       level: 3,
-      needs: [["脑机设备"], ["内容"], ["软件"]],
+      needs: [["脑机设备"], ["内容", "地质奇观带"], ["软件"]],
       makes: "梦境体验",
       model: "dream",
-      desc: "潜意识接入、虚拟感官体验定制、痛苦记忆剥离与二手记忆买卖。",
+      desc: "潜意识接入、虚拟感官体验定制与记忆重构服务。",
     },
     {
       id: "X014",
@@ -1236,10 +1254,10 @@ const hf = ["12", "18", "13", "20", "17", "11", "19", "10", "16", "14", "15"],
       en: "Time Stasis",
       sector: "16",
       level: 4,
-      needs: [["量子算力"], ["医疗服务", "医疗器械"], ["聚变电力"]],
+      needs: [["量子算力"], ["医疗服务", "医疗器械"], ["聚变电力", "暗物质残片"]],
       makes: "时间停滞",
       model: "chrono",
-      desc: "面向星际远航与绝症患者的分子级时间停滞。",
+      desc: "面向星际远航与重症临床的分子级时间停滞设施。",
     },
     {
       id: "X015",
@@ -1249,10 +1267,10 @@ const hf = ["12", "18", "13", "20", "17", "11", "19", "10", "16", "14", "15"],
       en: "Morphing Apparel",
       sector: "11",
       level: 3,
-      needs: [["服装"], ["生物制造"], ["芯片", "电子硬件"]],
+      needs: [["服装", "棉花"], ["生物制造", "异星生命源质"], ["芯片", "电子硬件"]],
       makes: "智能服饰",
       model: "morphwear",
-      desc: "融入记忆合金与相变微胶囊的纳米织物，一件衣服能随体温和天气自动改变厚度、款式甚至隐身。",
+      desc: "融入记忆合金与相变微胶囊的纳米织物，随体温与环境自适应调节。",
     },
     {
       id: "X016",
@@ -1262,10 +1280,10 @@ const hf = ["12", "18", "13", "20", "17", "11", "19", "10", "16", "14", "15"],
       en: "Private Base Vehicle",
       sector: "11",
       level: 3,
-      needs: [["汽车"], ["电子硬件"], ["软件"], ["聚变电力", "电力"]],
+      needs: [["汽车"], ["电子硬件", "星辰振金矿"], ["软件"], ["聚变电力", "电力"]],
       makes: "移动基地",
       model: "basecar",
-      desc: "可以快速展开的私人“科技空间”。",
+      desc: "可快速展开的全地形模块化移动生活与科研空间。",
     },
   ],
   aB = (A, e) => e.map((t) => [t, A]),
@@ -1483,9 +1501,16 @@ function indTagsOf(id, res) {
   const d = HA[id];
   if (!d) return [];
   const a = [d.makes, ...(d.alsoMakes ?? [])];
-  if (res && d.harvest && d.harvest.includes(res)) {
+  if (res) {
     const k = ke[res];
-    k && a.push(k.name);
+    if (
+      k &&
+      ((d.harvest && d.harvest.includes(res)) ||
+        (k.fictional && ((k.anyFic && d.source === "架空") || (k.boostInds && k.boostInds.includes(d.id)))))
+    ) {
+      a.includes(k.name) || a.push(k.name);
+      if (Array.isArray(k.altTags)) for (const tg of k.altTags) a.includes(tg) || a.push(tg);
+    }
   }
   return a;
 }
@@ -5452,9 +5477,9 @@ const Rl = [
         fictional: !0,
         terrains: ["ice", "desert", "mountain"],
         color: "#7cf7ff",
-        boostInds: ["X003", "131110"],
-        bonus: 0.45,
-        altTags: ["锂矿", "铀矿"],
+        boostInds: ["X003", "131110", "X012"],
+        bonus: 1.4,
+        altTags: ["锂矿", "铀矿", "氦-3陨石"],
       },
       {
         id: "supercond",
@@ -5463,9 +5488,10 @@ const Rl = [
         fictional: !0,
         terrains: ["ice", "mountain"],
         color: "#9a8cff",
-        boostInds: ["X009", "X010", "X012"],
-        bonus: 0.45,
+        boostInds: ["X009", "X010", "X012", "201010"],
+        bonus: 1.35,
         powerAdd: 15,
+        altTags: ["极寒散热带", "室温超导晶"],
       },
       {
         id: "vibranium",
@@ -5474,9 +5500,9 @@ const Rl = [
         fictional: !0,
         terrains: ["mountain", "desert", "hill"],
         color: "#ffcf4a",
-        boostInds: ["X002", "X007", "X016"],
-        bonus: 0.45,
-        altTags: ["钢材", "太空矿产"],
+        boostInds: ["X002", "X007", "X016", "171011"],
+        bonus: 1.4,
+        altTags: ["钢材", "太空矿产", "稀土", "星辰振金矿"],
       },
       {
         id: "biospore",
@@ -5485,8 +5511,9 @@ const Rl = [
         fictional: !0,
         terrains: ["water", "forest", "valley"],
         color: "#6dffa8",
-        boostInds: ["X004", "X005", "X013", "X015"],
-        bonus: 0.45,
+        boostInds: ["X004", "X005", "X013", "X015", "161010"],
+        bonus: 1.4,
+        altTags: ["道地药材", "古生态菌群", "异星生命源质"],
       },
       {
         id: "darkmatter",
@@ -5496,7 +5523,8 @@ const Rl = [
         terrains: ["ice", "desert"],
         color: "#ff66d4",
         boostInds: ["X014", "X012", "X011"],
-        bonus: 0.5,
+        bonus: 1.5,
+        altTags: ["暗物质残片"],
       },
       {
         id: "aether",
@@ -5506,7 +5534,8 @@ const Rl = [
         terrains: ["plain", "hill", "forest", "mountain", "desert", "valley", "ice", "water"],
         color: "#e5b8ff",
         anyFic: !0,
-        bonus: 0.4,
+        bonus: 1.15,
+        altTags: ["聚变电力", "量子算力"],
       },
     ],
   ],
@@ -7586,16 +7615,35 @@ function cf(A, e, t, n) {
     lf: r,
   };
 }
+function indMatchesRes(e, resId) {
+  if (!e || !resId) return !1;
+  if (e.harvest && e.harvest.includes(resId)) return !0;
+  const r = ke[resId];
+  return !!(
+    r &&
+    r.fictional &&
+    ((r.anyFic && e.source === "架空") || (r.boostInds && r.boostInds.includes(e.id)))
+  );
+}
+function tileSelfTags(tile, indDef, baseTags) {
+  if (!tile || !tile.resource || !indMatchesRes(indDef, tile.resource)) return baseTags;
+  const r = ke[tile.resource];
+  if (!r) return baseTags;
+  const next = new Set(baseTags);
+  next.add(r.name);
+  if (Array.isArray(r.altTags)) for (const tg of r.altTags) next.add(tg);
+  return next;
+}
 function QB(A, e) {
   const t = Tl(e);
-  return (
-    e.harvest &&
-      (!e.harvestOptional || e.id === "121010") &&
-      A.resource &&
-      e.harvest.includes(A.resource) &&
-      t.push(jl(A.resource)),
-    t
-  );
+  if (A.resource && indMatchesRes(e, A.resource)) {
+    const r = ke[A.resource];
+    if (r) {
+      t.includes(r.name) || t.push(r.name);
+      if (Array.isArray(r.altTags)) for (const tg of r.altTags) t.includes(tg) || t.push(tg);
+    }
+  }
+  return t;
 }
 function wc(A, e) {
   return !e.harvest || e.harvestOptional ? !0 : !!A.resource && e.harvest.includes(A.resource);
@@ -7799,7 +7847,7 @@ function dt(A, e = Date.now()) {
       if (C.has(y.id) || y.paused > 0) continue;
       const R = HA[y.industry];
       (!((((T = g.get(y.id)) == null ? void 0 : T.ignoreDeps) ?? 0) > 0) &&
-        (!wc(y, R) || qf(R.needs, E).length)) ||
+        (!wc(y, R) || qf(R.needs, tileSelfTags(y, R, E)).length)) ||
         (C.add(y.id), QB(y, R).forEach((W) => E.add(W)), (h = !0));
     }
   }
@@ -7813,7 +7861,7 @@ function dt(A, e = Date.now()) {
     if (!C.has(y.id)) continue;
     const R = HA[y.industry],
       effLv = Math.min(y.level, Og(A, y)),
-      hasRes = !!(R.harvest && y.resource && R.harvest.includes(y.resource)),
+      hasRes = indMatchesRes(R, y.resource),
       supAmt = effLv * ((O.supplyPerLv ?? 2.5) + (hasRes ? (O.supplyResBonus ?? 1) : 0));
     for (const tg of QB(y, R)) tagSup.set(tg, (tagSup.get(tg) ?? 0) + supAmt);
   }
@@ -8210,7 +8258,7 @@ function dt(A, e = Date.now()) {
     if (
       ((W.population = OA[y.id] ?? 0), (W.running = q), (W.cluster = H[y.id] ?? -1), !q && y.paused === 0)
     ) {
-      const bA = qf(R.needs, E);
+      const bA = qf(R.needs, tileSelfTags(y, R, E));
       (wc(y, R) || bA.unshift((R.harvest ?? []).map((ze) => ke[ze].name)), (W.missing = bA));
     }
     const CA = Og(A, y);
@@ -8844,7 +8892,7 @@ function t4(A, e) {
 function js(A, e, t, n) {
   const s = HA[t],
     f = n ?? dt(A),
-    o = qf(s.needs, f.tags);
+    o = qf(s.needs, tileSelfTags(e, s, f.tags));
   let r;
   return (
     e.unlocked
@@ -10050,13 +10098,21 @@ function c7(A, e) {
       qe(void 0, o[0]))
     : UA("这里的地形没有可勘探的资源");
 }
-function ca(A) {
-  const e = new Set(A.tiles.filter((t) => t.unlocked && t.resource).map((t) => t.resource));
-  return new Set(fs.filter((t) => t.tier <= 1 && !e.has(t.id)).map((t) => t.id));
-}
-const r4 = new Set(Ee.flatMap((A) => A.needs.flat())),
+const _indMakesSet = new Set(Ee.map((A) => A.makes).filter((m) => m && m !== "太空矿产")),
+  r4 = new Set([
+    ...Ee.flatMap((A) =>
+      A.needs
+        .filter((grp) => !grp.some((tg) => _indMakesSet.has(tg)))
+        .flat(),
+    ),
+    ...Ee.filter((A) => A.harvest && !A.harvestOptional).flatMap((A) => A.harvest.map((id) => ke[id]?.name).filter(Boolean)),
+  ]),
   Qc = (A) => r4.has(A),
   Wv = [0, 1, 2, 3, 4];
+function ca(A) {
+  const e = new Set(A.tiles.filter((t) => t.unlocked && t.resource).map((t) => t.resource));
+  return new Set(fs.filter((t) => !t.fictional && t.tier <= 2 && !e.has(t.id) && Qc(t.name)).map((t) => t.id));
+}
 function B7(A = 0, exMult = 1) {
   return Wv.map((e) => K9[e] * (e >= 2 ? Math.max(0.2, 1 + A * e) : 1) * (e >= 3 ? exMult : 1));
 }
@@ -35025,7 +35081,7 @@ function pp({ tile: A, tab: e }) {
                       .filter(
                         (F) =>
                           F.id !== x.id &&
-                          !F.harvest &&
+                          (!F.harvest || F.harvestOptional) &&
                           F.needs.length &&
                           qf(F.needs, s.tags).length &&
                           !qf(F.needs, z.tags).length,
@@ -36246,17 +36302,77 @@ function Fp({ m }) {
     ],
   });
 }
+const _uiMakesSet = new Set(Ee.map((d) => d.makes).filter((m) => m && m !== "太空矿产"));
+function describeResRole(i, st) {
+  if (!i) return null;
+  const exAdd = st ? be(st).mods.exoticAdd ?? 0 : 0,
+    isRaw = !i.fictional && Ee.some((d) => d.harvest && !d.harvestOptional && d.harvest.includes(i.id)),
+    hosts = i.fictional
+      ? i.anyFic
+        ? Ee.filter((d) => d.source === "架空")
+        : Ee.filter((d) => i.boostInds && i.boostInds.includes(d.id))
+      : Ee.filter((d) => d.harvest && d.harvest.includes(i.id)),
+    matchTags = new Set([i.name, ...(i.altTags || [])]),
+    hardDown = [],
+    linkDown = [];
+  for (const ind of Ee) {
+    let isHard = !1,
+      isLink = !1;
+    for (const grp of ind.needs) {
+      if (!grp.some((tg) => matchTags.has(tg))) continue;
+      const bypassed = grp.some((tg) => _uiMakesSet.has(tg));
+      if (!bypassed) isHard = !0;
+      else isLink = !0;
+    }
+    if (isHard) hardDown.push(ind.short);
+    else if (isLink) linkDown.push(ind.short);
+  }
+  const bonusVal = i.fictional
+      ? i.bonus + exAdd
+      : isRaw
+        ? Ms[i.tier]
+        : Ms[i.tier] + (O.optHarvestBonus ?? 0.2),
+    kindLabel = i.fictional ? "奇异禀赋" : isRaw ? `${Ke[i.tier]}矿藏` : `${Ke[i.tier]}宝地`,
+    subLabel = i.fictional
+      ? `奇异禀赋 · 驻地 +${SA(bonusVal)}${i.powerAdd ? ` · 供电 +${i.powerAdd}` : ""}`
+      : isRaw
+        ? `${Ke[i.tier]}矿藏${bonusVal > 0 ? ` · 开采 +${SA(bonusVal)}` : " · 基础原材"}`
+        : `${Ke[i.tier]}宝地 · 适建 +${SA(bonusVal)}`,
+    hostTitle = isRaw ? "开采产业" : "适建开发",
+    hostText = i.fictional && i.anyFic
+      ? "全部 16 项架空产业"
+      : hosts.length
+        ? hosts.map((d) => d.short).join("、")
+        : "全行业通用",
+    downParts = [
+      ...hardDown.map((nm) => `★${nm}`),
+      ...linkDown,
+    ],
+    downText = downParts.length
+      ? downParts.slice(0, 6).join("、") + (downParts.length > 6 ? ` 等${downParts.length}项` : "")
+      : i.altTags && i.altTags.length
+        ? `替代 ${i.altTags.join(" / ")}`
+        : "供给同系上下游配额";
+  return {
+    isRaw,
+    hosts,
+    hardDown,
+    linkDown,
+    bonusVal,
+    kindLabel,
+    subLabel,
+    hostTitle,
+    hostText,
+    downText,
+  };
+}
 function HQ({ id: A, index: e, tile: t, pv: n, fresh: s, offTerrain: f, verb: o, children: r }) {
-  var a, Q;
   const i = ke[A],
     v = t.industry ? HA[t.industry] : null,
-    c = Ee.filter((D) => {
-      var l;
-      return (l = D.harvest) == null ? void 0 : l.includes(A);
-    }),
-    g = Ee.filter((D) => D.needs.some((l) => l.includes(i.name))),
+    role = describeResRole(i, ie.state),
     P = n ? n.gdpAfter - n.gdpBefore : 0,
-    B = !!((a = v == null ? void 0 : v.harvest) != null && a.includes(A));
+    B = !!(v && indMatchesRes(v, A)),
+    wasUsing = !!(v && t.resource && indMatchesRes(v, t.resource));
   return w("li", {
     class: `pcard t${i.tier}`,
     style: `--rc:${i.color};--tc:${Xe[i.tier]};--i:${e}`,
@@ -36269,7 +36385,7 @@ function HQ({ id: A, index: e, tile: t, pv: n, fresh: s, offTerrain: f, verb: o,
             class: "pc-name",
             children: [
               w("b", { children: i.name }),
-              w("small", { children: [Ke[i.tier], Ms[i.tier] > 0 ? ` · 开采 +${SA(Ms[i.tier])}` : ""] }),
+              w("small", { children: role.subLabel }),
             ],
           }),
         ],
@@ -36277,25 +36393,27 @@ function HQ({ id: A, index: e, tile: t, pv: n, fresh: s, offTerrain: f, verb: o,
       w("div", {
         class: "pc-tags",
         children: [
-          s && w("span", { class: "chip chip-gold", children: "国内还没有" }),
-          B && w("span", { class: "chip chip-ok", children: ["「", v.short, "」正好能采"] }),
+          s && w("span", { class: "chip chip-gold", children: "国内紧缺前置" }),
+          role.hardDown.length > 0 &&
+            w("span", {
+              class: "chip chip-info",
+              children: [`解锁 ${role.hardDown.slice(0, 2).join(" / ")}${role.hardDown.length > 2 ? "…" : ""}`],
+            }),
+          B && w("span", { class: "chip chip-ok", children: ["「", v.short, "」契合增产"] }),
           v &&
             !B &&
-            t.resource &&
-            ((Q = v.harvest) == null ? void 0 : Q.includes(t.resource)) &&
-            w("span", { class: "chip chip-warn", children: ["会顶掉正在采的", ke[t.resource].name] }),
-          f && w("span", { class: "chip chip-info", children: [Ge[t.terrain].name, "勘探不出"] }),
+            wasUsing &&
+            w("span", { class: "chip chip-warn", children: ["会替换当前生效的", ke[t.resource].name] }),
+          f && w("span", { class: "chip chip-info", children: [Ge[t.terrain].name, "稀缺异域"] }),
         ],
       }),
       w("dl", {
         class: "pc-info",
         children: [
-          w("dt", { children: "谁来开采" }),
-          w("dd", { children: c.length ? c.map((D) => D.short).join("、") : "暂时没有产业能采" }),
-          w("dt", { children: "谁用得上" }),
-          w("dd", {
-            children: g.length ? g.map((D) => D.short).join("、") : "不是别的产业的原料，只加开采产出",
-          }),
+          w("dt", { children: role.hostTitle }),
+          w("dd", { children: role.hostText }),
+          w("dt", { children: "下游联动" }),
+          w("dd", { children: role.downText }),
         ],
       }),
       n &&
@@ -36311,7 +36429,7 @@ function HQ({ id: A, index: e, tile: t, pv: n, fresh: s, offTerrain: f, verb: o,
                     " 亿/季",
                   ],
                 })
-              : w("span", { class: "muted", children: [o, "后 GDP 暂时不变"] }),
+              : w("span", { class: "muted", children: [o, "后需建对口产业激活加成"] }),
             n.starts.length > 0 && w("span", { class: "up", children: ["复产：", n.starts.join("、")] }),
             n.stops.length > 0 && w("span", { class: "down", children: ["停产：", n.stops.join("、")] }),
           ],
@@ -42548,21 +42666,22 @@ function u9({ tile: A }) {
     P = (d) => c.has(d.id) && Qc(d.name),
     B = (d) => (P(d) ? 2 : g.has(d.id) ? 0 : 1),
     a = fs
-      .filter((d) => d.terrains.includes(A.terrain) && d.id !== A.resource)
+      .filter((d) => (!d.fictional || isExoticUnlocked(t, A)) && d.terrains.includes(A.terrain) && d.id !== A.resource)
       .sort((d, x) => B(x) - B(d) || x.tier - d.tier),
-    Q = a.some(P) ? void 0 : fs.find((d) => P(d) && d.id !== A.resource),
+    Q = a.some(P) ? void 0 : fs.find((d) => !d.fictional && P(d) && d.id !== A.resource),
     D = () => e.openModal({ type: "build", tile: A.id, tab: "industry" }),
     l = (d) => {
-      const x = Ee.filter((z) => {
-          var p;
-          return (p = z.harvest) == null ? void 0 : p.includes(d.id);
-        }).map((z) => z.short),
-        M = Ee.filter((z) => z.needs.some((p) => p.includes(d.name))).map((z) => z.short);
+      const rl = describeResRole(d, t);
       return [
-        P(d) ? `✓ 国内还没有，${M.join("、")}等着用` : g.has(d.id) ? "国内已经有了" : "国内还没有",
-        x.length ? `开采它的产业：${x.join("、")}` : "暂时没有产业能采",
-        M.length ? `用到它的产业：${M.join("、")}` : "不是别的产业的原料，只加开采产出",
-        Ms[d.tier] > 0 ? `${Ke[d.tier]}品质：开采产出 +${SA(Ms[d.tier])}` : "",
+        P(d)
+          ? `✓ 国内紧缺前置（${rl.hardDown.length ? rl.hardDown.join("、") : rl.hostText} 急需）`
+          : g.has(d.id)
+            ? "国内已探明同类禀赋"
+            : "国内尚未探明",
+        `${rl.hostTitle}：${rl.hostText}`,
+        `下游联动：${rl.downText}（贴邻可连供需边）`,
+        rl.subLabel,
+        d.altTags && d.altTags.length ? `全局替代配额：${d.altTags.join("、")}` : "",
       ].filter(Boolean).join(`
 `);
     },
@@ -42572,15 +42691,15 @@ function u9({ tile: A }) {
         : w("button", {
             class: "btn small rb-prospect",
             "data-tip-title": `${n ? "重新勘探" : "勘探"} · ◇${r}`,
-            "data-tip": `给出最多 ${O.prospectOptions} 种资源，挑一种采用，也可以都不要${
+            "data-tip": `探明最多 ${O.prospectOptions} 种战略矿藏或特殊宝地供选型，也可放弃保留原状${
               n
                 ? `
-采用新的会顶掉现在的${n.name}`
+采用新禀赋会替换当前的${n.name}`
                 : ""
             }${
               Q
                 ? `
-• ${v}找不到国内还缺的${Q.name}，它要去${Q.terrains.map((d) => Ge[d].name).join("、")}勘探`
+• ${v}不出产紧缺的${Q.name}，可前往${Q.terrains.map((d) => Ge[d].name).join("、")}勘探`
                 : ""
             }`,
             onClick: () => {
@@ -42603,15 +42722,15 @@ function u9({ tile: A }) {
           children: [
             w("small", {
               class: "rb-cap",
-              "data-tip-title": `${v}勘探得出 ${a.length} 种资源`,
-              "data-tip": `把鼠标移到图标上看每一种的用处
-带金圈的是国内还缺、别的产业又等着用的${
+              "data-tip-title": `${v}可探明 ${a.length} 种矿藏与宝地`,
+              "data-tip": `悬停图标查看适建产业与下游联动
+带金圈的为国内尚未探明的关键前置原材${
                 s != null && s.harvest
                   ? `
-「${s.short}」要本地资源才能${s.harvestOptional ? "多产出" : "开工"}`
+「${s.short}」需对应禀赋才能${s.harvestOptional ? "激发宝地增产" : "开工开采"}`
                   : ""
               }`,
-              children: "还没发现资源 · 可能有",
+              children: "尚未探明禀赋 · 可出产",
             }),
             w("span", {
               class: "rb-icons",
@@ -42622,20 +42741,20 @@ function u9({ tile: A }) {
                     {
                       class: `rb-pot${P(d) ? " want" : ""}`,
                       tabIndex: 0,
-                      "data-tip-title": `${d.name} · ${Ke[d.tier]}`,
+                      "data-tip-title": `${d.name} · ${describeResRole(d, t).kindLabel}`,
                       "data-tip": l(d),
                       children: w($i, { id: d.id, size: 22 }),
                     },
                     d.id,
                   ),
                 ),
-                !a.length && w("small", { children: "这种地形没有可勘探的资源" }),
+                !a.length && w("small", { children: "这种地形没有可勘探的禀赋" }),
               ],
             }),
             Q &&
               w("small", {
                 class: "rb-note",
-                children: ["国内缺的", Q.name, "在", Q.terrains.map((d) => Ge[d].name).join("、")],
+                children: ["国内紧缺的", Q.name, "位于", Q.terrains.map((d) => Ge[d].name).join("、")],
               }),
           ],
         }),
@@ -42645,6 +42764,7 @@ function u9({ tile: A }) {
   const C = exMatch
       ? n.bonus + (be(t).mods.exoticAdd ?? 0)
       : Ms[n.tier] + (s != null && s.harvestOptional ? (O.optHarvestBonus ?? 0.2) : 0),
+    nRole = describeResRole(n, t),
     E = Tt(t, "trade"),
     eMax = E.maxCharges || 0,
     eCur = E.charges ?? E.left ?? 0,
@@ -42654,33 +42774,31 @@ function u9({ tile: A }) {
     style: `--rc:${n.color};--tc:${Xe[n.tier]}`,
     children: [
       w("span", {
-        "data-tip-title": `${n.name} · ${n.fictional ? "奇异资源" : Ke[n.tier]}`,
-        "data-tip": n.fictional
-          ? [
-              `奇异赋能：${n.anyFic ? "全部架空产业" : (n.boostInds || []).map((k) => (HA[k] && HA[k].short) || k).join("、")} 产出 +${SA(n.bonus + (be(t).mods.exoticAdd ?? 0))}`,
-              n.powerAdd ? `附带超导零损供电 +${n.powerAdd}` : "",
-              n.altTags ? `全局替代原料：${n.altTags.join("、")}` : "",
-            ]
-              .filter(Boolean)
-              .join("\n")
-          : l(n),
+        "data-tip-title": `${n.name} · ${nRole.kindLabel}`,
+        "data-tip": l(n),
         children: w($i, { id: n.id, size: 38 }),
       }),
       w("div", {
         class: "rb-main",
         children: [
-          w("b", { children: [n.name, w("em", { children: n.fictional ? "奇异" : Ke[n.tier] })] }),
+          w("b", { children: [n.name, w("em", { children: nRole.kindLabel })] }),
           f
             ? w("small", {
                 class: "rb-state ok",
-                children: ["「", s.short, exMatch ? "」奇异赋能 +" : "」开采中 +", SA(C)],
+                children: ["「", s.short, exMatch ? "」奇异赋能 +" : nRole.isRaw ? "」开采中 +" : "」宝地增产 +", SA(C)],
               })
             : w("span", {
                 class: "rb-icons",
                 children: [
                   w("small", {
                     class: `rb-state${s ? " warn" : ""}`,
-                    children: s ? `「${s.short}」用不上` : visMiners.length ? "点图标去开采" : "暂时没有产业能采",
+                    children: s
+                      ? `「${s.short}」未触发本格禀赋`
+                      : visMiners.length
+                        ? nRole.isRaw
+                          ? "点图标去开采"
+                          : "点图标适建开发"
+                        : "需更高首都等级开放适建产业",
                   }),
                   visMiners.slice(0, 6).map((d) =>
                     s || A.build
@@ -42690,7 +42808,7 @@ function u9({ tile: A }) {
                             class: "rb-miner",
                             tabIndex: 0,
                             "data-tip-title": d.name,
-                            "data-tip": `能开采${n.name}。这块地已经有别的设施了，要换成它才采得到`,
+                            "data-tip": `契合「${n.name}」（可向下游联动：${nRole.downText}）。本格已有其他设施，替换后生效`,
                             children: w(vn, { industry: d.id, size: 22 }),
                           },
                           d.id,
@@ -42700,8 +42818,8 @@ function u9({ tile: A }) {
                           {
                             class: "rb-miner",
                             "data-tip-title": d.name,
-                            "data-tip": `能开采这里的${n.name}
-点一下去建设`,
+                            "data-tip": `契合本格「${n.name}」（下游联动：${nRole.downText}）
+点击打开建设面板`,
                             onClick: D,
                             children: w(vn, { industry: d.id, size: 22 }),
                           },
