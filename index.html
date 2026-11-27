@@ -35423,56 +35423,64 @@ function pp({ tile: A, tab: e }) {
                 ],
               }),
             d.ok &&
-              w("div", {
-                class: "bc-btns",
-                children: [
-                  w("button", {
-                    class: `btn small ${dcBuild.warn ? "btn-debt-warn" : "primary"}`,
-                    disabled: u || !canPay(n, d.cost, t.metrics),
-                    "data-tip": !canPay(n, d.cost, t.metrics)
-                      ? payErr(n, d.cost, t.metrics)
-                      : dcBuild.warn
-                        ? `将动用主权信用举债建设（预计负债 −${fe(dcBuild.debtAfter)} 亿），点击查看利息与偿付预览`
-                        : void 0,
-                    onClick: () =>
-                      guardDebtAction(t, {
-                        title: `举债建设「${targetName}」`,
-                        verb: "举债建设",
-                        cost: d.cost,
-                        onConfirm: () => {
-                          const buildTile = d.anchor != null ? d.anchor : A;
-                          if (t.act((m) => VP(m, buildTile, d.id, !1, d.kind)).ok) {
-                            t.selected = buildTile;
-                            t.openModal(null);
-                          }
-                        },
-                      }),
-                    children: [dcBuild.warn ? "举债建设 " : "建设 ", w(Hn, { v: d.cost })],
-                  }),
-                  x &&
+              (() => {
+                const canBuildNow = !u && canPay(n, d.cost, t.metrics) && !dcBuild.blocked,
+                  bDebt = canBuildNow && dcBuild.warn,
+                  canFinNow = Boolean(x && !u && !C && canPay(n, finDownCost, t.metrics) && !(dcFin && dcFin.blocked)),
+                  fDebt = Boolean(canFinNow && dcFin && dcFin.warn);
+                return w("div", {
+                  class: "bc-btns",
+                  children: [
                     w("button", {
-                      class: `btn small${dcFin && dcFin.warn ? " btn-debt-warn" : ""}`,
-                      disabled: u || C || !canPay(n, finDownCost, t.metrics),
-                      "data-tip": finLocked
-                        ? "当前处于主权债务重整保护期，暂停融资建设"
-                        : `首付 30% 开工，工期照常，建成后 ${z} 季以 80% 产能还款`,
+                      class: `btn small ${bDebt ? "btn-debt-warn" : "primary"}`,
+                      disabled: !canBuildNow,
+                      "data-tip": !canPay(n, d.cost, t.metrics) || dcBuild.blocked
+                        ? payErr(n, d.cost, t.metrics)
+                        : bDebt
+                          ? `将动用主权信用举债建设（预计负债 −${fe(dcBuild.debtAfter)} 亿），点击查看利息与偿付预览`
+                          : void 0,
                       onClick: () =>
                         guardDebtAction(t, {
-                          title: `举债融资建设「${targetName}」`,
+                          title: `举债建设「${targetName}」`,
                           verb: "举债建设",
-                          cost: finDownCost,
+                          cost: d.cost,
                           onConfirm: () => {
-                            t.act((m) => VP(m, A, d.id, !0)).ok && t.openModal(null);
+                            const buildTile = d.anchor != null ? d.anchor : A;
+                            if (t.act((m) => VP(m, buildTile, d.id, !1, d.kind)).ok) {
+                              t.selected = buildTile;
+                              t.openModal(null);
+                            }
                           },
                         }),
-                      children: [
-                        w(_e, { name: "bolt", size: 11 }),
-                        dcFin && dcFin.warn ? " 举债融资 " : " 融资 ",
-                        w(Hn, { v: finDownCost }),
-                      ],
+                      children: [w("span", { children: bDebt ? "举债建设" : "建设" }), w(Hn, { v: d.cost })],
                     }),
-                ],
-              }),
+                    x &&
+                      w("button", {
+                        class: `btn small${fDebt ? " btn-debt-warn" : ""}`,
+                        disabled: !canFinNow,
+                        "data-tip": finLocked
+                          ? "当前处于主权债务重整保护期，暂停融资建设"
+                          : !canPay(n, finDownCost, t.metrics)
+                            ? payErr(n, finDownCost, t.metrics)
+                            : `首付 30% 开工，工期照常，建成后 ${z} 季以 80% 产能还款`,
+                        onClick: () =>
+                          guardDebtAction(t, {
+                            title: `举债融资建设「${targetName}」`,
+                            verb: "举债融资",
+                            cost: finDownCost,
+                            onConfirm: () => {
+                              t.act((m) => VP(m, A, d.id, !0)).ok && t.openModal(null);
+                            },
+                          }),
+                        children: [
+                          w(_e, { name: "bolt", size: 11 }),
+                          w("span", { children: fDebt ? "举债融资" : "融资" }),
+                          w(Hn, { v: finDownCost }),
+                        ],
+                      }),
+                  ],
+                });
+              })(),
           ],
         },
         d.id,
@@ -48210,10 +48218,14 @@ select {
   margin-top: auto;
 }
 .bc-btns .btn {
-  flex: 1;
+  flex: 1 1 auto;
+  min-width: 0;
+  white-space: nowrap;
+  padding: 6px 7px;
+  gap: 4px;
 }
 .bc-btns .btn:first-child {
-  flex: 1.5;
+  flex: 1.06 1 auto;
 }
 .res-row {
   display: flex;
