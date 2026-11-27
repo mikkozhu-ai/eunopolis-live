@@ -80,6 +80,7 @@ const Ds = { name: "经世济国", version: "1.1", stage: "正式版", note: "�
     supplyFloor: 0.45,
     optHarvestBonus: 0.2,
     upgradeTime: [0, 0, 0, 2, 2, 3],
+    pubUpgradeTime: [0, 1, 2],
     wonderUpgradeTime: [0, 3, 4, 5, 6],
     wonderSuperviseStep: 3,
     landGdp: 0.8,
@@ -652,7 +653,7 @@ const hf = ["12", "18", "13", "20", "17", "11", "19", "10", "16", "14", "15"],
       makes: "住宅",
       suits: ["plain"],
       model: "housing",
-      desc: "住宅建造。开工需建筑骨料或木材与供水。",
+      desc: "住宅社区建造，开工需建筑骨料或木材与供水。支撑全国市政设施与国家奇观升至 Lv.2，紧邻市政设施享配套溢价。",
     },
     {
       id: "111013",
@@ -1014,7 +1015,7 @@ const hf = ["12", "18", "13", "20", "17", "11", "19", "10", "16", "14", "15"],
       water: !0,
       suits: ["plain"],
       model: "housing",
-      desc: "综合商业体与住宅社区开发，建于地质奇观带享景观溢价。",
+      desc: "综合商业体与住宅社区开发，建于地质奇观带享景观溢价。支撑市政设施升至 Lv.2–3 与奇观扩建，紧邻市政设施享配套溢价。",
     },
     {
       id: "151011",
@@ -1026,7 +1027,7 @@ const hf = ["12", "18", "13", "20", "17", "11", "19", "10", "16", "14", "15"],
       needs: [["地产", "地质奇观带"], ["资管", "信贷"]],
       makes: "REIT",
       model: "finance",
-      desc: "商业与文旅不动产证券化投资信托。",
+      desc: "商业与城市综合体不动产证券化信托。支撑国家奇观升至 Lv.4 与紧邻市政 Lv.3 综合体扩建，邻接市政设施享配套溢价。",
     },
     {
       id: "151012",
@@ -1038,7 +1039,7 @@ const hf = ["12", "18", "13", "20", "17", "11", "19", "10", "16", "14", "15"],
       needs: [["住宅", "地产"]],
       makes: "物业服务",
       model: "office",
-      desc: "社区运维、楼宇管理与不动产经纪，高税率城市服务底座。",
+      desc: "社区运维、楼宇管理与不动产经纪底座。支撑全国市政设施与国家奇观升至 Lv.3，紧邻市政设施享配套溢价。",
     },
     {
       id: "X001",
@@ -1401,6 +1402,8 @@ const hf = ["12", "18", "13", "20", "17", "11", "19", "10", "16", "14", "15"],
     "X015",
     "X016",
   ]),
+  REAL_ESTATE_INDS = new Set(["111012", "151010", "151011", "151012"]),
+  REAL_ESTATE_COMPLEX_INDS = new Set(["151010", "151011", "151012"]),
   Ll = {
     121010: "中良粮油",
     121011: "农夫三泉",
@@ -8045,11 +8048,14 @@ function dt(A, e = Date.now()) {
     }
     for (const CA of nbSet) {
       const EA = n[CA];
-      !EA.unlocked ||
-        !EA.industry ||
-        EA.build ||
-        !R.boosts.includes(EA.industry) ||
-        (U.push({ a: y.id, b: CA }), m.set(CA, (m.get(CA) ?? 0) + R.boost * q * adjW));
+      if (!EA.unlocked || !EA.industry || EA.build) continue;
+      if (R.boosts.includes(EA.industry)) {
+        U.push({ a: y.id, b: CA });
+        m.set(CA, (m.get(CA) ?? 0) + R.boost * q * adjW);
+      } else if (REAL_ESTATE_INDS.has(EA.industry)) {
+        U.push({ a: y.id, b: CA, re: !0 });
+        m.set(CA, (m.get(CA) ?? 0) + R.boost * 0.6 * q * adjW);
+      }
     }
   }
   const X = new Set(
@@ -9397,20 +9403,142 @@ function yg(A, e, t) {
   }
   if (e.public) {
     const def = it[e.public],
-      capLv = (A.tiles.find((z) => z.capital) || {}).level || 1;
+      capLv = (A.tiles.find((z) => z.capital) || {}).level || 1,
+      tags = t.tags || new Set();
     if (def && def.wonder) {
-      const req = Math.min(6, e.level + 1);
+      const req = Math.min(6, e.level + 1),
+        wReqs = [
+          { label: `首都达到 Lv.${req}`, ok: capLv >= req, how: `先将首都升至 Lv.${req}（现在 Lv.${capLv}）` },
+        ],
+        powCut = (t.power && t.power.cut) || 0,
+        watCut = (t.water && t.water.cut) || 0,
+        noUtilCut = powCut <= 1e-6 && watCut <= 1e-6,
+        utilHow =
+          powCut > 1e-6 && watCut > 1e-6
+            ? "先补建电力与供水设施，消除全国水电管网缺口"
+            : powCut > 1e-6
+              ? "先补建发电、新能源或核聚变设施，消除全国电力缺口"
+              : "先补建水务或气象构造设施，消除全国供水缺口";
+      if (n === 2) {
+        wReqs.push(
+          {
+            label: "全国产出「建材」与「钢材」",
+            ok: tags.has("建材") && tags.has("钢材"),
+            how: "同时建成并运转建材与钢材产业，备齐奇观扩建基础材料",
+          },
+          {
+            label: "全国产出「住宅」或「地产」",
+            ok: tags.has("住宅") || tags.has("地产"),
+            how: "建成并运转房屋建设（住宅）或房地产开发产业，形成周边城区配套",
+          },
+        );
+      } else if (n === 3) {
+        wReqs.push(
+          {
+            label: "全国产出「电气设备」或「机械设备」",
+            ok: tags.has("电气设备") || tags.has("机械设备"),
+            how: "建成并运转电气设备或机械设备产业，提供重型机电装备",
+          },
+          {
+            label: "全国产出「地产」或「物业服务」",
+            ok: tags.has("地产") || tags.has("物业服务"),
+            how: "建成并运转房地产开发或房地产服务（物业），承接地标综合运维",
+          },
+          {
+            label: "全国水电管网无缺口",
+            ok: noUtilCut,
+            how: utilHow,
+          },
+        );
+      } else if (n === 4) {
+        wReqs.push(
+          {
+            label: "全国产出「芯片」或「航天装备」",
+            ok: tags.has("芯片") || tags.has("航天装备"),
+            how: "建成并运转半导体（芯片）或航空航天及国防产业，提供精密控制与特种结构",
+          },
+          {
+            label: "全国产出「REIT」或「资管」",
+            ok: tags.has("REIT") || tags.has("资管"),
+            how: "建成并运转 REIT（不动产信托）或资产管理产业，提供巨构长期资本工具",
+          },
+          {
+            label: "全国水电管网无缺口",
+            ok: noUtilCut,
+            how: utilHow,
+          },
+        );
+      } else if (n >= 5) {
+        const ficRunKinds = new Set(
+          A.tiles
+            .filter(
+              (tl) =>
+                tl.unlocked &&
+                !tl.build &&
+                tl.industry &&
+                HA[tl.industry] &&
+                HA[tl.industry].source === "架空" &&
+                t.tiles[tl.id] &&
+                t.tiles[tl.id].running,
+            )
+            .map((tl) => tl.industry),
+        ).size;
+        wReqs.push(
+          {
+            label: "运转至少 2 种架空未来产业",
+            ok: ficRunKinds >= 2,
+            how: `建成并正常运转至少 2 种架空未来产业（现在 ${ficRunKinds}/2 种）`,
+          },
+          {
+            label: "全国水电管网无缺口",
+            ok: noUtilCut,
+            how: utilHow,
+          },
+        );
+      }
+      return wReqs;
+    }
+    const r = t.publicEdges.filter((v) => v.a === e.id && (!t.tiles[v.b] || t.tiles[v.b].running)).length,
+      hasAdjRe = Un(A)[e.id].some((nb) => {
+        const tl = A.tiles[nb];
+        return (
+          tl &&
+          tl.unlocked &&
+          !tl.build &&
+          tl.industry &&
+          REAL_ESTATE_COMPLEX_INDS.has(tl.industry) &&
+          (!t.tiles[nb] || t.tiles[nb].running)
+        );
+      });
+    if (n === 2) {
       return [
-        { label: `首都达到 Lv.${req}`, ok: capLv >= req, how: `先将首都升至 Lv.${req}（现在 Lv.${capLv}）` },
+        {
+          label: "全国产出「住宅」或「地产」",
+          ok: tags.has("住宅") || tags.has("地产"),
+          how: "建成并运转房屋建设（住宅）或房地产开发产业，形成城区居住载体",
+        },
+        {
+          label: "相邻带动 ≥1 处运转产业（含住宅/地产/物业/REIT）",
+          ok: r >= 1,
+          how: "在相邻格建设并运转对口产业，或配建住宅/地产/物业/REIT 社区",
+        },
       ];
     }
-    const r = t.publicEdges.filter((v) => v.a === e.id).length,
-      i = e.level;
     return [
       {
-        label: `相邻带动 ${i} 处产业或首都 Lv.${i + 1}`,
-        ok: r >= i || capLv >= i + 1,
-        how: `在旁边建产业或升首都至 Lv.${i + 1}`,
+        label: "全国产出「地产」或「物业服务」",
+        ok: tags.has("地产") || tags.has("物业服务"),
+        how: "建成并运转房地产开发或房地产服务（物业），提供大型场馆综合运维",
+      },
+      {
+        label: "全国产出「建材」或「钢材」",
+        ok: tags.has("建材") || tags.has("钢材"),
+        how: "建成并运转建材或钢材产业，提供场馆扩建材料支撑",
+      },
+      {
+        label: "相邻带动 ≥2 处运转产业，或紧邻「地产/物业/REIT」",
+        ok: r >= 2 || hasAdjRe,
+        how: "周边带动 2 处运转产业，或在相邻格配建地产/物业/REIT 形成城市综合体",
       },
     ];
   }
@@ -9500,8 +9628,11 @@ function Df(A, e, t, n = !1) {
   const isWonder = !!(e.public && it[e.public] && it[e.public].wonder);
   if (e.public && e.level >= (isWonder ? 5 : 3)) return { ok: !1, reason: "已是最高等级" };
   const m = t ?? dt(A);
-  if (isWonder && !n && m.buildsActive >= m.buildSlots)
-    return { ok: !1, reason: `施工队已满（${m.buildsActive}/${m.buildSlots}），腾出施工队后再启动奇观扩建` };
+  if (e.public && !n && m.buildsActive >= m.buildSlots)
+    return {
+      ok: !1,
+      reason: `施工队已满（${m.buildsActive}/${m.buildSlots}），腾出施工队后再启动${isWonder ? "奇观" : "市政"}扩建`,
+    };
   if (!e.capital && !e.public) {
     if (!e.industry) return { ok: !1, reason: "先建成设施再升级" };
     if (e.level >= 6) return { ok: !1, reason: "已是最高等级" };
@@ -9649,18 +9780,21 @@ function yi(A, e, t = !1, n, s = !1, spec = null) {
         ? (O.upgradeTime && O.upgradeTime[f.level]) || 0
         : isWonder
           ? (O.wonderUpgradeTime && O.wonderUpgradeTime[f.level]) || 0
-          : 0
+          : f.public
+            ? (O.pubUpgradeTime && O.pubUpgradeTime[f.level]) || 0
+            : 0
       : 0;
   if (baseTime > 0) {
     const mods = be(A).mods,
-      pubTimeAdd = isWonder ? mods.pubBuildTime || 0 : 0,
+      pubTimeAdd = f.public ? mods.pubBuildTime || 0 : 0,
       upQ = Math.max(1, Math.round(baseTime * Math.max(0.3, 1 + (mods.buildTime || 0) + pubTimeAdd + C0(A, e, "buildTime")))),
       chosenSpec = f.industry ? (f.level === 3 ? (spec === "craft" ? "craft" : "scale") : f.spec || "scale") : null;
     f.upBuild = { targetLv: f.level + 1, left: upQ, total: upQ, paid: r, spec: chosenSpec };
-    if (isWonder) {
-      const wName = it[f.public].name;
-      s || pe(A, `启动「${wName}」Lv.${f.level + 1} 扩建工程，预计 ${upQ} 季完工（期间原等级效果照常生效）。`, "info");
-      return qe(`已启动 Lv.${f.level + 1} 奇观扩建（需 ${upQ} 季）`);
+    if (f.public) {
+      const pName = it[f.public].name,
+        kindLabel = isWonder ? "奇观扩建" : "市政扩建";
+      s || pe(A, `启动「${pName}」Lv.${f.level + 1} 扩建工程，预计 ${upQ} 季完工（期间原等级效果照常生效）。`, "info");
+      return qe(`已启动 Lv.${f.level + 1} ${kindLabel}（需 ${upQ} 季）`);
     }
     const specNote = f.level === 3 ? ` · ${SPEC_DEFS[chosenSpec].name}` : "";
     s ||
@@ -12811,7 +12945,7 @@ function G4(A, e, t = Date.now()) {
         if (o.build) {
           ((o.build.left = Math.max(1, o.build.left - B.q)), c.lines.push(`工程推进 ${B.q} 季`));
         } else if (o.upBuild) {
-          ((o.upBuild.left = Math.max(1, o.upBuild.left - B.q)), c.lines.push(`技改推进 ${B.q} 季`));
+          ((o.upBuild.left = Math.max(1, o.upBuild.left - B.q)), c.lines.push(`${o.public ? "扩建" : "技改"}推进 ${B.q} 季`));
         }
         break;
       case "stamina":
@@ -29896,7 +30030,7 @@ function lQ(A) {
       f.resource && (f.resource = migrateTileRes(f)),
       f.spec !== "scale" && f.spec !== "craft" && (f.spec = f.industry && f.level >= 4 ? "scale" : null),
       f.upBuild &&
-        (!(f.industry || (f.public && it[f.public] && it[f.public].wonder)) ||
+        (!(f.industry || (f.public && it[f.public] && f.level < (it[f.public].wonder ? 5 : 3))) ||
           f.build ||
           typeof f.upBuild.left != "number" ||
           f.upBuild.left <= 0) &&
@@ -29906,7 +30040,7 @@ function lQ(A) {
       ((f.industry = null), (f.public = null), (f.upBuild = null), (f.spec = null), (f.wonderHost = null), (f.wonderTri = null));
       f.cardLocked = Boolean(f.cardLocked);
     } else if (f.public) {
-      ((f.industry = null), !(it[f.public] && it[f.public].wonder) && (f.upBuild = null), (f.spec = null), (f.wonderHost = null), (f.card = null), (f.cardLocked = !1));
+      ((f.industry = null), f.build && (f.upBuild = null), (f.spec = null), (f.wonderHost = null), (f.card = null), (f.cardLocked = !1));
     } else if (!f.industry || f.build) {
       ((f.upBuild = null), (f.spec = null), (f.card = null), (f.cardLocked = !1));
     } else {
@@ -32262,7 +32396,7 @@ function If(A, e, t, n = {}) {
         },
         {
           q: "产业、市政设施与国家奇观有什么区别？",
-          a: `75 种「产业」分五级（造价 ${Li(O.buildCost)} 亿，工期 ${Li(O.buildTime)} 季，开国前 ${O.foundingBuilds} 次建设半价且工期 −1 季${jo(e) > 0 ? `，还剩 ${jo(e)} 次` : ""}）；24 种「市政设施」占 1 格、每种全国限建 3 座、可升至 Lv.3；8 座「国家奇观」为唯一巨构，需相连 3 格空地三角（地图金色三角框高亮，点击任意合法角自动对齐锚点），最高可升至 Lv.5。`,
+          a: `75 种「产业」分五级（造价 ${Li(O.buildCost)} 亿，工期 ${Li(O.buildTime)} 季，开国前 ${O.foundingBuilds} 次建设半价且工期 −1 季${jo(e) > 0 ? `，还剩 ${jo(e)} 次` : ""}）；24 种「市政设施」占 1 格、每种全国限建 3 座，除带动对口产业外还对紧邻的住宅/地产/物业/REIT 提供 60% 配套溢价，依托城区居住与物业建材底座可历时 1–2 季扩建至 Lv.3；8 座「国家奇观」为唯一巨构，需相连 3 格空地三角（地图金色三角框高亮），随首都等级与重工、地产/REIT、芯片航天及未来产业底座历时 3–6 季扩建至 Lv.5。`,
         },
         {
           q: "施工队上限怎么增加？怎么加快工期？",
@@ -35365,6 +35499,16 @@ function pp({ tile: A, tab: e }) {
                       U,
                     );
                   }),
+                M &&
+                  (() => {
+                    const rePct = M.boost * 0.6,
+                      reStr = Number.isInteger(Math.round(rePct * 1e3) / 10) ? SA(rePct, 0) : SA(rePct, 1);
+                    return w("span", {
+                      class: "bchip",
+                      "data-tip": `紧邻房屋建设（住宅）、房地产开发、物业服务或 REIT 时，提供 +${reStr} 城市配套溢价并计入市政带动数`,
+                      children: ["地产社区 +", reStr],
+                    });
+                  })(),
                 w("span", {
                   class: "bchip",
                   "data-tip":
@@ -37499,29 +37643,47 @@ function Up({ id: A }) {
           }),
           w("div", {
             class: "flow-col",
-            children: [
-              w("h4", { children: ["供给下游", r.length ? ` · ${r.length} 个行业` : ""] }),
-              r.length
-                ? w("div", {
-                    class: "flow-down",
-                    children: r.map((p) =>
-                      w(
-                        "button",
-                        {
-                          class: `flow-ind${t.tiles.some((H) => H.industry === p.id) ? " built" : ""}`,
-                          title: `${p.name}${t.tiles.some((H) => H.industry === p.id) ? "（已建）" : ""}`,
-                          onClick: () => g(p.id),
-                          children: [w(vn, { industry: p.id, size: 24 }), p.short],
-                        },
-                        p.id,
+            children: (() => {
+              const urbanMap = {
+                  111012: "城市配套：支撑全国市政设施与国家奇观升至 Lv.2；紧邻市政或奇观享 60% 配套溢价。",
+                  151010: "城市配套：支撑市政设施与奇观升至 Lv.2–3；紧邻市政可直通 Lv.3 综合体并享 60% 配套溢价。",
+                  151011: "城市不动产枢纽：支撑国家奇观升至 Lv.4；紧邻市政可直通 Lv.3 综合体并享 60% 配套溢价。",
+                  151012: "城市运维底座：支撑全国市政设施与国家奇观升至 Lv.3；紧邻市政可直通 Lv.3 综合体并享 60% 配套溢价。",
+                },
+                uRole = urbanMap[s.id] || "";
+              return [
+                w("h4", {
+                  children: ["供给下游", r.length ? ` · ${r.length} 个行业` : uRole ? " · 城市与市政协同" : ""],
+                }),
+                r.length
+                  ? w("div", {
+                      class: "flow-down",
+                      children: r.map((p) =>
+                        w(
+                          "button",
+                          {
+                            class: `flow-ind${t.tiles.some((H) => H.industry === p.id) ? " built" : ""}`,
+                            title: `${p.name}${t.tiles.some((H) => H.industry === p.id) ? "（已建）" : ""}`,
+                            onClick: () => g(p.id),
+                            children: [w(vn, { industry: p.id, size: 24 }), p.short],
+                          },
+                          p.id,
+                        ),
                       ),
-                    ),
-                  })
-                : w("p", {
+                    })
+                  : !uRole &&
+                    w("p", {
+                      class: "hint",
+                      children: "它是产业链的末端：不给别的行业供货，产出直接算进 GDP。",
+                    }),
+                uRole &&
+                  w("p", {
                     class: "hint",
-                    children: "它是产业链的末端：不给别的行业供货，产出直接算进 GDP。",
+                    style: r.length ? "margin-top:6px" : void 0,
+                    children: uRole,
                   }),
-            ],
+              ];
+            })(),
           }),
         ],
       }),
@@ -41816,11 +41978,11 @@ function xi(A, e) {
       ? [
           {
             q: "市政设施与国家奇观的定位与准入条件？",
-            a: `• 24 座市政设施：占 1 格辅助地块，最高 Lv.3；提供全国宜居度、带动相邻对口产业与全国被动词条。分为基础民生（零额外门槛）、现代专业（需首都等级或对口基础产业）与国家级高阶（需首都、GDP、高阶产业与主公对应专精）三档。\n• 8 座国家奇观：全国唯一国家级地标，占用相连 3 格三角形空地，工期 12–20 季，需同时达成疆域、首都、季度 GDP、对口核心产业群与主公专精里程碑。全国当前宜居上限为 ${fe(livCap, 0)}%。`,
+            a: `• 24 座市政设施：占 1 格辅助地块，最高 Lv.3；提供全国宜居度、带动相邻对口产业（并对紧邻的住宅/地产/物业/REIT 社区提供 60% 配套溢价）及全国被动词条。分为基础民生（零额外门槛）、现代专业（需首都等级或对口基础产业）与国家级高阶（需首都、GDP、高阶产业与主公对应专精）三档。\n• 8 座国家奇观：全国唯一国家级地标，占用相连 3 格三角形空地，工期 12–20 季，需同时达成疆域、首都、季度 GDP、对口核心产业群与主公专精里程碑。全国当前宜居上限为 ${fe(livCap, 0)}%。`,
           },
           {
-            q: "市政与奇观怎么升级？",
-            a: `普通市政最高升至 Lv.3（即时升级）；国家奇观最高升至 Lv.5，需首都达到 Lv.(k+1) 并投入施工队历时 3–6 季在用扩建（扩建期间原奇观照常生效）。宜居与周边带动倍率 Lv.1–5 为 ×${Pc.join(" / ×")}。`,
+            q: "市政与奇观怎么扩建升级？",
+            a: `• 普通市政（最高 Lv.3）：占用 1 支施工队在用扩建（扩建期间原设施照常生效，督办可当场完工）。Lv.2 历时 1 季，需全国产出「住宅/地产」且相邻带动 ≥1 处运转产业；Lv.3 历时 2 季，需全国产出「地产/物业服务」与「建材/钢材」，且周边带动 ≥2 处或紧邻地产/物业/REIT 综合体。\n• 国家奇观（最高 Lv.5）：占用 1 支施工队历时 3–6 季在用扩建，除首都达到 Lv.(k+1) 外，Lv.2–5 依次需具备「建材+钢材 & 住宅/地产」「电气/机械 & 地产/物业 & 水电无缺口」「芯片/航天装备 & REIT/资管 & 水电无缺口」「2 种运转架空产业 & 水电无缺口」。宜居与周边带动倍率 Lv.1–5 为 ×${Pc.join(" / ×")}。`,
           },
           {
             q: "拆除市政或奇观退还多少？",
@@ -42126,22 +42288,27 @@ function _p() {
             w(sf, { label: "维护费", value: fe(s.maintenance, 1), unit: "亿/季" }),
           ],
         }),
-        w("p", {
-          class: "hint",
-          children: [
-            "带动相邻的 ",
-            h.boosts
-              .map((z) => {
-                var p;
-                return ((p = HA[z]) == null ? void 0 : p.short) ?? z;
-              })
-              .join("、"),
-            "：+",
-            SA(h.boost * (Pc[n.level - 1] ?? 1)),
-            "。",
-            M.length ? `正在带动：${M.join("、")}。` : "旁边还没有对口产业。",
-          ],
-        }),
+        (() => {
+          const curMult = Pc[n.level - 1] ?? 1,
+            rePct = h.boost * 0.6 * curMult,
+            reStr = Number.isInteger(Math.round(rePct * 1e3) / 10) ? SA(rePct, 0) : SA(rePct, 1);
+          return w("p", {
+            class: "hint",
+            children: [
+              "带动相邻的 ",
+              h.boosts
+                .map((z) => {
+                  var p;
+                  return ((p = HA[z]) == null ? void 0 : p.short) ?? z;
+                })
+                .join("、"),
+              "：+",
+              SA(h.boost * curMult),
+              `（紧邻住宅/地产/物业/REIT 享 +${reStr} 配套溢价）。`,
+              M.length ? `正在带动：${M.join("、")}。` : "旁边还没有对口或地产社区产业。",
+            ],
+          });
+        })(),
         scaledStat &&
           w("p", {
             class: "hint",
@@ -42154,7 +42321,8 @@ function _p() {
               supAct = Tt(e, "supervise"),
               supMax = supAct.maxCharges || 0,
               supCur = supAct.charges ?? supAct.left ?? 0,
-              afterQ = aa(ub.left, e, !0);
+              kindName = h.wonder ? "奇观" : "市政",
+              afterQ = aa(ub.left, e, !!h.wonder);
             return w("div", {
               class: "upbuild-box",
               style:
@@ -42164,7 +42332,7 @@ function _p() {
                   value: ub.total - ub.left,
                   max: ub.total,
                   color: "var(--gold)",
-                  label: `扩建 → Lv.${ub.targetLv}（剩 ${Math.ceil(ub.left)} 季 · 现行奇观照常生效）`,
+                  label: `扩建 → Lv.${ub.targetLv}（剩 ${Math.ceil(ub.left)} 季 · 现行${kindName}照常生效）`,
                 }),
                 w("div", {
                   class: "actions",
@@ -42173,7 +42341,7 @@ function _p() {
                     w("button", {
                       class: `btn small gold act-inline${supAct.block ? " off" : ""}`,
                       "data-tip-title": `督办扩建 · 体力 ${supAct.cost} · 充能 ${supCur}/${supMax}`,
-                      "data-tip": `推进该奇观扩建工程：剩余 ${Math.ceil(ub.left)} 季 → ${afterQ > 0 ? `${afterQ} 季` : "当场完工"}${supAct.block ? `\n! ${supAct.block}` : ""}`,
+                      "data-tip": `推进该${kindName}扩建工程：剩余 ${Math.ceil(ub.left)} 季 → ${afterQ > 0 ? `${afterQ} 季` : "当场完工"}${supAct.block ? `\n! ${supAct.block}` : ""}`,
                       onClick: () => (supAct.block ? A.toast(supAct.block, "warn") : A.superviseAt(n.id)),
                       children: [
                         w(NA, { node: fo.supervise, size: 13 }),
@@ -42186,8 +42354,8 @@ function _p() {
                       onClick: () =>
                         A.openModal({
                           type: "confirm",
-                          title: "取消奇观扩建？",
-                          body: "取消后保留当前奇观等级继续生效，并退还本次扩建实付资金的 80%。",
+                          title: `取消${kindName}扩建？`,
+                          body: `取消后保留当前${kindName}等级继续生效，并退还本次扩建实付资金的 80%。`,
                           okText: "取消扩建",
                           danger: !0,
                           onOk: () => A.act((z0) => cancelUpBuild(z0, n.id)),
@@ -42204,7 +42372,18 @@ function _p() {
           const canShowUp = !n.upBuild && n.level < maxLv,
             dcPub = canShowUp ? evalDebtCross(e, d, t) : null,
             canPubPay = canShowUp ? canPay(e, d, t) && !dcPub.blocked : !1,
-            pubDebt = Boolean(canShowUp && x.ok && canPubPay && dcPub.warn);
+            pubDebt = Boolean(canShowUp && x.ok && canPubPay && dcPub.warn),
+            rawUpBase = h.wonder
+              ? (O.wonderUpgradeTime && O.wonderUpgradeTime[n.level]) || n.level + 2
+              : (O.pubUpgradeTime && O.pubUpgradeTime[n.level]) || 1,
+            pubMods = be(e).mods,
+            pubUpQ = Math.max(
+              1,
+              Math.round(
+                rawUpBase *
+                  Math.max(0.3, 1 + (pubMods.buildTime || 0) + (pubMods.pubBuildTime || 0) + C0(e, n.id, "buildTime")),
+              ),
+            );
           return w(he, {
             children: [
               w("div", {
@@ -42216,17 +42395,15 @@ function _p() {
                       disabled: !x.ok || !canPubPay,
                       onClick: () =>
                         guardDebtAction(A, {
-                          title: `${h.wonder ? "扩建" : "升级"}「${h.name}」至 Lv.${n.level + 1}`,
-                          verb: h.wonder ? "举债扩建" : "举债升级",
+                          title: `扩建「${h.name}」至 Lv.${n.level + 1}`,
+                          verb: "举债扩建",
                           cost: d,
                           onConfirm: () => A.act((z) => yi(z, n.id)),
                         }),
                       children: [
                         pubDebt ? w(NA, { node: Ae.warn, size: 14, stroke: 2.3 }) : w(_e, { name: "up", size: 12 }),
                         pubDebt ? ` 举债升到 Lv.${n.level + 1}` : ` 升到 Lv.${n.level + 1}`,
-                        h.wonder
-                          ? `（${(O.wonderUpgradeTime && O.wonderUpgradeTime[n.level]) || n.level + 2}季） `
-                          : " ",
+                        `（${pubUpQ}季） `,
                         w(Hn, { v: d }),
                       ],
                     }),
@@ -43455,6 +43632,16 @@ function nL({ tile: A }) {
               w("div", { class: "chain-make", children: ["产出：", bg(f.makes)] }),
               r.length > 0 &&
                 w("div", { class: "chain-use", children: ["下游：", r.map((v) => v.short).join("、")] }),
+              REAL_ESTATE_INDS.has(f.id) &&
+                w("div", {
+                  class: "chain-use",
+                  children:
+                    f.id === "111012"
+                      ? "城市协同：支撑市政与奇观升至 Lv.2，邻接市政享 60% 配套溢价"
+                      : f.id === "151011"
+                        ? "城市协同：支撑奇观升至 Lv.4 与邻接市政 Lv.3 扩建，享 60% 配套溢价"
+                        : "城市协同：支撑市政与奇观升至 Lv.3，邻接市政直通 Lv.3 并享 60% 配套溢价",
+                }),
             ],
           }),
           w("button", {
