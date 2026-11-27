@@ -550,9 +550,9 @@ const hf = ["12", "18", "13", "20", "17", "11", "19", "10", "16", "14", "15"],
     },
     {
       id: "171015",
-      name: "工业中间产品",
+      name: "工业零部件",
       short: "零部件",
-      en: "Industrial Intermediate Prod",
+      en: "Industrial Components",
       sector: "17",
       level: 2,
       needs: [
@@ -561,7 +561,7 @@ const hf = ["12", "18", "13", "20", "17", "11", "19", "10", "16", "14", "15"],
       ],
       makes: "工业零部件",
       model: "factory",
-      desc: "精密金属件、特种玻璃与橡胶密封等工业中间品。",
+      desc: "精密金属件、特种玻璃与橡胶密封等工业零部件制造。",
     },
     {
       id: "171110",
@@ -42983,18 +42983,24 @@ function sf({ label: A, value: e, unit: t, sub: n, accent: s, icon: f }) {
     ],
   });
 }
+const SLOT_UNLOCK_NODE = [
+  ["rect", { width: "18", height: "11", x: "3", y: "11", rx: "2", ry: "2" }],
+  ["path", { d: "M7 11V7a5 5 0 0 1 9.9-1" }],
+];
 function xg({ tile: A }) {
   const e = ie,
     t = e.state,
     n = A.capital ? "首长" : "人物",
     s = () => e.openModal({ type: "deploy", tile: A.id }),
     lockBtn = w("button", {
-      class: `btn tiny slot-lock-btn${A.cardLocked ? " on" : ""}`,
+      class: `icon-btn slot-lock-btn${A.cardLocked ? " on" : ""}`,
       "aria-label": A.cardLocked ? "解除锁岗" : "锁定岗位",
       "data-tip-title": A.cardLocked ? "已锁定该岗位驻守" : "锁定该岗位驻守",
-      "data-tip": "锁定后「智能调派」不会挪动该地块的驻守安排",
+      "data-tip": A.cardLocked
+        ? "当前已锁岗，「智能调派」不会挪动该地块驻守；点击解除锁岗"
+        : "点击锁定岗位，锁定后「智能调派」不会挪动该地块的驻守安排",
       onClick: () => e.act((st) => toggleTileCardLock(st, A.id)),
-      children: A.cardLocked ? "🔒 已锁岗" : "🔓 锁岗",
+      children: w(NA, { node: A.cardLocked ? Ae.lock : SLOT_UNLOCK_NODE, size: 14 }),
     });
   if (!A.card) {
     const g = Object.values(t.cards),
@@ -43112,7 +43118,8 @@ ${A.capital ? "首都" : "这块地"}产出 +${SA(i.prod)}${
         ],
       }),
       w("div", {
-        class: "cs-main",
+        class: "cs-main is-link",
+        onClick: () => e.openModal({ type: "card", id: f.id }),
         children: [
           w("b", { children: [w(Jo, { def: f }), w("em", { children: ["+", SA(i.prod)] })] }),
           w(ei, {
@@ -45784,12 +45791,14 @@ small {
   right: 0;
   bottom: 0;
   left: 0;
-  display: flex;
-  align-items: center;
   padding: 0 6px;
   font-size: 10px;
+  line-height: 12px;
   font-family: var(--mono);
   color: #eaf3fb;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 .sheet .bar {
   margin-top: 10px;
@@ -50808,10 +50817,10 @@ button.lord-here {
   border: 1px solid rgba(160, 200, 240, 0.13);
 }
 .rbox {
-  flex: 1.5 1 300px;
+  flex: 1.45 1 326px;
 }
 .cslot {
-  flex: 1 1 215px;
+  flex: 1 1 258px;
 }
 .rbox.none,
 .cslot.vacant {
@@ -50842,6 +50851,7 @@ button.lord-here {
 .cs-main {
   flex: 1;
   min-width: 0;
+  overflow: hidden;
   display: flex;
   flex-direction: column;
   gap: 4px;
@@ -50871,6 +50881,7 @@ button.lord-here {
   flex-wrap: wrap;
   align-items: center;
   gap: 4px;
+  min-width: 0;
 }
 .rb-pot {
   display: inline-grid;
@@ -50900,6 +50911,9 @@ button.lord-here {
   line-height: 1.3;
   color: var(--muted);
   white-space: nowrap;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 .rb-state.ok {
   color: #9dffbf;
@@ -51051,8 +51065,15 @@ span.rb-miner {
   font-style: normal;
   color: var(--green);
 }
+.cs-main.is-link {
+  cursor: pointer;
+}
 .sheet .cslot .bar {
   margin-top: 0;
+  height: 16px;
+}
+.sheet .cslot .bar-label {
+  line-height: 14px;
 }
 .abox {
   flex: 0 0 auto;
@@ -56451,24 +56472,24 @@ button.dcard {
   align-items: center;
   gap: 5px;
 }
-.slot-lock-btn {
+.icon-btn.slot-lock-btn {
   flex: none;
-  padding: 3px 7px;
-  font-size: 11px;
-  border-radius: 7px;
-  border-color: rgba(160, 200, 240, 0.24);
-  color: #a9bcd1;
-  background: rgba(10, 16, 26, 0.72);
-  white-space: nowrap;
+  width: 30px;
+  height: 30px;
+  padding: 0;
+  color: #8ea3b8;
+  border-color: rgba(160, 200, 240, 0.22);
+  background: rgba(10, 16, 26, 0.65);
 }
-.slot-lock-btn:hover {
+.icon-btn.slot-lock-btn:hover {
   border-color: rgba(255, 207, 74, 0.55);
   color: #fff0c2;
+  background: rgba(255, 207, 74, 0.12);
 }
-.slot-lock-btn.on {
+.icon-btn.slot-lock-btn.on {
   border-color: rgba(255, 207, 74, 0.72);
-  background: rgba(255, 207, 74, 0.18);
-  color: #ffe394;
+  background: rgba(255, 207, 74, 0.2);
+  color: #ffdf85;
 }
 .cslot.locked {
   border-color: rgba(255, 207, 74, 0.42);
