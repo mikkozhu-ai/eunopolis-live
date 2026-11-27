@@ -33959,7 +33959,8 @@ function cardBtMode(A, cs) {
   return null;
 }
 function evalDebtCross(A, cost, m) {
-  if (!A || !(cost > 0)) return { crossesZero: !1, debtAfter: 0, ratioAfter: 0, blocked: !1, warn: !1 };
+  if (!A || !(cost > 0))
+    return { crossesZero: !1, usesDebt: !1, debtAfter: 0, ratioAfter: 0, blocked: !1, warn: !1, modalWarn: !1 };
   const met = m || dt(A),
     wc =
       typeof wouldCrossDebt == "function"
@@ -33973,20 +33974,63 @@ function evalDebtCross(A, cost, m) {
     prevDebt = Math.max(0, -A.treasury),
     prevRatio = prevDebt / cap,
     ratioAfter = wc.debtAfter / cap,
-    warn = !wc.blockedByRestructure && (wc.crossesZero || (prevRatio <= 0.65 && ratioAfter > 0.65));
+    usesDebt = !wc.blockedByRestructure && A.treasury < cost,
+    modalWarn = !wc.blockedByRestructure && (wc.crossesZero || (prevRatio <= 0.65 && ratioAfter > 0.65));
   return {
     crossesZero: wc.crossesZero,
+    usesDebt,
     debtAfter: wc.debtAfter,
     ratioAfter,
     blocked: wc.blockedByRestructure,
-    warn,
+    warn: usesDebt,
+    modalWarn,
   };
+}
+function renderSheetDebtBanner(e, t, cost, dc, canBuy, verbLabel = "执行") {
+  if (!canBuy) {
+    return w("div", {
+      class: "sheet-debt-alert blocked",
+      children: [
+        w(NA, { node: Ae.warn, size: 17, stroke: 2.3 }),
+        w("em", { class: "sda-badge", children: "发债受限" }),
+        w("span", {
+          class: "sda-txt",
+          children: [
+            payErr(e, cost, t),
+            "（当前每季净结余 ",
+            w("b", { children: `${t.net >= 0 ? "+" : "−"}${fe(Math.abs(t.net))} 亿` }),
+            "）",
+          ],
+        }),
+      ],
+    });
+  }
+  if (!(e.treasury < cost)) return null;
+  const issueAmt = cost - Math.max(0, e.treasury),
+    remCap = Math.max(0, t.debtCap - dc.debtAfter);
+  return w("div", {
+    class: `sheet-debt-alert${dc.ratioAfter > 0.65 ? " high" : ""}`,
+    children: [
+      w(NA, { node: Ae.warn, size: 17, stroke: 2.3 }),
+      w("em", { class: "sda-badge", children: "主权举债" }),
+      w("span", {
+        class: "sda-txt",
+        children: [
+          `国库现金不足（当前${e.treasury >= 0 ? `现金 ${fe(e.treasury)} 亿` : `负债 −${fe(-e.treasury)} 亿`}），本次${verbLabel}将发行主权国债 `,
+          w("b", { children: `+${fe(issueAmt)} 亿` }),
+          "（举债后总负债 ",
+          w("b", { children: `−${fe(dc.debtAfter)} 亿` }),
+          ` · 剩余发债空间 ${fe(remCap)} 亿）`,
+        ],
+      }),
+    ],
+  });
 }
 function guardDebtAction(store, { title, verb, cost, onConfirm }) {
   const st = store.state,
     met = store.metrics,
     dc = evalDebtCross(st, cost, met);
-  if (dc.warn) {
+  if (dc.modalWarn) {
     store.openModal({
       type: "debtConfirm",
       title: title || `${verb || "举债"}确认`,
@@ -41883,10 +41927,11 @@ function _p() {
         : null;
     return w("div", {
       class: "sheet",
+      style: h ? (!canBuy ? "--c:#ff5d6c" : dc.warn ? "--c:#ffb347" : void 0) : void 0,
       children: [
         w(Mi, {
           title: h ? `可开拓 · ${Ge[n.terrain].name}` : n.outer ? `边疆 · ${Ge[n.terrain].name}` : "未知土地",
-          sub: `#${n.id} · ${h ? "可以开拓" : n.outer ? "远洋边疆，需先开拓相邻土地或提升首都国土上限" : "需要先开拓相邻土地"}`,
+          sub: `#${n.id} · ${h ? (!canBuy ? (dc.blocked ? "债务重整保护期 · 暂停举债开拓" : "超出主权发债上限 · 暂无法开拓") : dc.warn ? "国库现金不足 · 可发行主权国债开拓" : "可以开拓") : n.outer ? "远洋边疆，需先开拓相邻土地或提升首都国土上限" : "需要先开拓相邻土地"}`,
           onClose: r,
           res: n.revealed ? n.resource : null,
           help: h ? xi(e, n) : void 0,
@@ -41899,7 +41944,7 @@ function _p() {
                 class: "actions",
                 children: [
                   w("button", {
-                    class: `btn big ${dc.warn && canBuy ? "btn-debt-warn" : "primary"}`,
+                    class: `btn big ${!canBuy ? "btn-debt-blocked" : dc.warn ? "btn-debt-warn" : "primary"}`,
                     disabled: !canBuy,
                     onClick: () =>
                       guardDebtAction(A, {
@@ -41908,32 +41953,16 @@ function _p() {
                         cost: d,
                         onConfirm: () => AL(n.id),
                       }),
-                    children: [dc.warn && canBuy ? "举债开拓 " : "开拓 ", w(Hn, { v: d })],
+                    children: [
+                      (!canBuy || dc.warn) && w(NA, { node: Ae.warn, size: 15, stroke: 2.3 }),
+                      !canBuy ? " 无法开拓 " : dc.warn ? " 举债开拓 " : "开拓 ",
+                      w(Hn, { v: d }),
+                    ],
                   }),
                   va(e, n) && w(LQ, { tile: n, label: "远程勘探" }),
                 ],
               }),
-              !canBuy
-                ? w("p", {
-                    class: "hint warn",
-                    children: [
-                      dc.blockReason || payErr(e, d, t),
-                      "，当前每季净结余 ",
-                      fe(t.net),
-                      " 亿。",
-                    ],
-                  })
-                : e.treasury < d &&
-                  w("p", {
-                    class: `hint${dc.warn ? " warn" : ""}`,
-                    children: [
-                      "国库现金不足，本次开拓将发行主权国债 ",
-                      fe(d - Math.max(0, e.treasury)),
-                      " 亿（剩余发债额度 ",
-                      fe(Math.max(0, t.debtCap - dc.debtAfter)),
-                      " 亿）。",
-                    ],
-                  }),
+              (!canBuy || e.treasury < d) && renderSheetDebtBanner(e, t, d, dc, canBuy, "开拓"),
             ],
           }),
         !h &&
@@ -42010,23 +42039,46 @@ function _p() {
             ],
           }),
         n.level < 6 && w(dg, { tile: n }),
-        w("div", {
-          class: "actions",
-          children: [
-            n.level < 6
-              ? w("button", {
-                  class: "btn primary",
-                  disabled: !d.ok || !canPay(e, h, t),
-                  "data-tip-title": `升到 Lv.${n.level + 1}`,
-                  "data-tip": `施工队 +1，首都自带水电与国土上限提升\n主公体力上限 +${O.staminaPerCapital}（升至 ${M} 点），升级时体力当场回满\nLv.3 解锁四大税制、首座特区、架空未来产业与第 2 政策槽；Lv.5 解锁 217 格全境与第 3 政策槽`,
-                  onClick: () => A.act((z) => yi(z, n.id)),
-                  children: [w(_e, { name: "up", size: 12 }), " 升级首都 ", w(Hn, { v: h })],
-                })
-              : w(nf, { kind: "gold", children: "首都已满级" }),
-            w("button", { class: "btn", onClick: () => A.openPanel("economy"), children: "国家经济" }),
-            unzoneBtn,
-          ],
-        }),
+        (() => {
+          const dcCap = n.level < 6 ? evalDebtCross(e, h, t) : null,
+            canCapPay = n.level < 6 ? canPay(e, h, t) && !dcCap.blocked : !1,
+            capDebt = Boolean(n.level < 6 && d.ok && canCapPay && dcCap.warn);
+          return w(he, {
+            children: [
+              w("div", {
+                class: "actions",
+                children: [
+                  n.level < 6
+                    ? w("button", {
+                        class: `btn ${capDebt ? "btn-debt-warn" : "primary"}`,
+                        disabled: !d.ok || !canCapPay,
+                        "data-tip-title": `升到 Lv.${n.level + 1}`,
+                        "data-tip": `施工队 +1，首都自带水电与国土上限提升\n主公体力上限 +${O.staminaPerCapital}（升至 ${M} 点），升级时体力当场回满\nLv.3 解锁四大税制、首座特区、架空未来产业与第 2 政策槽；Lv.5 解锁 217 格全境与第 3 政策槽`,
+                        onClick: () =>
+                          guardDebtAction(A, {
+                            title: `升级首都至 Lv.${n.level + 1}`,
+                            verb: "举债升级",
+                            cost: h,
+                            onConfirm: () => A.act((z) => yi(z, n.id)),
+                          }),
+                        children: [
+                          capDebt ? w(NA, { node: Ae.warn, size: 14, stroke: 2.3 }) : w(_e, { name: "up", size: 12 }),
+                          capDebt ? " 举债升级首都 " : " 升级首都 ",
+                          w(Hn, { v: h }),
+                        ],
+                      })
+                    : w(nf, { kind: "gold", children: "首都已满级" }),
+                  w("button", { class: "btn", onClick: () => A.openPanel("economy"), children: "国家经济" }),
+                  unzoneBtn,
+                ],
+              }),
+              n.level < 6 &&
+                d.ok &&
+                (!canCapPay || e.treasury < h) &&
+                renderSheetDebtBanner(e, t, h, dcCap, canCapPay, "升级首都"),
+            ],
+          });
+        })(),
       ],
     });
   }
@@ -42140,41 +42192,59 @@ function _p() {
             });
           })(),
         !n.upBuild && n.level < maxLv && w(dg, { tile: n }),
-        w("div", {
-          class: "actions",
-          children: [
-            !n.upBuild &&
-              n.level < maxLv &&
-              w("button", {
-                class: "btn primary",
-                disabled: !x.ok || !canPay(e, d, t),
-                onClick: () => A.act((z) => yi(z, n.id)),
+        (() => {
+          const canShowUp = !n.upBuild && n.level < maxLv,
+            dcPub = canShowUp ? evalDebtCross(e, d, t) : null,
+            canPubPay = canShowUp ? canPay(e, d, t) && !dcPub.blocked : !1,
+            pubDebt = Boolean(canShowUp && x.ok && canPubPay && dcPub.warn);
+          return w(he, {
+            children: [
+              w("div", {
+                class: "actions",
                 children: [
-                  w(_e, { name: "up", size: 12 }),
-                  " 升到 Lv.",
-                  n.level + 1,
-                  h.wonder
-                    ? `（${(O.wonderUpgradeTime && O.wonderUpgradeTime[n.level]) || n.level + 2}季） `
-                    : " ",
-                  w(Hn, { v: d }),
+                  canShowUp &&
+                    w("button", {
+                      class: `btn ${pubDebt ? "btn-debt-warn" : "primary"}`,
+                      disabled: !x.ok || !canPubPay,
+                      onClick: () =>
+                        guardDebtAction(A, {
+                          title: `${h.wonder ? "扩建" : "升级"}「${h.name}」至 Lv.${n.level + 1}`,
+                          verb: h.wonder ? "举债扩建" : "举债升级",
+                          cost: d,
+                          onConfirm: () => A.act((z) => yi(z, n.id)),
+                        }),
+                      children: [
+                        pubDebt ? w(NA, { node: Ae.warn, size: 14, stroke: 2.3 }) : w(_e, { name: "up", size: 12 }),
+                        pubDebt ? ` 举债升到 Lv.${n.level + 1}` : ` 升到 Lv.${n.level + 1}`,
+                        h.wonder
+                          ? `（${(O.wonderUpgradeTime && O.wonderUpgradeTime[n.level]) || n.level + 2}季） `
+                          : " ",
+                        w(Hn, { v: d }),
+                      ],
+                    }),
+                  unzoneBtn,
+                  w("button", {
+                    class: "btn danger",
+                    onClick: () =>
+                      A.openModal({
+                        type: "confirm",
+                        title: `拆除「${h.name}」？`,
+                        body: "退还累计实付净投入的 50%，宜居度、周边带动与全国被动随之移除。",
+                        okText: "拆除",
+                        danger: !0,
+                        onOk: () => A.act((z) => i7(z, n.id)),
+                      }),
+                    children: "拆除",
+                  }),
                 ],
               }),
-            unzoneBtn,
-            w("button", {
-              class: "btn danger",
-              onClick: () =>
-                A.openModal({
-                  type: "confirm",
-                  title: `拆除「${h.name}」？`,
-                  body: "退还累计实付净投入的 50%，宜居度、周边带动与全国被动随之移除。",
-                  okText: "拆除",
-                  danger: !0,
-                  onOk: () => A.act((z) => i7(z, n.id)),
-                }),
-              children: "拆除",
-            }),
-          ],
-        }),
+              canShowUp &&
+                x.ok &&
+                (!canPubPay || e.treasury < d) &&
+                renderSheetDebtBanner(e, t, d, dcPub, canPubPay, h.wonder ? "扩建奇观" : "升级市政"),
+            ],
+          });
+        })(),
       ],
     });
   }
@@ -42526,56 +42596,108 @@ function _p() {
         }),
       C && !C.ok && w("p", { class: "hint ex-hint", children: ["满级专属「", u.name, "」：", C.reason] }),
       n.level < 6 && !n.upBuild && !D && w(dg, { tile: n }),
-      w("div", {
-        class: "actions",
-        children: [
-          (C == null ? void 0 : C.ok) &&
-            w("button", {
-              class: "btn gold",
-              disabled: !canPay(e, kg(n), t),
-              onClick: () => A.act((h) => i4(h, n.id)),
-              children: ["专属进阶「", u.name, "」 ", w(Hn, { v: kg(n) })],
-            }),
-          n.level < 6 &&
-            !n.upBuild &&
-            (Q.ok
-              ? n.level === 3
-                ? w(he, {
-                    children: [
-                      w("button", {
-                        class: "btn primary",
-                        disabled: !canPay(e, a, t),
-                        "data-tip-title": "升至 Lv.4 · 定型「规模产线」（技改 2 季）",
-                        "data-tip": `${SPEC_DEFS.scale.desc}\n• 占用 1 支施工队，期间当前 Lv.3 产线照常运转`,
-                        onClick: () => A.act((h) => yi(h, n.id, !1, void 0, !1, "scale")),
-                        children: [w(_e, { name: "up", size: 12 }), " Lv.4·规模 ", w(Hn, { v: a })],
+      (() => {
+        const exCost = (C == null ? void 0 : C.ok) ? kg(n) : 0,
+          dcEx = exCost > 0 ? evalDebtCross(e, exCost, t) : null,
+          canExPay = exCost > 0 ? canPay(e, exCost, t) && !dcEx.blocked : !1,
+          exDebt = Boolean(exCost > 0 && canExPay && dcEx.warn),
+          canShowIndUp = n.level < 6 && !n.upBuild,
+          dcInd = canShowIndUp && Q.ok ? evalDebtCross(e, a, t) : null,
+          canIndPay = dcInd ? canPay(e, a, t) && !dcInd.blocked : !1,
+          indDebt = Boolean(dcInd && canIndPay && dcInd.warn);
+        return w(he, {
+          children: [
+            w("div", {
+              class: "actions",
+              children: [
+                (C == null ? void 0 : C.ok) &&
+                  w("button", {
+                    class: `btn ${exDebt ? "btn-debt-warn" : "gold"}`,
+                    disabled: !canExPay,
+                    onClick: () =>
+                      guardDebtAction(A, {
+                        title: `专属进阶「${u.name}」`,
+                        verb: "举债进阶",
+                        cost: exCost,
+                        onConfirm: () => A.act((h) => i4(h, n.id)),
                       }),
-                      w("button", {
-                        class: "btn primary",
-                        disabled: !canPay(e, a, t),
-                        "data-tip-title": "升至 Lv.4 · 定型「精工产线」（技改 2 季）",
-                        "data-tip": `${SPEC_DEFS.craft.desc}\n• 占用 1 支施工队，期间当前 Lv.3 产线照常运转`,
-                        onClick: () => A.act((h) => yi(h, n.id, !1, void 0, !1, "craft")),
-                        children: [w(_e, { name: "up", size: 12 }), " Lv.4·精工 ", w(Hn, { v: a })],
-                      }),
-                    ],
-                  })
-                : w("button", {
-                    class: "btn primary",
-                    disabled: !canPay(e, a, t),
-                    "data-tip-title":
-                      n.level >= 4
-                        ? `启动 Lv.${B} 技改扩建（预计 ${(O.upgradeTime && O.upgradeTime[n.level]) || 2} 季）`
-                        : void 0,
-                    "data-tip":
-                      n.level >= 4 ? "占用 1 支施工队推进高阶技改，期间当前产线照常运转" : void 0,
-                    onClick: () => A.act((h) => yi(h, n.id)),
                     children: [
-                      w(_e, { name: "up", size: 12 }),
-                      n.level >= 4 ? ` 技改 Lv.${B} ` : ` 升到 Lv.${B} `,
-                      w(Hn, { v: a }),
+                      exDebt && w(NA, { node: Ae.warn, size: 14, stroke: 2.3 }),
+                      exDebt ? ` 举债进阶「${u.name}」 ` : `专属进阶「${u.name}」 `,
+                      w(Hn, { v: exCost }),
                     ],
-                  })
+                  }),
+                canShowIndUp &&
+                  (Q.ok
+                    ? n.level === 3
+                      ? w(he, {
+                          children: [
+                            w("button", {
+                              class: `btn ${indDebt ? "btn-debt-warn" : "primary"}`,
+                              disabled: !canIndPay,
+                              "data-tip-title": "升至 Lv.4 · 定型「规模产线」（技改 2 季）",
+                              "data-tip": `${SPEC_DEFS.scale.desc}\n• 占用 1 支施工队，期间当前 Lv.3 产线照常运转`,
+                              onClick: () =>
+                                guardDebtAction(A, {
+                                  title: `技改「${c.short}」至 Lv.4（规模产线）`,
+                                  verb: "举债技改",
+                                  cost: a,
+                                  onConfirm: () => A.act((h) => yi(h, n.id, !1, void 0, !1, "scale")),
+                                }),
+                              children: [
+                                indDebt ? w(NA, { node: Ae.warn, size: 13, stroke: 2.3 }) : w(_e, { name: "up", size: 12 }),
+                                indDebt ? " 举债Lv.4·规模 " : " Lv.4·规模 ",
+                                w(Hn, { v: a }),
+                              ],
+                            }),
+                            w("button", {
+                              class: `btn ${indDebt ? "btn-debt-warn" : "primary"}`,
+                              disabled: !canIndPay,
+                              "data-tip-title": "升至 Lv.4 · 定型「精工产线」（技改 2 季）",
+                              "data-tip": `${SPEC_DEFS.craft.desc}\n• 占用 1 支施工队，期间当前 Lv.3 产线照常运转`,
+                              onClick: () =>
+                                guardDebtAction(A, {
+                                  title: `技改「${c.short}」至 Lv.4（精工产线）`,
+                                  verb: "举债技改",
+                                  cost: a,
+                                  onConfirm: () => A.act((h) => yi(h, n.id, !1, void 0, !1, "craft")),
+                                }),
+                              children: [
+                                indDebt ? w(NA, { node: Ae.warn, size: 13, stroke: 2.3 }) : w(_e, { name: "up", size: 12 }),
+                                indDebt ? " 举债Lv.4·精工 " : " Lv.4·精工 ",
+                                w(Hn, { v: a }),
+                              ],
+                            }),
+                          ],
+                        })
+                      : w("button", {
+                          class: `btn ${indDebt ? "btn-debt-warn" : "primary"}`,
+                          disabled: !canIndPay,
+                          "data-tip-title":
+                            n.level >= 4
+                              ? `启动 Lv.${B} 技改扩建（预计 ${(O.upgradeTime && O.upgradeTime[n.level]) || 2} 季）`
+                              : void 0,
+                          "data-tip":
+                            n.level >= 4 ? "占用 1 支施工队推进高阶技改，期间当前产线照常运转" : void 0,
+                          onClick: () =>
+                            guardDebtAction(A, {
+                              title: `${n.level >= 4 ? "技改" : "升级"}「${c.short}」至 Lv.${B}`,
+                              verb: n.level >= 4 ? "举债技改" : "举债升级",
+                              cost: a,
+                              onConfirm: () => A.act((h) => yi(h, n.id)),
+                            }),
+                          children: [
+                            indDebt ? w(NA, { node: Ae.warn, size: 13, stroke: 2.3 }) : w(_e, { name: "up", size: 12 }),
+                            indDebt
+                              ? n.level >= 4
+                                ? ` 举债技改 Lv.${B} `
+                                : ` 举债升到 Lv.${B} `
+                              : n.level >= 4
+                                ? ` 技改 Lv.${B} `
+                                : ` 升到 Lv.${B} `,
+                            w(Hn, { v: a }),
+                          ],
+                        })
               : l
                 ? w("button", {
                     class: "btn primary",
@@ -42600,10 +42722,17 @@ function _p() {
                         "data-tip": Q.reason || void 0,
                         children: [w(_e, { name: "up", size: 12 }), " 升到 Lv.", B, " ", w(Hn, { v: a })],
                       })),
-          unzoneBtn,
-          w("button", { class: "btn ghost", onClick: o, children: f ? "收起" : "详情" }),
-        ],
-      }),
+                unzoneBtn,
+                w("button", { class: "btn ghost", onClick: o, children: f ? "收起" : "详情" }),
+              ],
+            }),
+            canShowIndUp &&
+              Q.ok &&
+              (!canIndPay || e.treasury < a) &&
+              renderSheetDebtBanner(e, t, a, dcInd, canIndPay, n.level >= 3 ? "技改" : "升级"),
+          ],
+        });
+      })(),
       f && w(nL, { tile: n }),
     ],
   });
@@ -55098,16 +55227,99 @@ button.dcard {
 /* Cross-Zero Sovereign Debt Warning & Restructuring & Founding Banner */
 .btn.btn-debt-warn,
 .btn-debt-warn {
-  background: linear-gradient(180deg, #9e5a10, #6f3b08) !important;
-  border-color: #ffb347 !important;
-  color: #fff4df !important;
+  background: linear-gradient(180deg, #d87414, #8f4306) !important;
+  border: 1px solid #ffc45c !important;
+  color: #fff8eb !important;
+  font-weight: 600;
   box-shadow:
-    0 2px rgba(0, 0, 0, 0.45),
-    0 0 12px rgba(255, 165, 52, 0.25);
+    0 5px 16px rgba(232, 122, 18, 0.4),
+    inset 0 1px rgba(255, 245, 215, 0.34) !important;
+}
+.btn.btn-debt-warn .money,
+.btn-debt-warn .money {
+  color: #ffe799 !important;
 }
 .btn.btn-debt-warn:hover:not(:disabled) {
-  border-color: #ffe099 !important;
-  filter: brightness(1.07);
+  border-color: #ffe5a3 !important;
+  filter: brightness(1.08);
+}
+.btn.primary:disabled,
+.btn.btn-debt-blocked {
+  background: linear-gradient(180deg, rgba(44, 54, 68, 0.85), rgba(26, 34, 46, 0.88)) !important;
+  border: 1px solid rgba(160, 184, 212, 0.24) !important;
+  color: #93a4b8 !important;
+  box-shadow: none !important;
+  opacity: 0.78;
+}
+.btn.primary:disabled .money,
+.btn.btn-debt-blocked .money {
+  color: #b4c2d4 !important;
+}
+.btn.btn-debt-blocked {
+  border-color: rgba(255, 98, 112, 0.42) !important;
+  color: #d9a7ae !important;
+}
+.sheet-debt-alert {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 10px;
+  padding: 9px 12px;
+  border-radius: 9px;
+  border: 1px solid rgba(255, 184, 77, 0.62);
+  border-left: 4px solid #ffb347;
+  background: linear-gradient(90deg, rgba(122, 58, 8, 0.74), rgba(64, 28, 6, 0.56));
+  color: #fff2dc;
+  font-size: 12.8px;
+  line-height: 1.5;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.28);
+}
+.sheet-debt-alert > svg {
+  flex: none;
+  color: #ffc864;
+}
+.sheet-debt-alert .sda-badge {
+  flex: none;
+  font-style: normal;
+  font-size: 11.5px;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  padding: 1px 7px;
+  border-radius: 5px;
+  background: rgba(255, 184, 77, 0.24);
+  border: 1px solid rgba(255, 202, 112, 0.58);
+  color: #ffe4a3;
+}
+.sheet-debt-alert .sda-txt {
+  flex: 1 1 220px;
+  min-width: 0;
+}
+.sheet-debt-alert .sda-txt b {
+  color: #ffd86b;
+  font-weight: 700;
+}
+.sheet-debt-alert.high {
+  border-color: rgba(255, 132, 84, 0.68);
+  border-left-color: #ff7b47;
+  background: linear-gradient(90deg, rgba(126, 38, 14, 0.76), rgba(66, 20, 10, 0.58));
+}
+.sheet-debt-alert.blocked {
+  border-color: rgba(255, 98, 112, 0.64);
+  border-left-color: #ff5d6c;
+  background: linear-gradient(90deg, rgba(108, 18, 30, 0.76), rgba(56, 12, 20, 0.58));
+  color: #ffe0e4;
+}
+.sheet-debt-alert.blocked > svg {
+  color: #ff7a86;
+}
+.sheet-debt-alert.blocked .sda-badge {
+  background: rgba(255, 93, 108, 0.24);
+  border-color: rgba(255, 122, 134, 0.58);
+  color: #ffc2c9;
+}
+.sheet-debt-alert.blocked .sda-txt b {
+  color: #ffb3bc;
 }
 .debt-danger-alert {
   display: flex;
